@@ -729,7 +729,7 @@ document.addEventListener('submit',e=>{
     if(action==='signin')return authSignIn(values.username,values.password);
     return;
   }
-  if(f==='set-password')return authSetPassword(values.password);
+  if(f==='set-password')return authSetPassword(values.currentPassword,values.password,values.confirmPassword);
   if(f==='claim-username')return claimUsername(values.username);
   const err=FORMS[f](values);
   if(err)return toast(err);
@@ -1107,11 +1107,15 @@ async function saveRecoveredPassword(password,confirmation){
     status.textContent='Пароль успешно изменён. Теперь войдите с новым паролем.';
   }catch(error){status.textContent='Не удалось изменить пароль. Откройте ссылку из письма ещё раз.'}
 }
-async function authSetPassword(password){
-  if(!sb||!user)return toast('Сначала войдите в аккаунт.');
-  if(!validPassword(password))return toast('Пароль должен содержать не менее 12 символов.');
+async function authSetPassword(currentPassword,password,confirmation){
+  if(!sb||!user?.email)return toast('Сначала войдите в аккаунт.');
+  if(!currentPassword)return toast('Введите текущий пароль.');
+  if(password!==confirmation)return toast('Новые пароли не совпадают.');
+  if(!validPassword(password))return toast('Новый пароль должен содержать не менее 12 символов.');
+  const {error:verifyError}=await sb.auth.signInWithPassword({email:user.email,password:currentPassword});
+  if(verifyError)return toast('Текущий пароль неверен. Изменения не внесены.');
   const {error}=await sb.auth.updateUser({password});
-  toast(error?'Не удалось обновить пароль: '+error.message:'Пароль успешно сохранён.');
+  toast(error?'Не удалось обновить пароль. Попробуйте позже.':'Пароль успешно изменён.');
 }
 async function logout(){
   if(!sb)return;
@@ -1130,7 +1134,7 @@ function accountCard(){
     const isUsernameAccount=(user.email||'').endsWith('@accounts.saymosaldo.app');
     return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">'+(isUsernameAccount?'Ваш логин: <b>'+esc(currentUsername||user.email.split('@')[0])+'</b>':'Старый аккаунт: '+esc(user.email||'аккаунт'))+'. Финансовые данные привязаны к этому аккаунту.</p>'+
       (isUsernameAccount?'':'<form class="chatform" data-form="claim-username"><input name="username" type="text" required minlength="3" maxlength="24" autocapitalize="none" spellcheck="false" placeholder="Новый логин (3–24 символа)"><button class="primary">Перейти на вход по логину</button></form><p class="muted" style="font-size:12px;margin:8px 0">После перехода вход будет выполняться по логину и паролю. Почта для входа больше не понадобится.</p>')+
-      '<form class="chatform" data-form="set-password"><input name="password" type="password" minlength="12" maxlength="72" required placeholder="Новый пароль (от 12 символов)" autocomplete="new-password"><button class="primary">Изменить пароль</button></form>'+
+      '<form class="chatform" data-form="set-password"><input name="currentPassword" type="password" required placeholder="Текущий пароль" autocomplete="current-password"><input name="password" type="password" minlength="12" maxlength="72" required placeholder="Новый пароль (от 12 символов)" autocomplete="new-password"><input name="confirmPassword" type="password" minlength="12" maxlength="72" required placeholder="Повторите новый пароль" autocomplete="new-password"><button class="primary">Изменить пароль</button></form>'+
       (accountReady&&syncAllowed&&!accountHasData&&guestHasData()?'<button class="ghost" data-act="import-device-data">Перенести данные с этого устройства в аккаунт</button>':'')+
       '<button class="ghost" data-act="logout">Выйти</button></div>';
   }
