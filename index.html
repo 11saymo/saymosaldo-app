@@ -362,6 +362,18 @@ button,input,select{letter-spacing:0;line-height:1.4}
  .home-goal-item{padding:15px!important;gap:12px!important}
 }
 
+
+/* Monthly outlook and actionable local insights */
+.forecast-card{padding:20px!important;border-color:color-mix(in srgb,var(--acc) 24%,var(--line))}
+.forecast-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.forecast-tag{font-size:11px;color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,var(--card));padding:5px 9px;border-radius:999px;white-space:nowrap}
+.forecast-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.forecast-metric{display:grid;gap:4px;min-width:0}
+.forecast-metric span{font-size:12px;color:var(--mut)}
+.forecast-metric b{font-size:18px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.forecast-note{display:block;margin-top:12px;font-size:12px;line-height:1.55;color:var(--mut)}
+.insight-line{border-top:1px solid var(--line);margin-top:14px;padding-top:12px;font-size:13px;line-height:1.6}
+@media(max-width:380px){.forecast-card{padding:16px!important}.forecast-metric b{font-size:16px}}
 </style>
 </head>
 <body>
@@ -380,6 +392,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
         </div>
       </div>
       <p class="status" id="status"></p>
+      <div id="moneyInsight"></div>
       <div class="quick">
         <button class="qbtn" data-go="add"><span>＋</span>Операция</button>
         <button class="qbtn" data-go="stats"><span>◎</span>Бюджет</button>
@@ -522,6 +535,27 @@ function render(){
   $('#income').textContent=money(inc);
   $('#expense').textContent=money(out);
   $('#status').textContent=!S.tx.length?'Добавьте первую операцию, и картина месяца появится здесь.':overN?`Превышено лимитов: ${overN}. Проверьте категории ниже.`:'Всё под контролем.';
+   const insightEl=$('#moneyInsight');
+   const todayDate=new Date(),dayOfMonth=todayDate.getDate(),daysInMonth=new Date(todayDate.getFullYear(),todayDate.getMonth()+1,0).getDate();
+   const expenseRows=m.filter(x=>x.type==='expense'&&Number(x.amount)>0);
+   const categoryTotals={};
+   expenseRows.forEach(x=>{const c=String(x.category||'Другое');categoryTotals[c]=(categoryTotals[c]||0)+Number(x.amount||0)});
+   const canForecast=dayOfMonth>=5&&m.length>=3;
+   const projectedOut=canForecast?out/dayOfMonth*daysInMonth:null;
+   const projectedIn=canForecast?inc/dayOfMonth*daysInMonth:null;
+   const projectedNet=canForecast?projectedIn-projectedOut:null;
+   const topCategory=Object.entries(categoryTotals).sort((a,b)=>b[1]-a[1])[0];
+   const nearLimit=S.budgets.map(b=>({category:b.category,spent:categoryTotals[b.category]||0,limit:Number(b.limit)||0})).filter(x=>x.limit>0).sort((a,b)=>b.spent/b.limit-a.spent/a.limit)[0];
+   let insight='';
+   if(nearLimit&&nearLimit.spent>=nearLimit.limit*.8){
+     const pct=Math.round(nearLimit.spent/nearLimit.limit*100);
+     insight=`Лимит «${esc(nearLimit.category)}» использован на ${pct}%. Осталось ${money(Math.max(0,nearLimit.limit-nearLimit.spent))}.`;
+   }else if(topCategory){
+     insight=`Больше всего расходов сейчас в категории «${esc(topCategory[0])}» — ${money(topCategory[1])}.`;
+   }else{
+     insight='Добавляйте операции — здесь появятся персональные подсказки по расходам и лимитам.';
+   }
+   insightEl.innerHTML=`<div class="card forecast-card"><div class="forecast-head"><b>Финансовый прогноз</b><span class="forecast-tag">${canForecast?'По текущему темпу':'Набираем данные'}</span></div>${canForecast?`<div class="forecast-grid"><div class="forecast-metric"><span>Расходы к концу месяца</span><b>${money(projectedOut)}</b></div><div class="forecast-metric"><span>Доходы к концу месяца</span><b>${money(projectedIn)}</b></div><div class="forecast-metric"><span>Прогноз разницы</span><b class="${projectedNet>=0?'pos':''}">${money(projectedNet)}</b></div><div class="forecast-metric"><span>Дней прошло</span><b>${dayOfMonth} из ${daysInMonth}</b></div></div><small class="forecast-note">Оценка по среднему дневному темпу записей этого месяца. Это не банковский баланс; будущие платежи, незаписанные операции и изменения дохода не учитываются.</small>`:`<p class="muted">Для прогноза нужно немного больше записей. После нескольких дней и операций покажем ориентир до конца месяца.</p>`}<div class="insight-line"><b>Подсказка</b><br>${insight}</div></div>`;
   const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(ymd(d))}
   const dv=days.map(dd=>S.tx.filter(x=>x.type==='expense'&&x.date===dd).reduce((v,x)=>v+(+x.amount||0),0));
   const wmax=Math.max(...dv,1);
