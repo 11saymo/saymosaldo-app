@@ -11,9 +11,12 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>SaymoSaldo</title>
+<script>try{var t=localStorage.getItem('saymosaldo_theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <style>
 :root{--bg:#f5f5f3;--card:#fff;--fg:#121212;--mut:#6e6e6a;--line:#e4e4e0;--acc:#7a1f2b;--warn:#b26a00;--bad:#b42318;--r:14px;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#0d0e0d;--card:#161816;--fg:#f0f0ec;--mut:#8d8f8a;--line:#262826;--acc:#e0707d;--warn:#e9a23b;--bad:#f07167;color-scheme:dark}}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d0e0d;--card:#161816;--fg:#f0f0ec;--mut:#8d8f8a;--line:#262826;--acc:#e0707d;--warn:#e9a23b;--bad:#f07167;color-scheme:dark}}
+:root[data-theme=dark]{--bg:#0d0e0d;--card:#161816;--fg:#f0f0ec;--mut:#8d8f8a;--line:#262826;--acc:#e0707d;--warn:#e9a23b;--bad:#f07167;color-scheme:dark}
 *{box-sizing:border-box;margin:0}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--fg);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
@@ -103,6 +106,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 
   <main>
     <section class="view" data-view="home">
+      <p class="muted" id="status" style="margin:0 0 12px;font-size:15px"></p>
       <div class="card hero">
         <span class="label" id="monthLabel"></span>
         <div class="big" id="balance">—</div>
@@ -113,6 +117,8 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
       </div>
       <div class="sec"><h2>Последние операции</h2><button class="link" data-go="ops">Все операции</button></div>
       <div id="recent" class="list"></div>
+      <div class="sec"><h2>Лимиты</h2><button class="link" data-go="more">Управлять</button></div>
+      <div id="homeLimits" class="list"></div>
       <div class="sec"><h2>Цели</h2><button class="link" data-go="more">Управлять</button></div>
       <div id="homeGoals" class="list"></div>
       <p class="note">Данные хранятся в этом браузере. Делайте резервную копию в разделе «Ещё».</p>
@@ -154,7 +160,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
         <button data-tab="recurring">Платежи</button>
         <button data-tab="debts">Долги</button>
         <button data-tab="assistant">Помощник</button>
-        <button data-tab="data">Данные</button>
+        <button data-tab="settings">Настройки</button><button data-tab="data">Данные</button>
       </div>
       <div id="panel"></div>
     </section>
@@ -165,7 +171,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
   <button data-go="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Главная</button>
   <button data-go="ops"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Операции</button>
   <button data-go="add" class="fab" aria-label="Новая операция"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
-  <button data-go="stats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Аналитика</button>
+  <button data-go="stats"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Бюджет</button>
   <button data-go="more"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Ещё</button>
 </nav>
 
@@ -178,10 +184,9 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const KEY='saymosaldo_';
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(KEY+k))??d}catch{return d}};
 const S={tx:load('tx',[]),goals:load('goals',[]),budgets:load('budgets',[]),recurring:load('recurring',[]),debts:load('debts',[])};
-const save=()=>{for(const k in S)localStorage.setItem(KEY+k,JSON.stringify(S[k]))};
+const save=()=>{for(const k in S)localStorage.setItem(KEY+k,JSON.stringify(S[k]));scheduleSync()};
 const CATS={expense:['Продукты','Кафе и рестораны','Транспорт','Покупки','Дом','Здоровье','Развлечения','Подписки','Кредиты и долги','Другое'],income:['Зарплата','Подработка','Подарок','Другое']};
 const DEBT_KINDS=['Ипотека','Кредит','Кредитная карта','Рассрочка','Частный долг'];
-const UNIVERSAL_REPLY='Режим Universal пока демонстрационный: запрос не отправляется ни на сервер, ни провайдеру ИИ. Подключение появится после настройки защищённого сервера и отдельного согласия.';
 const ymd=d=>d.toLocaleDateString('en-CA');
 const today=()=>ymd(new Date()), nowMk=()=>today().slice(0,7);
 const money=n=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(+n||0)+' ₽';
@@ -195,11 +200,11 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const empty=t=>`<div class="empty">${t}</div>`;
 const catOpts=t=>CATS[t].map(c=>`<option>${esc(c)}</option>`).join('');
 const field=(n,l,t='number',x='')=>`<label class="field"><span>${l}</span><input name="${n}" type="${t}" ${t==='number'?'inputmode="decimal" step="any"':''} ${x}></label>`;
-let mode='universal', tab='goals', cur='home';
+let mode='finance', tab='goals', cur='home';
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2400)}
 
-const TITLES={home:'Главная',ops:'Операции',add:'Новая операция',stats:'Аналитика',more:'Ещё'};
+const TITLES={home:'Главная',ops:'Операции',add:'Новая операция',stats:'Бюджет',more:'Ещё'};
 function go(p){
   cur=p;
   $$('.view').forEach(v=>v.hidden=v.dataset.view!==p);
@@ -222,7 +227,7 @@ function ask(title,fields,cb){
   d.showModal();
 }
 
-const items=(list,del)=>list.map(x=>`<div class="item"><div><b>${esc(x.comment||x.category)}</b><small>${esc(x.category)} · ${fmtDate(x.date)}</small></div><div class="amt ${x.type==='income'?'pos':''}">${x.type==='income'?'+':'−'}${money(x.amount)}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`).join('');
+const items=(list,del)=>list.map(x=>`<div class="item"><div><b>${esc(x.comment||x.category)}</b><small>${x.comment?esc(x.category)+' · ':''}${fmtDate(x.date)}</small></div><div class="amt ${x.type==='income'?'pos':''}">${x.type==='income'?'+':'−'}${money(x.amount)}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`).join('');
 const bar=(l,v,max)=>`<div class="bl"><div class="row"><span>${esc(l)}</span><b>${money(v)}</b></div><div class="bar"><i style="width:${Math.max(2,v/max*100)}%"></i></div></div>`;
 const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="card"><div class="row"><b>${esc(g.name)}</b><small>${Math.round(p)}%</small></div><small>${money(g.saved)} из ${money(g.target)}${g.date?' · до '+fmtDate(g.date):''}</small><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
 
@@ -238,6 +243,10 @@ function render(){
   $('#count').textContent=list.length+' шт.';
   $('#allItems').innerHTML=items(list,true)||empty('Нет операций по выбранному фильтру.');
   $('#homeGoals').innerHTML=S.goals.slice(0,3).map(g=>goalCard(g,true)).join('')||empty('Цели пока не добавлены.');
+  const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(x=>x.amount));
+  const overN=S.budgets.filter(b=>spent(b.category)>b.limit).length;
+  $('#status').textContent=!S.tx.length?'Добавьте первую операцию, и картина месяца появится здесь.':overN?`Превышено лимитов: ${overN}. Проверьте категории ниже.`:'Всё под контролем.';
+  $('#homeLimits').innerHTML=S.budgets.slice(0,3).map(b=>{const sp=spent(b.category),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><small>${money(sp)} из ${money(b.limit)}</small></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div></div>`}).join('')||empty('Лимиты не установлены. Их можно задать в разделе «Ещё → Лимиты».');
   const by={};
   m.filter(x=>x.type==='expense').forEach(x=>by[x.category]=(by[x.category]||0)+(+x.amount||0));
   const ents=Object.entries(by).sort((a,b)=>b[1]-a[1]), max=ents[0]?.[1]||1;
@@ -276,15 +285,13 @@ const PANELS={
     <form class="card" data-form="debt"><label class="field"><span>Тип</span><select name="kind">${DEBT_KINDS.map(k=>`<option>${k}</option>`).join('')}</select></label>${field('name','Название','text','required placeholder="Ипотека, банк"')}${field('original','Первоначальная сумма, ₽','number','required min="1"')}${field('remaining','Текущий остаток, ₽','number','required min="0"')}${field('monthly','Ежемесячный платёж, ₽','number','required min="1"')}${field('day','День платежа (1–31)','number','required min="1" max="31"')}${field('rate','Ставка, % годовых (необязательно)','number','min="0" max="100"')}<button class="primary">Добавить</button></form>`;
   },
 
-  assistant:()=>`<div class="tabs" role="tablist">
-      <button data-mode="universal" aria-selected="${mode==='universal'}">Universal</button>
-      <button data-mode="finance" aria-selected="${mode==='finance'}">Finance</button></div>
-    <p class="muted">${mode==='universal'?'Вопросы, идеи, тексты и обучение. Пока в демонстрационном режиме.':'Анализ ваших записей. Всё считается в браузере, данные никуда не отправляются.'}</p>
+  assistant:()=>`<p class="muted">Анализ ваших записей. Всё считается в браузере, данные никуда не отправляются.</p>
     <div id="chat" class="chat"></div>
-    <div class="chips">${(mode==='universal'?['Что такое ИИ простыми словами','Идея для небольшого бизнеса','План изучения английского']:['На что я больше всего трачу?','Как изменились мои расходы?','Какие лимиты превышены?','Дайте совет по экономии']).map(q=>`<button class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
-    <form class="chatform" data-form="chat"><input name="q" autocomplete="off" placeholder="${mode==='finance'?'Например, на что ушло больше всего':'Спросите о чём угодно'}"><button class="primary">Отправить</button></form>
+    <div class="chips">${['На что я больше всего трачу?','Как изменились мои расходы?','Какие лимиты превышены?','Дайте совет по экономии'].map(q=>`<button class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <form class="chatform" data-form="chat"><input name="q" autocomplete="off" placeholder="Например, на что ушло больше всего"><button class="primary">Отправить</button></form>
     <div class="actions"><button class="link" data-act="chat-clear">Очистить историю этого режима</button></div>`,
 
+  settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `${accountCard()}<div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
   data:()=>`<div class="card"><p>Резервная копия содержит операции, цели, лимиты, платежи и долги. Файл содержит ваши финансовые записи, не передавайте его посторонним.</p>
     <div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div>
     <p class="note">Данные хранятся только в этом браузере. Очистка данных сайта может их удалить, поэтому делайте копию регулярно. Не вводите пароли, коды подтверждения и номера карт.</p>`
@@ -301,6 +308,7 @@ const FORMS={
   budget(d){const limit=Math.round(+d.limit);if(!(limit>0))return'Укажите лимит больше нуля.';const b=S.budgets.find(x=>x.category===d.category);if(b)b.limit=limit;else S.budgets.push({category:d.category,limit});toast('Лимит сохранён')},
   rec(d){const name=d.name.trim(),amount=Math.round(+d.amount),day=Math.round(+d.day);if(!name||!(amount>0))return'Укажите название и сумму.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';S.recurring.push({id:uid(),name,amount,category:d.category,day});toast('Платёж добавлен')},
   debt(d){const name=d.name.trim(),original=Math.round(+d.original),remaining=Math.round(+d.remaining),monthly=Math.round(+d.monthly),day=Math.round(+d.day),rate=d.rate===''?null:+d.rate;if(!name)return'Укажите название.';if(!(original>0))return'Первоначальная сумма должна быть больше нуля.';if(!(remaining>=0&&remaining<=original))return'Остаток должен быть от 0 до первоначальной суммы.';if(!(monthly>0))return'Укажите ежемесячный платёж.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';if(rate!==null&&!(rate>=0&&rate<=100))return'Ставка — от 0 до 100.';S.debts.push({id:uid(),kind:d.kind,name,original,remaining,monthly,day,rate,history:[]});toast('Обязательство добавлено')},
+  login(d){sendLink(d.email)},
   chat(d){askAssistant(d.q)}
 };
 
@@ -381,13 +389,13 @@ function loadChatItems(){try{return JSON.parse(localStorage.getItem(chatKey()))|
 function renderChat(){
   const el=$('#chat');if(!el)return;
   const list=loadChatItems();
-  el.innerHTML=list.map(m=>`<div class="msg ${m.role==='user'?'user':''}">${esc(m.text)}</div>`).join('')||empty(mode==='finance'?'Спросите, например, на что уходит больше всего денег.':'Задайте любой вопрос.');
+  el.innerHTML=list.map(m=>`<div class="msg ${m.role==='user'?'user':''}">${esc(m.text)}</div>`).join('')||empty('Спросите, например, на что уходит больше всего денег.');
   el.scrollTop=el.scrollHeight;
 }
 function askAssistant(q){
   q=(q||'').trim();if(!q)return;
   const list=loadChatItems();
-  list.push({role:'user',text:q},{role:'assistant',text:mode==='finance'?finance(q):UNIVERSAL_REPLY});
+  list.push({role:'user',text:q},{role:'assistant',text:finance(q)});
   localStorage.setItem(chatKey(),JSON.stringify(list.slice(-60)));
   renderChat();
 }
@@ -408,9 +416,48 @@ function finance(q){
   return'Могу ответить на вопросы: на что больше всего трачу, как изменились расходы, какие лимиты превышены, и дать совет по экономии.';
 }
 
+const SB_URL='https://pmrrslmkrulhuapxtltm.supabase.co';
+const SB_KEY='sb_publishable_yqDwOCq3n3rZ7E0WOMLUtg_84VOefBt';
+const KEYS=['tx','goals','budgets','recurring','debts'];
+let sb=null, user=null, syncTimer=null;
+function initSB(){
+  if(!window.supabase){renderPanel();return}
+  sb=window.supabase.createClient(SB_URL,SB_KEY);
+  sb.auth.onAuthStateChange((_e,s)=>{const was=user&&user.id;user=(s&&s.user)||null;if(user&&user.id!==was)pullRemote();renderPanel()});
+}
+function scheduleSync(){if(!user)return;clearTimeout(syncTimer);syncTimer=setTimeout(pushRemote,800)}
+async function pushRemote(){
+  if(!sb||!user)return;
+  const payload={};KEYS.forEach(k=>payload[k]=S[k]);
+  const {error}=await sb.from('user_data').upsert({user_id:user.id,data:payload,updated_at:new Date().toISOString()});
+  if(error)toast('Не удалось сохранить в облако. Данные сохранены на этом устройстве.');
+}
+async function pullRemote(){
+  if(!sb||!user)return;
+  const {data,error}=await sb.from('user_data').select('data').eq('user_id',user.id).maybeSingle();
+  if(error){toast('Не удалось загрузить данные из облака');return}
+  const remote=(data&&data.data)||{};
+  if(Object.keys(remote).length){
+    const local={};KEYS.forEach(k=>local[k]=S[k]);
+    try{localStorage.setItem(KEY+'before_cloud',JSON.stringify(local))}catch(e){}
+    KEYS.forEach(k=>{if(Array.isArray(remote[k]))S[k]=remote[k]});
+    save();render();toast('Данные загружены из облака');
+  }else{await pushRemote()}
+}
+async function sendLink(email){
+  if(!sb){toast('Вход пока не настроен');return}
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split('#')[0]}});
+  toast(error?'Не удалось отправить ссылку: '+error.message:'Ссылка отправлена на почту');
+}
+function accountCard(){
+  if(user)return `<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как ${esc(user.email)}. Данные синхронизируются между устройствами.</p><button class="ghost" data-act="logout">Выйти</button></div>`;
+  return `<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Войдите, чтобы данные были на всех ваших устройствах. Пароль не нужен: пришлём ссылку на почту.</p><form class="chatform" data-form="login"><input name="email" type="email" required placeholder="you@example.com" autocomplete="email"><button class="primary">Получить ссылку</button></form></div>`;
+}
+function setTheme(v){try{localStorage.setItem('saymosaldo_theme',v)}catch(e){}if(v==='light'||v==='dark')document.documentElement.dataset.theme=v;else delete document.documentElement.dataset.theme}
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-go],[data-tab],[data-mode],[data-q],[data-act]');
+  const t=e.target.closest('[data-go],[data-tab],[data-mode],[data-q],[data-act],[data-theme-set]');
   if(!t)return;
+  if(t.dataset.themeSet){setTheme(t.dataset.themeSet);return renderPanel()}
   if(t.dataset.go)return go(t.dataset.go);
   if(t.dataset.tab){tab=t.dataset.tab;return renderPanel()}
   if(t.dataset.mode){mode=t.dataset.mode;return renderPanel()}
@@ -432,6 +479,7 @@ document.addEventListener('click',e=>{
     case'debt-pay':return payDebt(id);
     case'debt-del':return confirmDo('Удалить обязательство? История расходов останется.',()=>{S.debts=S.debts.filter(x=>x.id!==id)});
     case'chat-clear':if(confirm('Очистить историю этого режима на этом устройстве?')){localStorage.removeItem(chatKey());renderChat()}return;
+    case'logout':if(sb)sb.auth.signOut();toast('Вы вышли из аккаунта');return;
     case'export':return exportData();
     case'import':return $('#importFile').click();
     case'dlg-cancel':return $('#dlg').close();
@@ -442,6 +490,7 @@ document.addEventListener('change',e=>{if(e.target.id==='importFile')importData(
 $('#filter').addEventListener('change',render);
 
 fillTx();
+initSB();
 go('home');
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
