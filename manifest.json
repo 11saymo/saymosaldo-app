@@ -1,0 +1,18 @@
+{
+  "name": "SaymoSaldo Bordo",
+  "short_name": "SaymoSaldo",
+  "description": "Бюджет, цели, лимиты, платежи и долги. Данные хранятся на устройстве.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d0e0d",
+  "theme_color": "#0d0e0d",
+  "lang": "ru",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
