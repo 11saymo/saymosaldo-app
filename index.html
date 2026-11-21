@@ -598,7 +598,7 @@ function render(){
    const expenseRows=m.filter(x=>x.type==='expense'&&Number(x.amount)>0);
    const categoryTotals={};
    expenseRows.forEach(x=>{const c=String(x.category||'Другое');categoryTotals[c]=(categoryTotals[c]||0)+Number(x.amount||0)});
-   const canForecast=dayOfMonth>=5&&m.length>=3;
+   const canForecast=dayOfMonth>=5&&expenseRows.length>=3;
    const projectedOut=canForecast?out/dayOfMonth*daysInMonth:null;
    const projectedIn=canForecast?inc/dayOfMonth*daysInMonth:null;
    const projectedNet=canForecast?projectedIn-projectedOut:null;
