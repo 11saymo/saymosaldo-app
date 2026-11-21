@@ -250,6 +250,70 @@ body::after{content:"";position:fixed;z-index:-1;pointer-events:none;width:420px
 }
 :root[data-theme=dark] .tabs button,:root[data-theme=dark] .chip,:root[data-theme=dark] .bl{box-shadow:0 4px 16px rgba(0,0,0,.16)}
 
+
+/* Consistent soft-square surfaces across dashboard and every secondary section */
+:root{--surface-soft:rgba(255,255,255,.88);--surface-shadow:0 7px 22px rgba(36,24,24,.065)}
+:root[data-theme=dark]{--surface-soft:rgba(27,29,28,.94);--surface-shadow:0 8px 24px rgba(0,0,0,.24)}
+@media(prefers-color-scheme:dark){
+ :root:not([data-theme=light]){--surface-soft:rgba(27,29,28,.94);--surface-shadow:0 8px 24px rgba(0,0,0,.24)}
+}
+.view:not([data-view=home]) .card,
+#budgetWrap>.card,
+#panel>.card,
+#panel>form.card,
+#homeLimits>.card,
+#homeGoals>.item,
+#recent>.item,
+#allItems>.item,
+#catStats .bl,
+#monthStats .bl,
+#panel>#chat,
+#panel>.chatform,
+#panel>.chips,
+#panel>.muted,
+#panel>.note{
+ background:var(--surface-soft);
+ border:1px solid color-mix(in srgb,var(--line) 78%,var(--acc) 22%);
+ border-radius:17px;
+ box-shadow:var(--surface-shadow);
+}
+#homeLimits>.card,#budgetWrap>.card,#panel>.card,#panel>form.card,
+.view:not([data-view=home]) .card{padding:18px}
+#homeGoals>.item,#recent>.item,#allItems>.item{
+ padding:14px 16px;
+ margin:0 0 9px;
+}
+#homeLimits>.card{margin:0 0 9px}
+#budgetWrap>.sec,#panel>.sec{margin-top:22px}
+#budgetWrap .empty,#homeLimits .empty,#homeGoals .empty,
+#recent .empty,#allItems .empty,#panel .empty{
+ display:block;
+ padding:16px;
+ margin:0 0 10px;
+ background:var(--surface-soft);
+ border:1px solid var(--line);
+ border-radius:16px;
+ box-shadow:var(--surface-shadow);
+ text-align:left;
+}
+#panel>#chat{padding:14px;min-height:90px}
+#panel>.chips{padding:12px;border-radius:17px}
+#panel>.chatform{padding:10px;border-radius:16px}
+#panel>.note{padding:14px;margin-top:12px}
+#panel .msg{border-radius:13px}
+#panel .msg:not(.user){background:var(--card);border-color:var(--line)}
+#panel .field input,#panel .field select,
+#budgetWrap .field input,#budgetWrap .field select{
+ background:var(--bg);
+ border-color:var(--line);
+}
+#panel .actions button,#budgetWrap .actions button{border-radius:11px}
+@media(max-width:759px){
+ #homeLimits>.card,#budgetWrap>.card,#panel>.card,#panel>form.card,
+ .view:not([data-view=home]) .card{padding:16px}
+ #homeGoals>.item,#recent>.item,#allItems>.item{padding:13px}
+}
+
 </style>
 </head>
 <body>
