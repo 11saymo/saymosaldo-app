@@ -338,6 +338,30 @@ button,input,select{letter-spacing:0;line-height:1.4}
  .view[data-view=home]>:nth-child(13),.view[data-view=home]>:nth-child(14),.view[data-view=home]>:nth-child(15),.view[data-view=home]>:nth-child(16),.view[data-view=home]>:nth-child(17){grid-column:1/-1}
 }
 
+
+/* More generous typography and clearer goal-card hierarchy */
+.goal-card{padding:24px!important}
+.goal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.goal-title{font-size:17px;line-height:1.5;letter-spacing:.012em;overflow-wrap:anywhere}
+.goal-percent{flex:none;font-size:14px;font-weight:700;color:var(--acc);padding:5px 10px;border-radius:999px;background:color-mix(in srgb,var(--acc) 10%,var(--card))}
+.goal-meta{display:grid;gap:5px;margin-top:18px;line-height:1.65;letter-spacing:.012em}
+.goal-meta>span,.goal-meta small{font-size:13px;color:var(--mut);line-height:1.6}
+.goal-meta>b{font-size:16px;line-height:1.6;font-weight:650;font-variant-numeric:tabular-nums}
+.goal-meta>b span{font-size:13px;color:var(--mut);font-weight:450}
+.goal-card .bar{height:7px;margin:17px 0 13px}
+.goal-card .actions{gap:10px;margin-top:16px}
+.home-goal-item{align-items:center;gap:15px!important;padding:17px 18px!important}
+.home-goal-copy{display:grid;gap:7px;min-width:0}
+.home-goal-copy>b{font-size:15px;line-height:1.5;letter-spacing:.012em;white-space:normal;overflow-wrap:anywhere}
+.home-goal-copy>small{font-size:13px;line-height:1.65;letter-spacing:.01em;color:var(--mut);white-space:normal}
+.home-goal-copy>small span{color:var(--mut)}
+@media(max-width:759px){
+ .goal-card{padding:20px!important}
+ .goal-title{font-size:16px}
+ .goal-meta{margin-top:15px}
+ .home-goal-item{padding:15px!important;gap:12px!important}
+}
+
 </style>
 </head>
 <body>
@@ -485,7 +509,7 @@ function ask(title,fields,cb){
 const ICON={'Продукты':'🛒','Кафе и рестораны':'☕','Транспорт':'🚌','Покупки':'🛍️','Дом':'🏠','Здоровье':'💊','Развлечения':'🎬','Подписки':'📺','Кредиты и долги':'🏦','Зарплата':'💼','Подработка':'🛠️','Подарок':'🎁'};
 const items=(list,del)=>list.map(x=>`<div class="item"><div style="display:flex;align-items:center;min-width:0"><span class="ico">${ICON[x.category]||'📦'}</span><div style="min-width:0"><b>${esc(x.comment||x.category)}</b><small>${x.comment?esc(x.category)+' · ':''}${fmtDate(x.date)}</small></div></div><div class="amt ${x.type==='income'?'pos':''}">${x.type==='income'?'+':'−'}${money(x.amount)}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`).join('');
 const bar=(l,v,max)=>`<div class="bl"><div class="row"><span>${esc(l)}</span><b>${money(v)}</b></div><div class="bar"><i style="width:${Math.max(2,v/max*100)}%"></i></div></div>`;
-const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="card"><div class="row"><b>${esc(g.name)}</b><small>${Math.round(p)}%</small></div><small>${money(g.saved)} из ${money(g.target)}${g.date?' · до '+fmtDate(g.date):''}</small><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
+const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="card goal-card"><div class="goal-head"><b class="goal-title">${esc(g.name)}</b><span class="goal-percent">${Math.round(p)}%</span></div><div class="goal-meta"><span>Накоплено</span><b>${money(g.saved)} <span>из ${money(g.target)}</span></b>${g.date?`<small>Срок: ${fmtDate(g.date)}</small>`:''}</div><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
 
 function render(){
   const k=nowMk(), m=monthTx(k), inc=sumType(m,'income'), out=sumType(m,'expense');
@@ -508,7 +532,7 @@ function render(){
   $('#count').textContent=list.length+' шт.';
   $('#allItems').innerHTML=items(list,true)||empty('Нет операций по выбранному фильтру.');
   const ring=p=>`<svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" class="rt"/><circle cx="18" cy="18" r="15.9" class="rv" stroke-dasharray="${Math.min(100,p)} 100"/></svg>`;
-  $('#homeGoals').innerHTML=S.goals.slice(0,3).map(g=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="item"><div style="display:flex;align-items:center;min-width:0"><div class="ringbox">${ring(p)}<span>${Math.round(p)}%</span></div><div style="min-width:0"><b>${esc(g.name)}</b><small>${money(g.saved)} из ${money(g.target)}</small></div></div></div>`}).join('')||empty('Цели пока не добавлены.');
+  $('#homeGoals').innerHTML=S.goals.slice(0,3).map(g=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="item home-goal-item"><div class="ringbox">${ring(p)}<span>${Math.round(p)}%</span></div><div class="home-goal-copy"><b>${esc(g.name)}</b><small><span>Накоплено</span> ${money(g.saved)} <span>из</span> ${money(g.target)}</small></div></div>`}).join('')||empty('Цели пока не добавлены.');
   const debtTotal=total(S.debts.map(d=>d.remaining));
   $('#homeDebts').innerHTML=S.debts.length?`<div class="card home-debt-total"><span class="label">Общая задолженность</span><div class="big">${money(debtTotal)}</div>${S.debts.slice(0,3).map(d=>{const original=Math.max(+d.original||0,+d.remaining||0),paid=Math.max(0,original-(+d.remaining||0)),p=original?paid/original*100:0;return `<div class="home-debt-row"><div class="row"><b>${esc(d.name)}</b><b>${money(d.remaining)}</b></div><small>${esc(d.kind)} · платёж ${money(d.monthly)} в месяц</small><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')}${S.debts.length>3?`<small>И ещё ${S.debts.length-3} обязательств</small>`:''}<button class="ghost" data-go="more" data-tab-target="debts">Открыть задолженность</button></div>`:empty('Задолженностей пока нет. Добавьте кредит или другое обязательство в разделе «Ещё».');
   $('#homeLimits').innerHTML=S.budgets.slice(0,3).map(b=>{const sp=spent(b.category),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><small>${money(sp)} из ${money(b.limit)}</small></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div></div>`}).join('')||empty('Лимиты не установлены. Их можно задать в разделе «Бюджет».');
