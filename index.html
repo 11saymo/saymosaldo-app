@@ -408,7 +408,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
       <div id="homeDebts" class="list"></div>
       <div class="sec"><h2>Последние операции</h2><button class="link" data-go="ops">Все</button></div>
       <div id="recent" class="list"></div>
-      <p class="note">Данные хранятся в этом браузере. Делайте резервную копию в разделе «Ещё».</p>
+      <p class="note">Без входа данные хранятся в браузере; при входе синхронизируются с аккаунтом. Резервную копию можно сохранить в разделе «Ещё».</p>
     </section>
 
     <section class="view" data-view="ops" hidden>
@@ -569,7 +569,7 @@ function render(){
   $('#homeGoals').innerHTML=S.goals.slice(0,3).map(g=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="item home-goal-item"><div class="ringbox">${ring(p)}<span>${Math.round(p)}%</span></div><div class="home-goal-copy"><b>${esc(g.name)}</b><small><span>Накоплено</span> ${money(g.saved)} <span>из</span> ${money(g.target)}</small></div></div>`}).join('')||empty('Цели пока не добавлены.');
   const debtTotal=total(S.debts.map(d=>d.remaining));
   $('#homeDebts').innerHTML=S.debts.length?`<div class="card home-debt-total"><span class="label">Общая задолженность</span><div class="big">${money(debtTotal)}</div>${S.debts.slice(0,3).map(d=>{const original=Math.max(+d.original||0,+d.remaining||0),paid=Math.max(0,original-(+d.remaining||0)),p=original?paid/original*100:0;return `<div class="home-debt-row"><div class="row"><b>${esc(d.name)}</b><b>${money(d.remaining)}</b></div><small>${esc(d.kind)} · платёж ${money(d.monthly)} в месяц</small><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')}${S.debts.length>3?`<small>И ещё ${S.debts.length-3} обязательств</small>`:''}<button class="ghost" data-go="more" data-tab-target="debts">Открыть задолженность</button></div>`:empty('Задолженностей пока нет. Добавьте кредит или другое обязательство в разделе «Ещё».');
-  $('#homeLimits').innerHTML=S.budgets.slice(0,3).map(b=>{const sp=spent(b.category),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><small>${money(sp)} из ${money(b.limit)}</small></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div></div>`}).join('')||empty('Лимиты не установлены. Их можно задать в разделе «Бюджет».');
+  $('#homeLimits').innerHTML=S.budgets.slice(0,3).map(b=>{const sp=spent(b.category),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><small>${money(sp)} из ${money(b.limit)}</small></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div><small>${p>100?`Превышение на ${money(sp-b.limit)}`:`Осталось ${money(Math.max(0,b.limit-sp))}`}</small></div>`}).join('')||empty('Лимиты не установлены. Их можно задать в разделе «Бюджет».');
   const by={};
   m.filter(x=>x.type==='expense').forEach(x=>by[x.category]=(by[x.category]||0)+(+x.amount||0));
   const ents=Object.entries(by).sort((a,b)=>b[1]-a[1]), max=ents[0]?.[1]||1;
@@ -588,7 +588,7 @@ const PANELS={
 
   budgets:()=>{
     const m=monthTx(nowMk()).filter(x=>x.type==='expense');
-    return `${S.budgets.map(b=>{const sp=total(m.filter(x=>x.category===b.category).map(x=>x.amount)),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><button class="link danger" data-act="budget-del" data-cat="${esc(b.category)}">Удалить</button></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div><small>${money(sp)} из ${money(b.limit)} · ${p>100?'превышение':Math.round(p)+'%'}</small></div>`}).join('')||empty('Лимиты не установлены.')}
+    return `${S.budgets.map(b=>{const sp=total(m.filter(x=>x.category===b.category).map(x=>x.amount)),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><button class="link danger" data-act="budget-del" data-cat="${esc(b.category)}">Удалить</button></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div><small>${money(sp)} из ${money(b.limit)} · ${Math.round(p)}%</small><small>${p>100?`Превышение на ${money(sp-b.limit)}`:`Осталось ${money(Math.max(0,b.limit-sp))}`}</small></div>`}).join('')||empty('Лимиты не установлены.')}
     <div class="sec"><h2>Новый лимит на месяц</h2></div>
     <form class="card" data-form="budget"><label class="field"><span>Категория</span><select name="category">${catOpts('expense')}</select></label>${field('limit','Лимит, ₽','number','required min="1"')}<button class="primary">Сохранить лимит</button></form>`;
   },
