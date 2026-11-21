@@ -993,7 +993,7 @@ function setAuthGateMode(mode){
   $('#authGateUsernameWrap').hidden=false;$('#authGateUsername').required=true;
   $('#authGateLegacyEmailWrap').hidden=true;$('#authGateLegacyEmail').required=false;
   $('#authGateUsername').disabled=false;$('#authGateLegacyEmail').disabled=true;
-  $('#authGatePassword').autocomplete=signup?'new-password':'current-password';
+  $('#authGatePassword').autocomplete=signup?'new-password':'current-password';$('#authGatePassword').minLength=12;
   $('#authGateSubmit').textContent=signup?'Создать аккаунт':'Войти';
   $('#authGateSubmit').dataset.authAction=signup?'signup':'signin';
   $('#authGateMode').textContent=signup?'Уже есть аккаунт? Войти':'Создать аккаунт';
@@ -1009,7 +1009,7 @@ function setLegacyGateMode(){
   $('#authGateUsernameWrap').hidden=true;$('#authGateUsername').required=false;$('#authGateUsername').disabled=true;
   $('#authGateLegacyEmailWrap').hidden=false;$('#authGateLegacyEmail').required=true;$('#authGateLegacyEmail').disabled=false;
   $('#authGateConfirmWrap').hidden=true;$('#authGateConfirm').required=false;
-  $('#authGatePassword').autocomplete='current-password';
+  $('#authGatePassword').autocomplete='current-password';$('#authGatePassword').minLength=1;
   $('#authGateSubmit').textContent='Войти по почте';
   $('#authGateSubmit').dataset.authAction='legacy-signin';
   const legacy=$('[data-auth-gate="legacy"]');
