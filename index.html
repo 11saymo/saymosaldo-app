@@ -803,7 +803,7 @@ function writeLocalState(prefix){KEYS.forEach(k=>localStorage.setItem(prefix+k,J
 function guestHasData(){return stateHasData(readLocalState(KEY))}
 function initSB(){
   if(!window.supabase){renderPanel();return}
-  sb=window.supabase.createClient(SB_URL,SB_KEY);
+  sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
   sb.auth.onAuthStateChange((_event,session)=>{
     const nextUser=(session&&session.user)||null;
     if((nextUser?.id||null)===(user?.id||null)&&accountReady)return;
