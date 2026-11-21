@@ -417,13 +417,14 @@ body.auth-locked .auth-gate{display:grid}
     <p class="auth-brand">SaymoSaldo</p><h1 id="authGateTitle">С возвращением</h1>
     <p class="auth-lead" id="authGateLead">Войдите, чтобы открыть свой финансовый кабинет.</p>
     <form id="authGateForm" class="auth-form" data-form="auth-gate">
-      <label class="field"><span>Электронная почта</span><input id="authGateEmail" name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label>
+      <label class="field" id="authGateUsernameWrap"><span>Логин</span><input id="authGateUsername" name="username" type="text" required minlength="3" maxlength="24" autocapitalize="none" spellcheck="false" autocomplete="username" placeholder="Придумайте логин"></label>
+      <label class="field" id="authGateLegacyEmailWrap" hidden><span>Почта старого аккаунта</span><input id="authGateLegacyEmail" name="legacyEmail" type="email" autocomplete="email" placeholder="you@example.com"></label>
       <label class="field"><span>Пароль</span><input id="authGatePassword" name="password" type="password" minlength="12" maxlength="72" required autocomplete="current-password" placeholder="Не менее 12 символов"></label>
       <label class="field" id="authGateConfirmWrap" hidden><span>Повторите пароль</span><input id="authGateConfirm" name="confirmPassword" type="password" minlength="12" maxlength="72" autocomplete="new-password" placeholder="Повторите пароль"></label>
       <button class="primary auth-submit" id="authGateSubmit" type="submit" data-auth-action="signin">Войти</button>
     </form>
-    <div class="auth-links"><button class="link" type="button" data-auth-gate="reset">Забыли пароль?</button><button class="link" type="button" id="authGateMode" data-auth-gate="signup">Создать аккаунт</button></div>
-    <p class="auth-hint" id="authGateHint">Ваши финансовые данные доступны только после входа в аккаунт.</p>
+    <div class="auth-links"><button class="link" type="button" data-auth-gate="legacy">У меня уже есть аккаунт по почте</button><button class="link" type="button" id="authGateMode" data-auth-gate="signup">Создать аккаунт</button></div>
+    <p class="auth-hint" id="authGateHint">Логин — от 3 до 24 символов: латинские буквы, цифры, точка, дефис или подчёркивание. Пароль — от 12 символов. Восстановление пароля по почте не предусмотрено.</p>
     <p class="auth-status" id="authGateStatus" role="status" aria-live="polite"></p>
     <form id="authRecoveryForm" class="auth-form" data-form="auth-recovery" hidden>
       <label class="field"><span>Новый пароль</span><input name="password" type="password" minlength="12" maxlength="72" required autocomplete="new-password" placeholder="Не менее 12 символов"></label>
@@ -718,9 +719,10 @@ document.addEventListener('submit',e=>{
     const action=e.submitter?.dataset.authAction;
     if(action==='signup'){
       if(values.password!==values.confirmPassword){$('#authGateStatus').textContent='Пароли не совпадают.';return}
-      return authSignUp(values.email,values.password,true);
+      return authSignUp(values.username,values.password,true);
     }
-    return authSignIn(values.email,values.password,true);
+    if(action==='legacy-signin')return authLegacySignIn(values.legacyEmail,values.password);
+    return authSignIn(values.username,values.password,true);
   }
   if(f==='auth'){
     const action=e.submitter?.dataset.authAction;
@@ -729,6 +731,7 @@ document.addEventListener('submit',e=>{
     return;
   }
   if(f==='set-password')return authSetPassword(values.password);
+  if(f==='claim-username')return claimUsername(values.username);
   if(f==='login')return sendLink(values.email);
   const err=FORMS[f](values);
   if(err)return toast(err);
@@ -985,14 +988,34 @@ function setAuthGateMode(mode){
   authGateMode=mode==='signup'?'signup':'signin';
   const signup=authGateMode==='signup';
   $('#authGateTitle').textContent=signup?'Создать аккаунт':'С возвращением';
-  $('#authGateLead').textContent=signup?'Зарегистрируйтесь по электронной почте, чтобы начать пользоваться SaymoSaldo.':'Войдите, чтобы открыть свой финансовый кабинет.';
+  $('#authGateLead').textContent=signup?'Придумайте логин и пароль для своего финансового кабинета.':'Введите логин и пароль, чтобы открыть свой финансовый кабинет.';
   $('#authGateConfirmWrap').hidden=!signup;$('#authGateConfirm').required=signup;
+  $('#authGateUsernameWrap').hidden=false;$('#authGateUsername').required=true;
+  $('#authGateLegacyEmailWrap').hidden=true;$('#authGateLegacyEmail').required=false;
+  $('#authGateUsername').disabled=false;$('#authGateLegacyEmail').disabled=true;
   $('#authGatePassword').autocomplete=signup?'new-password':'current-password';
   $('#authGateSubmit').textContent=signup?'Создать аккаунт':'Войти';
   $('#authGateSubmit').dataset.authAction=signup?'signup':'signin';
   $('#authGateMode').textContent=signup?'Уже есть аккаунт? Войти':'Создать аккаунт';
   $('#authGateMode').dataset.authGate=signup?'signin':'signup';
-  $('#authGateHint').textContent=signup?'Пароль должен содержать не менее 12 символов. После регистрации подтвердите почту по ссылке из письма.':'Ваши финансовые данные доступны только после входа в аккаунт.';
+  const legacy=$('[data-auth-gate="legacy"]');
+  if(legacy){legacy.hidden=false;legacy.textContent='У меня уже есть аккаунт по почте';}
+  $('#authGateHint').textContent=signup?'Логин: 3–24 символа, латиница, цифры, точка, дефис или подчёркивание. Пароль: не менее 12 символов. Почта не нужна.':'Если у вас уже был аккаунт с почтой, войдите по старой почте один раз и затем задайте логин в настройках.';
+  $('#authGateStatus').textContent='';
+}
+function setLegacyGateMode(){
+  $('#authGateTitle').textContent='Вход в старый аккаунт';
+  $('#authGateLead').textContent='Введите почту и пароль, которыми пользовались раньше. После входа сможете выбрать логин в настройках.';
+  $('#authGateUsernameWrap').hidden=true;$('#authGateUsername').required=false;$('#authGateUsername').disabled=true;
+  $('#authGateLegacyEmailWrap').hidden=false;$('#authGateLegacyEmail').required=true;$('#authGateLegacyEmail').disabled=false;
+  $('#authGateConfirmWrap').hidden=true;$('#authGateConfirm').required=false;
+  $('#authGatePassword').autocomplete='current-password';
+  $('#authGateSubmit').textContent='Войти по почте';
+  $('#authGateSubmit').dataset.authAction='legacy-signin';
+  const legacy=$('[data-auth-gate="legacy"]');
+  if(legacy){legacy.hidden=false;legacy.textContent='Вернуться ко входу по логину';}
+  $('#authGateMode').hidden=true;
+  $('#authGateHint').textContent='Это временный способ перенести существующий аккаунт. Финансовые данные сохранятся.';
   $('#authGateStatus').textContent='';
 }
 function unlockApp(){document.body.classList.remove('auth-locked');$('#authGateStatus').textContent='';if(user&&accountReady&&!localStorage.getItem(KEY+'onboarding'))showWelcome()}
@@ -1003,28 +1026,63 @@ async function sendLink(email){
   toast(error?'Не удалось отправить ссылку: '+error.message:'Ссылка отправлена на почту. Проверьте также папку «Спам».');
 }
 function validPassword(password){return typeof password==='string'&&password.length>=12&&password.length<=72}
-async function authSignIn(email,password,fromGate=false){
+function normalizeUsername(value){return typeof value==='string'?value.trim().toLowerCase():''}
+function usernameEmail(username){return normalizeUsername(username)+'@accounts.saymosaldo.app'}
+function usernameValid(username){return /^[a-z0-9][a-z0-9._-]{2,23}$/.test(normalizeUsername(username))}
+async function authSignIn(username,password,fromGate=false){
   const status=fromGate?$('#authGateStatus'):null;
+  const login=normalizeUsername(username);
   if(!sb){if(status)status.textContent='Сервис входа пока не подключён.';else toast('Вход пока не настроен');return}
-  if(!email||!password){if(status)status.textContent='Укажите почту и пароль.';else toast('Укажите почту и пароль.');return}
+  if(!usernameValid(login)||!password){if(status)status.textContent='Проверьте логин и пароль.';else toast('Проверьте логин и пароль.');return}
   if(status)status.textContent='Проверяем данные…';
   try{
-    const {error}=await sb.auth.signInWithPassword({email:email.trim(),password});
-    if(error){const msg='Не удалось войти. Проверьте почту и пароль.';if(status)status.textContent=msg;else toast(msg)}
+    const {error}=await sb.auth.signInWithPassword({email:usernameEmail(login),password});
+    if(error){const msg='Не удалось войти. Проверьте логин и пароль.';if(status)status.textContent=msg;else toast(msg)}
   }catch(error){const msg='Не удалось выполнить вход. Проверьте подключение к интернету.';if(status)status.textContent=msg;else toast(msg)}
 }
-async function authSignUp(email,password,fromGate=false){
+async function authLegacySignIn(email,password){
+  const status=$('#authGateStatus');
+  if(!sb||!email||!password){status.textContent='Введите старую почту и пароль.';return}
+  status.textContent='Проверяем старый аккаунт…';
+  try{
+    const {error}=await sb.auth.signInWithPassword({email:email.trim(),password});
+    if(error)status.textContent='Не удалось войти. Проверьте старую почту и пароль.';
+  }catch(error){status.textContent='Не удалось выполнить вход. Проверьте подключение.'}
+}
+async function authSignUp(username,password,fromGate=false){
   const status=fromGate?$('#authGateStatus'):null;
-  if(!sb){if(status)status.textContent='Регистрация пока не настроена.';else toast('Регистрация пока не настроена');return}
-  if(!email||!validPassword(password)){const msg='Пароль должен содержать не менее 12 символов.';if(status)status.textContent=msg;else toast(msg);return}
+  const login=normalizeUsername(username);
+  if(!sb){if(status)status.textContent='Сервис входа пока не подключён.';else toast('Вход пока не настроен');return}
+  if(!usernameValid(login)){if(status)status.textContent='Логин должен содержать 3–24 допустимых символа.';else toast('Проверьте логин.');return}
+  if(!validPassword(password)){if(status)status.textContent='Пароль должен содержать от 12 до 72 символов.';else toast('Пароль должен содержать не менее 12 символов.');return}
   if(status)status.textContent='Создаём аккаунт…';
   try{
-    const {error}=await sb.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:location.href.split('#')[0]}});
-    if(error){const msg='Не удалось создать аккаунт: '+error.message;if(status)status.textContent=msg;else toast(msg);return}
-    const msg='Аккаунт создан. Проверьте почту и подтвердите адрес по ссылке из письма, затем войдите.';
-    if(status)status.textContent=msg;else toast(msg);
-    if(fromGate){$('#authGateForm').reset();setAuthGateMode('signin');$('#authGateStatus').textContent=msg}
+    const {data,error}=await sb.functions.invoke('username-auth',{body:{action:'register',username:login,password}});
+    if(error||!data?.ok){
+      const code=data?.error||error?.message;
+      const messages={username_taken:'Этот логин уже занят. Выберите другой.',rate_limited:'Слишком много попыток. Подождите 10 минут.',temporarily_unavailable:'Сервис временно недоступен. Попробуйте позже.',registration_failed:'Не удалось создать аккаунт. Проверьте данные.'};
+      const msg=messages[code]||'Не удалось создать аккаунт. Попробуйте другой логин.';
+      if(status)status.textContent=msg;else toast(msg);return;
+    }
+    const {error:loginError}=await sb.auth.signInWithPassword({email:usernameEmail(login),password});
+    if(loginError){const msg='Аккаунт создан, но автоматический вход не удался. Теперь войдите по логину и паролю.';if(status)status.textContent=msg;else toast(msg);return}
+    if(status)status.textContent='Аккаунт создан. Добро пожаловать!';
   }catch(error){const msg='Не удалось создать аккаунт. Проверьте подключение к интернету.';if(status)status.textContent=msg;else toast(msg)}
+}
+async function claimUsername(username){
+  const login=normalizeUsername(username);
+  if(!sb||!user)return toast('Сначала войдите в аккаунт.');
+  if(!usernameValid(login))return toast('Логин должен содержать 3–24 допустимых символа.');
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session?.access_token)return toast('Сессия истекла. Войдите ещё раз.');
+  const {data,error}=await sb.functions.invoke('username-auth',{body:{action:'claim',username:login},headers:{Authorization:'Bearer '+session.access_token}});
+  if(error||!data?.ok){
+    const messages={username_taken:'Этот логин уже занят.',authentication_required:'Сессия истекла. Войдите ещё раз.',username_update_failed:'Не удалось изменить логин.'};
+    return toast(messages[data?.error]||'Не удалось сохранить логин.');
+  }
+  await sb.auth.refreshSession();
+  toast('Логин сохранён. Ваши финансовые данные на месте.');
+  renderPanel();
 }
 function showRecoveryScreen(){
   document.body.classList.add('auth-locked');
@@ -1083,8 +1141,16 @@ async function logout(){
   toast('Вы вышли из аккаунта');
 }
 function accountCard(){
-  if(user)return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как '+esc(user.email||'аккаунт')+'. Данные этого аккаунта отделены от данных на устройстве.</p><form class="chatform" data-form="set-password"><input name="password" type="password" minlength="12" maxlength="72" required placeholder="Новый пароль (от 12 символов)" autocomplete="new-password"><button class="primary">Установить / изменить пароль</button></form><p class="muted" style="font-size:12px;margin:8px 0">Если вы раньше входили по ссылке из письма, можно задать пароль здесь.</p>'+(accountReady&&syncAllowed&&!accountHasData&&guestHasData()?'<button class="ghost" data-act="import-device-data">Перенести данные с этого устройства в аккаунт</button>':'')+'<button class="ghost" data-act="logout">Выйти</button></div>';
-  return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Создайте аккаунт по почте и паролю или войдите в существующий.</p><form class="chatform" data-form="auth"><input id="authEmail" name="email" type="email" required placeholder="Электронная почта" autocomplete="email"><input name="password" type="password" minlength="12" maxlength="72" required placeholder="Пароль (от 12 символов)" autocomplete="current-password"><button class="primary" type="submit" data-auth-action="signin">Войти</button><button class="ghost" type="submit" data-auth-action="signup">Создать аккаунт</button></form><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="link" type="button" data-act="auth-reset">Забыли пароль?</button><button class="link" type="button" data-act="auth-link">Войти по ссылке из письма</button></div><p class="muted" style="font-size:12px;margin-top:10px">Для регистрации подтвердите адрес по ссылке в письме. Пароль должен содержать не менее 12 символов.</p></div>';
+  if(user){
+    const currentUsername=user.user_metadata?.username||'';
+    const isUsernameAccount=(user.email||'').endsWith('@accounts.saymosaldo.app');
+    return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">'+(isUsernameAccount?'Ваш логин: <b>'+esc(currentUsername||user.email.split('@')[0])+'</b>':'Старый аккаунт: '+esc(user.email||'аккаунт'))+'. Финансовые данные привязаны к этому аккаунту.</p>'+
+      (isUsernameAccount?'':'<form class="chatform" data-form="claim-username"><input name="username" type="text" required minlength="3" maxlength="24" autocapitalize="none" spellcheck="false" placeholder="Новый логин (3–24 символа)"><button class="primary">Перейти на вход по логину</button></form><p class="muted" style="font-size:12px;margin:8px 0">После перехода вход будет выполняться по логину и паролю. Почта для входа больше не понадобится.</p>')+
+      '<form class="chatform" data-form="set-password"><input name="password" type="password" minlength="12" maxlength="72" required placeholder="Новый пароль (от 12 символов)" autocomplete="new-password"><button class="primary">Изменить пароль</button></form>'+
+      (accountReady&&syncAllowed&&!accountHasData&&guestHasData()?'<button class="ghost" data-act="import-device-data">Перенести данные с этого устройства в аккаунт</button>':'')+
+      '<button class="ghost" data-act="logout">Выйти</button></div>';
+  }
+  return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Войдите по логину и паролю или создайте новый аккаунт.</p><form class="chatform" data-form="auth"><input name="username" type="text" required minlength="3" maxlength="24" autocapitalize="none" spellcheck="false" placeholder="Логин" autocomplete="username"><input name="password" type="password" minlength="12" maxlength="72" required placeholder="Пароль (от 12 символов)" autocomplete="current-password"><button class="primary" type="submit" data-auth-action="signin">Войти</button><button class="ghost" type="submit" data-auth-action="signup">Создать аккаунт</button></form><p class="muted" style="font-size:12px;margin-top:10px">Для существующих аккаунтов временно доступен вход по старой почте на главном экране. Пароль должен содержать не менее 12 символов.</p></div>';
 }
 const TOUR=[
  {view:'home',sel:'#balance',t:'Главная',x:'Здесь видно баланс месяца, доходы и расходы. Всё обновляется сразу после записи операции.'},
@@ -1124,8 +1190,12 @@ document.addEventListener('click',e=>{
   const gateAction=e.target.closest('[data-auth-gate]')?.dataset.authGate;
   if(gateAction){
     e.preventDefault();
-    if(gateAction==='signup'||gateAction==='signin')return setAuthGateMode(gateAction);
-    if(gateAction==='reset')return authReset($('#authGateEmail').value,true);
+    if(gateAction==='signup'||gateAction==='signin'){ $('#authGateMode').hidden=false; return setAuthGateMode(gateAction); }
+    if(gateAction==='legacy'){ 
+      if($('#authGateLegacyEmailWrap').hidden){setLegacyGateMode();}
+      else {$('#authGateMode').hidden=false;setAuthGateMode('signin');}
+      return;
+    }
   }
 });
 document.addEventListener('click',e=>{
