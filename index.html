@@ -501,9 +501,10 @@ async function activateAccount(nextUser){
     if(generation!==authGeneration)return;
     if(error)throw error;
     const remote=(data&&data.data)||{};
-    if(stateHasData(remote)){
+    const remoteHasState=KEYS.some(k=>Array.isArray(remote[k]));
+    if(remoteHasState){
       applyState(remote);
-      accountHasData=true;
+      accountHasData=stateHasData(remote);
     }else{
       const cached=readLocalState(prefix);
       if(stateHasData(cached))applyState(cached);
