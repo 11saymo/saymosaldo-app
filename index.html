@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="SaymoSaldo — учёт расходов, бюджета и задолженности. Данные хранятся на вашем устройстве.">
+<meta name="description" content="SaymoSaldo — учёт расходов, бюджет, цели и платежи. Данные хранятся в браузере и синхронизируются в облаке при входе в аккаунт.">
 <meta name="theme-color" content="#0d0e0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SaymoSaldo">
@@ -618,9 +618,9 @@ const PANELS={
     <div class="actions"><button class="link" data-act="chat-clear">Очистить историю этого режима</button></div>`,
 
   settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `${accountCard()}<div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
-  data:()=>`<div class="card"><p>Резервная копия содержит операции, цели, лимиты, платежи и долги. Файл содержит ваши финансовые записи, не передавайте его посторонним.</p>
+  data:()=>`<div class="card"><p>Резервная копия содержит операции, цели, лимиты, платежи, долги и историю финансового помощника. Файл содержит ваши финансовые записи, не передавайте его посторонним.</p>
     <div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div>
-    <p class="note">Данные хранятся только в этом браузере. Очистка данных сайта может их удалить, поэтому делайте копию регулярно. Не вводите пароли, коды подтверждения и номера карт.</p>`
+    <p class="note">${user?'Данные аккаунта синхронизируются с облаком. Для дополнительной защиты регулярно сохраняйте резервную копию.':'Без входа данные хранятся в этом браузере. Очистка данных сайта может их удалить, поэтому регулярно сохраняйте резервную копию.'} Не передавайте файл посторонним и не вводите сюда пароли, коды подтверждения и номера карт.</p>`
 };
 
 function renderPanel(){
