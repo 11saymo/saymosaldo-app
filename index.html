@@ -170,6 +170,36 @@ input,select{border-radius:12px}
   .nav{max-width:560px;border-radius:0}
 }
 
+
+/* Ambient finance-inspired background: layered color, fine grid and soft rings */
+body{position:relative;isolation:isolate;background:var(--bg);overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:
+ radial-gradient(ellipse 620px 500px at 4% 8%,rgba(122,31,43,.13),transparent 72%),
+ radial-gradient(ellipse 520px 440px at 96% 18%,rgba(190,151,105,.13),transparent 70%),
+ radial-gradient(ellipse 620px 520px at 82% 92%,rgba(122,31,43,.075),transparent 72%),
+ linear-gradient(rgba(122,31,43,.025) 1px,transparent 1px),
+ linear-gradient(90deg,rgba(122,31,43,.025) 1px,transparent 1px);
+ background-size:auto,auto,auto,34px 34px,34px 34px;
+ mask-image:linear-gradient(to bottom,black 0%,rgba(0,0,0,.85) 65%,transparent 100%)}
+body::after{content:"";position:fixed;z-index:-1;pointer-events:none;width:420px;height:420px;right:-190px;top:150px;border:1px solid rgba(122,31,43,.12);border-radius:50%;box-shadow:0 0 0 28px rgba(122,31,43,.025),0 0 0 58px rgba(122,31,43,.02),0 0 0 90px rgba(122,31,43,.015)}
+.app{position:relative}
+@media(prefers-color-scheme:dark){
+ body::before{background:
+ radial-gradient(ellipse 620px 500px at 4% 8%,rgba(224,112,125,.14),transparent 72%),
+ radial-gradient(ellipse 520px 440px at 96% 18%,rgba(197,151,99,.09),transparent 70%),
+ radial-gradient(ellipse 620px 520px at 82% 92%,rgba(224,112,125,.08),transparent 72%),
+ linear-gradient(rgba(224,112,125,.035) 1px,transparent 1px),
+ linear-gradient(90deg,rgba(224,112,125,.035) 1px,transparent 1px)}
+ body::after{border-color:rgba(224,112,125,.15);box-shadow:0 0 0 28px rgba(224,112,125,.035),0 0 0 58px rgba(224,112,125,.025),0 0 0 90px rgba(224,112,125,.018)}
+}
+:root[data-theme=dark] body::before{background:
+ radial-gradient(ellipse 620px 500px at 4% 8%,rgba(224,112,125,.14),transparent 72%),
+ radial-gradient(ellipse 520px 440px at 96% 18%,rgba(197,151,99,.09),transparent 70%),
+ radial-gradient(ellipse 620px 520px at 82% 92%,rgba(224,112,125,.08),transparent 72%),
+ linear-gradient(rgba(224,112,125,.035) 1px,transparent 1px),
+ linear-gradient(90deg,rgba(224,112,125,.035) 1px,transparent 1px)}
+:root[data-theme=dark] body::after{border-color:rgba(224,112,125,.15);box-shadow:0 0 0 28px rgba(224,112,125,.035),0 0 0 58px rgba(224,112,125,.025),0 0 0 90px rgba(224,112,125,.018)}
+
 </style>
 </head>
 <body>
