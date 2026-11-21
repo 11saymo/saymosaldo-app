@@ -649,7 +649,7 @@ document.addEventListener('submit',e=>{
 });
 
 function fillTx(){$('#txCat').innerHTML=catOpts(document.querySelector('#txForm [name=type]:checked').value)}
-$('#txForm').addEventListener('change',fillTx);
+$('#txForm').addEventListener('change',e=>{if(e.target.name==='type')fillTx()});
 $('#txForm').addEventListener('submit',e=>{
   e.preventDefault();
   if(user&&!accountReady)return;
