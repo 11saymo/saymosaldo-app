@@ -709,7 +709,7 @@ document.addEventListener('submit',e=>{
   e.preventDefault();
   const values=Object.fromEntries(new FormData(e.target));
   if(f==='auth-gate'){
-    const action=e.submitter?.dataset.authAction;
+    const action=e.submitter?.dataset.authAction||e.target.querySelector('[data-auth-action]')?.dataset.authAction;
     if(action==='signup'){
       if(values.password!==values.confirmPassword){$('#authGateStatus').textContent='Пароли не совпадают.';return}
       return authSignUp(values.username,values.password,true);
@@ -718,7 +718,7 @@ document.addEventListener('submit',e=>{
     return authSignIn(values.username,values.password,true);
   }
   if(f==='auth'){
-    const action=e.submitter?.dataset.authAction;
+    const action=e.submitter?.dataset.authAction||e.target.querySelector('[data-auth-action]')?.dataset.authAction;
     if(action==='signup')return authSignUp(values.username,values.password);
     if(action==='signin')return authSignIn(values.username,values.password);
     return;
