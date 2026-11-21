@@ -849,11 +849,16 @@ async function pushRemote(){
   const payload={};KEYS.forEach(k=>payload[k]=S[k]);
   try{payload.chat_finance=JSON.parse(localStorage.getItem(KEY+'user_'+uid+'_chat_finance')||'[]')}catch{payload.chat_finance=[]}
   const task=(async()=>{
-    const {error}=await sb.from('user_data').upsert({user_id:uid,data:payload,updated_at:new Date().toISOString()});
-    if(uid!==user?.id)return false;
-    if(error){toast('Не удалось сохранить в облако. Данные остались на этом устройстве.');return false}
-    accountHasData=stateHasData(payload);
-    return true;
+    try{
+      const {error}=await sb.from('user_data').upsert({user_id:uid,data:payload,updated_at:new Date().toISOString()});
+      if(uid!==user?.id)return false;
+      if(error){toast('Не удалось сохранить в облако. Данные остались на этом устройстве.');return false}
+      accountHasData=stateHasData(payload);
+      return true;
+    }catch(error){
+      if(uid===user?.id)toast('Не удалось сохранить в облако. Данные остались на этом устройстве.');
+      return false;
+    }
   })();
   syncInFlight=task;
   const ok=await task;
