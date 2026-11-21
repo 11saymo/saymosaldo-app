@@ -121,6 +121,55 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .ov-card p{margin-bottom:18px}
 .tour-card{position:fixed;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom) + 92px);max-width:420px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;z-index:70;box-shadow:0 12px 40px rgba(0,0,0,.3)}
 .tour-hl{outline:3px solid var(--acc)!important;outline-offset:4px;border-radius:12px}
+
+/* SaymoSaldo experience refresh */
+:root{--r:18px;--shadow:0 8px 28px rgba(24,28,24,.055)}
+body{background:radial-gradient(ellipse at 12% 0%,rgba(122,31,43,.055),transparent 34%),var(--bg)}
+.app{max-width:1120px;padding:calc(env(safe-area-inset-top) + 30px) 28px calc(env(safe-area-inset-bottom) + 116px)}
+.top{margin-bottom:26px;align-items:center}
+h1{font-size:30px;letter-spacing:-.035em}
+.card,.item{border-radius:18px;box-shadow:var(--shadow)}
+.card{padding:20px}
+.hero{padding:26px;background:linear-gradient(125deg,#852d3a 0%,#5a1724 58%,#3e1420 100%);box-shadow:0 14px 34px rgba(92,23,36,.18)}
+.hero .big{font-size:clamp(34px,4vw,46px);margin:8px 0 18px}
+.hero .split b{font-size:19px}
+.greet{font-size:16px;margin:-14px 0 2px;color:var(--mut)}
+.status{padding:13px 16px;border:1px solid var(--line);border-radius:14px;background:var(--card);margin:0 0 8px;align-self:end}
+.quick{gap:12px}
+.qbtn{min-height:88px;background:var(--card);box-shadow:var(--shadow);transition:transform .16s,border-color .16s}
+.qbtn:active{transform:translateY(1px)}
+.qbtn span{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:rgba(122,31,43,.09);color:var(--acc)}
+.sec{margin:18px 0 8px}
+.sec h2{font-size:16px;letter-spacing:-.01em}
+.week{height:150px}
+.wb i{min-height:5px}
+.nav{max-width:1120px;border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0;box-shadow:0 -8px 28px rgba(20,20,20,.06);padding:10px 18px calc(env(safe-area-inset-bottom) + 10px)}
+.nav button{font-size:12px}
+.nav .fab{box-shadow:0 8px 18px rgba(20,20,20,.18)}
+button{transition:background .16s,border-color .16s,transform .16s}
+button:not(:disabled):active{transform:translateY(1px)}
+input,select{border-radius:12px}
+.ov-card{padding:28px;border-radius:24px;box-shadow:0 24px 80px rgba(0,0,0,.22)}
+.ov-card h2{font-size:23px;letter-spacing:-.025em}
+.ov-card p{line-height:1.6}
+@media(min-width:760px){
+  .view[data-view=home]:not([hidden]){display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:18px;align-items:start}
+  .view[data-view=home]>:nth-child(1),.view[data-view=home]>:nth-child(13){grid-column:1/-1}
+  .view[data-view=home]>:nth-child(2),.view[data-view=home]>:nth-child(5),.view[data-view=home]>:nth-child(6){grid-column:1/8}
+  .view[data-view=home]>:nth-child(3),.view[data-view=home]>:nth-child(4),.view[data-view=home]>:nth-child(7),.view[data-view=home]>:nth-child(8){grid-column:8/13}
+  .view[data-view=home]>:nth-child(9),.view[data-view=home]>:nth-child(10){grid-column:1/7}
+  .view[data-view=home]>:nth-child(11),.view[data-view=home]>:nth-child(12){grid-column:7/13}
+  .view[data-view=home]>.sec{align-self:end}
+}
+@media(max-width:759px){
+  .app{max-width:560px;padding-left:16px;padding-right:16px}
+  h1{font-size:26px}
+  .card{padding:16px}
+  .hero{padding:20px}
+  .hero .big{font-size:34px}
+  .nav{max-width:560px;border-radius:0}
+}
+
 </style>
 </head>
 <body>
@@ -273,7 +322,7 @@ function render(){
   const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(x=>x.amount));
   const overN=S.budgets.filter(b=>spent(b.category)>b.limit).length;
   const h=new Date().getHours();
-  $('#greet').textContent=h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер';
+  $('#greet').textContent=(h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+', рады видеть вас в SaymoSaldo!';
   $('#monthLabel').textContent=monthName(k);
   $('#balance').textContent=money(inc-out);
   $('#income').textContent=money(inc);
@@ -570,7 +619,7 @@ const TOUR=[
 let tourI=0;
 function showWelcome(){
   const d=document.createElement('div');d.id='welcome';d.className='overlay';
-  d.innerHTML='<div class="ov-card"><h2>Добро пожаловать в SaymoSaldo</h2><p class="muted">Хотите пройти короткое обучение? Оно займёт около минуты и покажет основные разделы. Открыть его позже можно в «Ещё → Настройки».</p><div style="display:grid;gap:8px"><button class="primary" data-act="welcome-yes">Пройти обучение</button><button class="ghost" data-act="welcome-no">Пропустить</button></div></div>';
+  d.innerHTML='<div class="ov-card"><div style="font-size:34px;margin-bottom:12px">✦</div><h2>Добро пожаловать в SaymoSaldo!</h2><p class="muted">Ваш спокойный и понятный помощник для управления личными финансами. Записывайте расходы, планируйте бюджет, следите за целями и платежами — всё в одном месте.</p><p class="muted">Хотите пройти короткое знакомство? Покажем основные разделы примерно за минуту. Его можно открыть позже в настройках.</p><div style="display:grid;gap:8px"><button class="primary" data-act="welcome-yes">Показать, как всё устроено</button><button class="ghost" data-act="welcome-no">Перейти к приложению</button></div></div>';
   document.body.appendChild(d);
 }
 function closeWelcome(){document.getElementById('welcome')?.remove()}
