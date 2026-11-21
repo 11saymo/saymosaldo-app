@@ -740,20 +740,30 @@ function payRecurring(id){
 
 function payDebt(id){
   const d=S.debts.find(x=>x.id===id);if(!d)return;
-  ask('Платёж по обязательству',[{n:'paid',l:'Сколько заплатили, ₽',v:d.monthly},{n:'principal',l:'На сколько уменьшился основной долг, ₽ (если не знаете, оставьте 0)',v:0}],f=>{
-    const paid=Math.round(+f.paid),pr=Math.round(+f.principal||0);
-    if(!(paid>0))return'Укажите сумму платежа.';
-    if(pr<0||pr>paid)return'Основной долг не может быть больше платежа.';
-    if(pr>d.remaining)return'Сумма больше остатка долга.';
+  const dlg=$('#dlg');
+  dlg.innerHTML=`<form class="dlgf"><h2>Платёж по обязательству</h2>
+    ${field('paid','Сколько заплатили, ₽','number',`value="${esc(d.monthly)}" required min="1" step="1"`)}
+    ${field('principal','На сколько уменьшился основной долг, ₽','number','min="0" step="1" placeholder="По умолчанию — вся сумма платежа"')}
+    <p class="muted" style="margin:0 0 12px">Если оставить второе поле пустым, остаток долга уменьшится на всю сумму платежа. Если часть ушла на проценты или комиссию, укажите только сумму, которая погасила основной долг.</p>
+    <p class="err" id="dlgErr"></p><div class="row end"><button type="button" data-act="dlg-cancel">Отмена</button><button class="primary">Записать платёж</button></div></form>`;
+  dlg.querySelector('form').addEventListener('submit',e=>{
+    e.preventDefault();
+    const f=Object.fromEntries(new FormData(e.target));
+    const paid=Math.round(Number(f.paid));
+    const principal=f.principal.trim()===''?paid:Math.round(Number(f.principal));
+    const err=$('#dlgErr');
+    if(!Number.isFinite(paid)||paid<=0){err.textContent='Укажите сумму платежа больше нуля.';return}
+    if(!Number.isFinite(principal)||principal<0||principal>paid){err.textContent='Сумма погашения основного долга должна быть от 0 до суммы платежа.';return}
+    if(principal>d.remaining){err.textContent='Сумма погашения больше остатка долга.';return}
     const date=today();
     S.tx.push({id:uid(),created:Date.now(),type:'expense',amount:paid,category:'Кредиты и долги',date,comment:'Платёж: '+d.name});
-    d.remaining-=pr;
-    d.history=[...(d.history||[]),{date,amount:paid,principal:pr}];
-    save();render();
-    toast(d.remaining===0?'Обязательство полностью погашено':'Платёж записан. Остаток уменьшен только на указанную сумму основного долга.');
+    d.remaining-=principal;
+    d.history=[...(d.history||[]),{date,amount:paid,principal}];
+    save();render();dlg.close();
+    toast(d.remaining===0?'Обязательство полностью погашено':'Платёж записан. Остаток долга обновлён.');
   });
+  dlg.showModal();
 }
-
 function exportData(){
   const data={app:'SaymoSaldo',version:5,exportedAt:new Date().toISOString(),...S};
   try{data.chatFinance=JSON.parse(localStorage.getItem(scopedKey('chat_finance'))||'[]')}catch{data.chatFinance=[]}
