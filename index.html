@@ -725,6 +725,7 @@ function askAssistant(q){
   const list=loadChatItems();
   list.push({role:'user',text:q},{role:'assistant',text:finance(q)});
   localStorage.setItem(chatKey(),JSON.stringify(list.slice(-60)));
+  if(user&&accountReady&&syncAllowed)scheduleSync();
   renderChat();
 }
 
@@ -770,7 +771,7 @@ function finance(q){
 
 const SB_URL='https://pmrrslmkrulhuapxtltm.supabase.co';
 const SB_KEY='sb_publishable_yqDwOCq3n3rZ7E0WOMLUtg_84VOefBt';
-let sb=null, user=null, syncTimer=null, accountReady=false, syncAllowed=false, accountHasData=false, authGeneration=0;
+let sb=null, user=null, syncTimer=null, syncInFlight=null, accountReady=false, syncAllowed=false, accountHasData=false, authGeneration=0;
 const emptyState=()=>({tx:[],goals:[],budgets:[],recurring:[],debts:[]});
 const stateHasData=d=>KEYS.some(k=>Array.isArray(d[k])&&d[k].length>0);
 function applyState(d){KEYS.forEach(k=>S[k]=Array.isArray(d[k])?d[k]:[])}
@@ -818,6 +819,7 @@ async function activateAccount(nextUser,generation){
       else applyState(emptyState());
       accountHasData=stateHasData(cached);
     }
+    if(Array.isArray(remote.chat_finance))localStorage.setItem(prefix+'chat_finance',JSON.stringify(remote.chat_finance));
     writeLocalState(prefix);
     syncAllowed=true;
     accountReady=true;
@@ -840,13 +842,28 @@ function scheduleSync(){
   syncTimer=setTimeout(pushRemote,800);
 }
 async function pushRemote(){
-  if(!sb||!user||!accountReady||!syncAllowed)return;
+  if(!sb||!user||!accountReady||!syncAllowed)return false;
+  if(syncInFlight)await syncInFlight;
+  if(!sb||!user||!accountReady||!syncAllowed)return false;
   const uid=user.id;
   const payload={};KEYS.forEach(k=>payload[k]=S[k]);
-  const {error}=await sb.from('user_data').upsert({user_id:uid,data:payload,updated_at:new Date().toISOString()});
-  if(uid!==user?.id)return;
-  if(error)toast('Не удалось сохранить в облако. Данные остались на этом устройстве.');
-  else accountHasData=stateHasData(payload);
+  try{payload.chat_finance=JSON.parse(localStorage.getItem(KEY+'user_'+uid+'_chat_finance')||'[]')}catch{payload.chat_finance=[]}
+  const task=(async()=>{
+    try{
+      const {error}=await sb.from('user_data').upsert({user_id:uid,data:payload,updated_at:new Date().toISOString()});
+      if(uid!==user?.id)return false;
+      if(error){toast('Не удалось сохранить в облако. Данные остались на этом устройстве.');return false}
+      accountHasData=stateHasData(payload);
+      return true;
+    }catch(error){
+      if(uid===user?.id)toast('Не удалось сохранить в облако. Данные остались на этом устройстве.');
+      return false;
+    }
+  })();
+  syncInFlight=task;
+  const ok=await task;
+  if(syncInFlight===task)syncInFlight=null;
+  return ok;
 }
 async function sendLink(email){
   if(!sb){toast('Вход пока не настроен');return}
@@ -855,6 +872,11 @@ async function sendLink(email){
 }
 async function logout(){
   if(!sb)return;
+  if(user&&accountReady&&syncAllowed){
+    clearTimeout(syncTimer);syncTimer=null;
+    const saved=await pushRemote();
+    if(!saved){toast('Не удалось подтвердить сохранение. Проверьте интернет и попробуйте выйти ещё раз.');return}
+  }
   const {error}=await sb.auth.signOut({scope:'local'});
   if(error){toast('Не удалось выйти из аккаунта: '+error.message);return}
   toast('Вы вышли из аккаунта');
@@ -922,7 +944,7 @@ document.addEventListener('click',e=>{
     case'rec-del':return confirmDo('Удалить регулярный платёж?',()=>{S.recurring=S.recurring.filter(x=>x.id!==id)});
     case'debt-pay':return payDebt(id);
     case'debt-del':return confirmDo('Удалить обязательство? История расходов останется.',()=>{S.debts=S.debts.filter(x=>x.id!==id)});
-    case'chat-clear':if(confirm('Очистить историю этого режима на этом устройстве?')){localStorage.removeItem(chatKey());renderChat()}return;
+    case'chat-clear':if(confirm('Очистить историю этого режима на всех устройствах?')){localStorage.removeItem(chatKey());if(user&&accountReady&&syncAllowed)scheduleSync();renderChat()}return;
     case'welcome-yes':return startTour();
     case'welcome-no':try{localStorage.setItem(KEY+'onboarding','skipped')}catch(e){}closeWelcome();return;
     case'tour-start':return startTour();
