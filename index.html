@@ -6,7 +6,7 @@
 <meta name="description" content="SaymoSaldo — удобный финансовый помощник: учёт доходов и расходов, планирование бюджета, контроль платежей и накоплений.">
 <meta name="robots" content="index, follow">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'sha256-nxuOYyyz1mNQAcmNDKuTekASRchRmEvj/sHzvN4ryo8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'sha256-U5R4vmXbG+vtA1TeEE4uRSp2Eto/DxUOKmrKBGh41DA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="google-site-verification" content="5JxssF-pElOr3sZdiBvC2ko0LklpC0O8AirzG-uq7cI">
 <link rel="canonical" href="https://11saymo.github.io/saymosaldo-app/">
 <meta property="og:type" content="website">
@@ -450,7 +450,8 @@ button,input,select{letter-spacing:0;line-height:1.4}
         </div>
         <label class="field"><span>Сумма, ₽</span><input name="amount" type="number" inputmode="decimal" min="1" step="1" required placeholder="450"></label>
         <label class="field"><span>Категория</span><select name="category" id="txCat"></select></label>
-        <label class="field"><span>Дата</span><input name="date" type="date" required></label>
+        <label class="field"><span>Месяц операции</span><input id="txMonth" type="month" required></label>
+        <label class="field"><span>Дата операции</span><input name="date" type="date" required></label>
         <label class="field"><span>Комментарий (необязательно)</span><input name="comment" maxlength="80" placeholder="Например, обед"></label>
         <button class="primary">Сохранить</button>
       </form>
@@ -536,7 +537,7 @@ function go(p){
   $$('.view').forEach(v=>v.hidden=v.dataset.view!==p);
   $$('.nav [data-go]').forEach(b=>b.setAttribute('aria-current',b.dataset.go===p?'page':'false'));
   $('#title').textContent=TITLES[p];
-  if(p==='add'){$('#txForm [name=date]').value=today();fillTx()}
+  if(p==='add'){$('#txMonth').value=nowMk();$('#txForm [name=date]').value=today();fillTx()}
   window.scrollTo(0,0);
   render();
 }
@@ -708,6 +709,8 @@ document.addEventListener('submit',e=>{
 
 function fillTx(){$('#txCat').innerHTML=catOpts(document.querySelector('#txForm [name=type]:checked').value)}
 $('#txForm').addEventListener('change',e=>{if(e.target.name==='type')fillTx()});
+$('#txMonth').addEventListener('change',e=>{const m=e.target.value;if(m&&m.length===7)$('#txForm [name=date]').value=m+'-01'});
+$('#txForm [name=date]').addEventListener('change',e=>{if(e.target.value)$('#txMonth').value=e.target.value.slice(0,7)});
 $('#txForm').addEventListener('submit',e=>{
   e.preventDefault();
   
