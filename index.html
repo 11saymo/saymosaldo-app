@@ -220,7 +220,7 @@ const scopedKey=k=>storagePrefix()+k;
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(KEY+k))??d}catch{return d}};
 const loadScoped=(prefix,k,d)=>{try{return JSON.parse(localStorage.getItem(prefix+k))??d}catch{return d}};
 const S={tx:load('tx',[]),goals:load('goals',[]),budgets:load('budgets',[]),recurring:load('recurring',[]),debts:load('debts',[])};
-const save=()=>{for(const k of KEYS)localStorage.setItem(scopedKey(k),JSON.stringify(S[k]));if(user&&accountReady)scheduleSync()};
+const save=()=>{for(const k of KEYS)localStorage.setItem(scopedKey(k),JSON.stringify(S[k]));if(user&&accountReady){accountHasData=stateHasData(S);scheduleSync()}};
 const CATS={expense:['Продукты','Кафе и рестораны','Транспорт','Покупки','Дом','Здоровье','Развлечения','Подписки','Кредиты и долги','Другое'],income:['Зарплата','Подработка','Подарок','Другое']};
 const DEBT_KINDS=['Ипотека','Кредит','Кредитная карта','Рассрочка','Частный долг'];
 const ymd=d=>d.toLocaleDateString('en-CA');
