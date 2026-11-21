@@ -411,7 +411,7 @@ body.auth-locked .auth-gate{display:grid}
 @media(prefers-reduced-motion:no-preference){.auth-shell{animation:auth-enter .28s ease-out both}@keyframes auth-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}}
 </style>
 </head>
-<body class="auth-locked">
+<body>
 <section id="authGate" class="auth-gate" aria-labelledby="authGateTitle">
   <div class="auth-shell"><div class="auth-mark" aria-hidden="true">S</div>
     <p class="auth-brand">SaymoSaldo</p><h1 id="authGateTitle">С возвращением</h1>
@@ -884,19 +884,16 @@ function readLocalState(prefix){const d={};KEYS.forEach(k=>d[k]=loadScoped(prefi
 function writeLocalState(prefix){KEYS.forEach(k=>localStorage.setItem(prefix+k,JSON.stringify(S[k])))}
 function guestHasData(){return stateHasData(readLocalState(KEY))}
 function initSB(){
-  if(!window.supabase){renderPanel();return}
-  sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
-  sb.auth.onAuthStateChange((event,session)=>{
-    const nextUser=(session&&session.user)||null;
-    if((nextUser?.id||null)===(user?.id||null)&&accountReady)return;
-    user=nextUser;
-    accountReady=false;
-    const generation=++authGeneration;
-    clearTimeout(syncTimer);
-    syncTimer=null;
-    renderPanel();
-    setTimeout(()=>activateAccount(nextUser,generation),0);
-  });
+  // Public guest mode: no sign-in, registration, or cloud account required.
+  // All financial data is stored locally in this browser on this device.
+  sb=null;
+  user=null;
+  syncAllowed=false;
+  accountHasData=guestHasData();
+  accountReady=true;
+  applyState(readLocalState(KEY));
+  render();
+  renderPanel();
 }
 async function activateAccount(nextUser,generation){
   if(!nextUser){
