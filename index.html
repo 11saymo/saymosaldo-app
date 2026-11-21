@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="SaymoSaldo — удобный финансовый помощник: учёт доходов и расходов, планирование бюджета, контроль платежей и накоплений.">
 <meta name="robots" content="index, follow">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="google-site-verification" content="5JxssF-pElOr3sZdiBvC2ko0LklpC0O8AirzG-uq7cI">
 <link rel="canonical" href="https://11saymo.github.io/saymosaldo-app/">
 <meta property="og:type" content="website">
@@ -506,12 +508,12 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const KEY='saymosaldo_';
 const KEYS=['tx','goals','budgets','recurring','debts'];
 const scopedKey=k=>KEY+k;
-const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(KEY+k))??d}catch{return d}};
+const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(KEY+k));return Array.isArray(v)?v:d}catch{return d}};
 const S={tx:load('tx',[]),goals:load('goals',[]),budgets:load('budgets',[]),recurring:load('recurring',[]),debts:load('debts',[])};
 const save=()=>{for(const k of KEYS)localStorage.setItem(scopedKey(k),JSON.stringify(S[k]))};
 const CATS={expense:['Продукты','Кафе и рестораны','Транспорт','Покупки','Дом','Здоровье','Развлечения','Подписки','Кредиты и долги','Другое'],income:['Зарплата','Подработка','Подарок','Другое']};
 const DEBT_KINDS=['Ипотека','Кредит','Кредитная карта','Рассрочка','Частный долг'];
-const ymd=d=>d.toLocaleDateString('en-CA');
+const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const today=()=>ymd(new Date()), nowMk=()=>today().slice(0,7);
 const money=n=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(+n||0)+' ₽';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -684,10 +686,10 @@ function renderPanel(){
 }
 
 const FORMS={
-  goal(d){const name=d.name.trim(),target=Math.round(+d.target),saved=Math.round(+d.saved||0);if(!name||!(target>0))return'Укажите название и сумму цели.';if(saved<0)return'Сумма не может быть отрицательной.';S.goals.push({id:uid(),name,target,saved,date:d.date||''});toast('Цель создана')},
-  budget(d){const limit=Math.round(+d.limit);if(!(limit>0))return'Укажите лимит больше нуля.';const b=S.budgets.find(x=>x.category===d.category);if(b)b.limit=limit;else S.budgets.push({category:d.category,limit});toast('Лимит сохранён')},
-  rec(d){const name=d.name.trim(),amount=Math.round(+d.amount),day=Math.round(+d.day);if(!name||!(amount>0))return'Укажите название и сумму.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';S.recurring.push({id:uid(),name,amount,category:d.category,day});toast('Платёж добавлен')},
-  debt(d){const name=d.name.trim(),original=Math.round(+d.original),remaining=Math.round(+d.remaining),monthly=Math.round(+d.monthly),day=Math.round(+d.day),rate=d.rate===''?null:+d.rate;if(!name)return'Укажите название.';if(!(original>0))return'Первоначальная сумма должна быть больше нуля.';if(!(remaining>=0&&remaining<=original))return'Остаток должен быть от 0 до первоначальной суммы.';if(!(monthly>0))return'Укажите ежемесячный платёж.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';if(rate!==null&&!(rate>=0&&rate<=100))return'Ставка — от 0 до 100.';S.debts.push({id:uid(),kind:d.kind,name,original,remaining,monthly,day,rate,history:[]});toast('Обязательство добавлено')},
+  goal(d){const name=d.name.trim(),target=Math.round(Number(d.target)),saved=Math.round(Number(d.saved)||0);if(!name||!Number.isFinite(target)||!(target>0))return'Укажите название и корректную сумму цели.';if(!Number.isFinite(saved)||saved<0)return'Сумма не может быть отрицательной.';S.goals.push({id:uid(),name,target,saved,date:d.date||''});toast('Цель создана')},
+  budget(d){const limit=Math.round(Number(d.limit));if(!Number.isFinite(limit)||!(limit>0))return'Укажите корректный лимит больше нуля.';const b=S.budgets.find(x=>x.category===d.category);if(b)b.limit=limit;else S.budgets.push({category:d.category,limit});toast('Лимит сохранён')},
+  rec(d){const name=d.name.trim(),amount=Math.round(Number(d.amount)),day=Math.round(Number(d.day));if(!name||!Number.isFinite(amount)||!(amount>0))return'Укажите название и корректную сумму.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';S.recurring.push({id:uid(),name,amount,category:d.category,day});toast('Платёж добавлен')},
+  debt(d){const name=d.name.trim(),original=Math.round(Number(d.original)),remaining=Math.round(Number(d.remaining)),monthly=Math.round(Number(d.monthly)),day=Math.round(Number(d.day)),rate=d.rate===''?null:Number(d.rate);if(!name)return'Укажите название.';if(!Number.isFinite(original)||!(original>0))return'Первоначальная сумма должна быть больше нуля.';if(!Number.isFinite(remaining)||!(remaining>=0&&remaining<=original))return'Остаток должен быть от 0 до первоначальной суммы.';if(!Number.isFinite(monthly)||!(monthly>0))return'Укажите корректный ежемесячный платёж.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';if(rate!==null&&!(rate>=0&&rate<=100))return'Ставка — от 0 до 100.';S.debts.push({id:uid(),kind:d.kind,name,original,remaining,monthly,day,rate,history:[]});toast('Обязательство добавлено')},
   chat(d){askAssistant(d.q)}
 };
 
@@ -763,14 +765,36 @@ function exportData(){
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
+function validBackupDate(v){
+  if(typeof v!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;
+  const [y,m,d]=v.split('-').map(Number),dt=new Date(y,m-1,d);
+  return dt.getFullYear()===y&&dt.getMonth()===m-1&&dt.getDate()===d;
+}
+function validBackup(d){
+  if(!d||typeof d!=='object'||d.app!=='SaymoSaldo')return false;
+  const arrays=['tx','goals','budgets','recurring'];
+  if(!arrays.every(k=>Array.isArray(d[k])&&d[k].length<=20000))return false;
+  if('debts'in d&&(!Array.isArray(d.debts)||d.debts.length>5000))return false;
+  if('chatFinance'in d&&(!Array.isArray(d.chatFinance)||d.chatFinance.length>60))return false;
+  const str=(v,max)=>typeof v==='string'&&v.trim().length>0&&v.length<=max;
+  const positive=v=>Number.isFinite(Number(v))&&Number(v)>0;
+  const nonnegative=v=>Number.isFinite(Number(v))&&Number(v)>=0;
+  if(d.tx.some(x=>!x||typeof x!=='object'||!['income','expense'].includes(x.type)||!positive(x.amount)||!str(x.category,80)||!validBackupDate(x.date)||('comment'in x&&typeof x.comment!=='string')||('comment'in x&&x.comment.length>200)))return false;
+  if(d.goals.some(x=>!x||typeof x!=='object'||!str(x.name,80)||!positive(x.target)||!nonnegative(x.saved)||('date'in x&&x.date!==''&&!validBackupDate(x.date))))return false;
+  if(d.budgets.some(x=>!x||typeof x!=='object'||!str(x.category,80)||!positive(x.limit)))return false;
+  if(d.recurring.some(x=>!x||typeof x!=='object'||!str(x.name,80)||!positive(x.amount)||!str(x.category,80)||!Number.isInteger(Number(x.day))||Number(x.day)<1||Number(x.day)>31))return false;
+  if((d.debts||[]).some(x=>!x||typeof x!=='object'||!str(x.name,80)||!str(x.kind,60)||!positive(x.original)||!nonnegative(x.remaining)||Number(x.remaining)>Number(x.original)||!positive(x.monthly)||!Number.isInteger(Number(x.day))||Number(x.day)<1||Number(x.day)>31||('rate'in x&&x.rate!==null&&(!Number.isFinite(Number(x.rate))||Number(x.rate)<0||Number(x.rate)>100))||('history'in x&&(!Array.isArray(x.history)||x.history.length>20000||x.history.some(p=>!p||!validBackupDate(p.date)||!positive(p.amount)||!nonnegative(p.principal)||Number(p.principal)>Number(p.amount))))))return false;
+  if((d.chatFinance||[]).some(x=>!x||typeof x!=='object'||!['user','assistant'].includes(x.role)||typeof x.text!=='string'||x.text.length>4000))return false;
+  return true;
+}
 function importData(e){
   const f=e.target.files[0];e.target.value='';if(!f)return;
   if(f.size>10*1024*1024)return toast('Файл слишком большой для восстановления (максимум 10 МБ).');
   const r=new FileReader();
   r.onload=()=>{
     let d;try{d=JSON.parse(r.result)}catch{return toast('Файл повреждён или не является JSON')}
-    if(!d||typeof d!=='object'||d.app!=='SaymoSaldo'||!['tx','goals','budgets','recurring'].every(k=>Array.isArray(d[k]))||('debts'in d&&!Array.isArray(d.debts))||('chatFinance'in d&&!Array.isArray(d.chatFinance)))return toast('Это не резервная копия SaymoSaldo');
-    if(!confirm('Заменить текущие финансовые данные данными из копии? Это действие нельзя отменить.'))return;
+    if(!validBackup(d))return toast('Резервная копия повреждена или содержит некорректные данные. Текущие записи не изменены.');
+    if(!confirm('Заменить текущие финансовые данные данными из копии? Перед восстановлением сохраните текущую копию, если хотите иметь возможность отменить замену.'))return;
     S.tx=d.tx;S.goals=d.goals;S.budgets=d.budgets;S.recurring=d.recurring;S.debts=Array.isArray(d.debts)?d.debts:[];
     if(Array.isArray(d.chatFinance))localStorage.setItem(scopedKey('chat_finance'),JSON.stringify(d.chatFinance));
     save();render();renderPanel();toast('Данные восстановлены.');
