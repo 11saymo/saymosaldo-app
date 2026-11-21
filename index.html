@@ -463,7 +463,7 @@ function finance(q){
 
 const SB_URL='https://pmrrslmkrulhuapxtltm.supabase.co';
 const SB_KEY='sb_publishable_yqDwOCq3n3rZ7E0WOMLUtg_84VOefBt';
-let sb=null, user=null, syncTimer=null, accountReady=false, accountHasData=false, authGeneration=0;
+let sb=null, user=null, syncTimer=null, accountReady=false, syncAllowed=false, accountHasData=false, authGeneration=0;
 const emptyState=()=>({tx:[],goals:[],budgets:[],recurring:[],debts:[]});
 const stateHasData=d=>KEYS.some(k=>Array.isArray(d[k])&&d[k].length>0);
 function applyState(d){KEYS.forEach(k=>S[k]=Array.isArray(d[k])?d[k]:[])}
@@ -489,6 +489,7 @@ async function activateAccount(nextUser){
   if(!nextUser){
     applyState(readLocalState(KEY));
     accountHasData=false;
+    syncAllowed=false;
     accountReady=true;
     render();renderPanel();
     return;
@@ -510,6 +511,7 @@ async function activateAccount(nextUser){
       accountHasData=stateHasData(cached);
     }
     writeLocalState(prefix);
+    syncAllowed=true;
     accountReady=true;
     render();renderPanel();
     if(accountHasData)toast('Данные вашего аккаунта загружены');
@@ -518,18 +520,19 @@ async function activateAccount(nextUser){
     if(generation!==authGeneration)return;
     applyState(readLocalState(prefix));
     accountHasData=stateHasData(S);
+    syncAllowed=false;
     accountReady=true;
     render();renderPanel();
     toast('Не удалось загрузить облачные данные. Изменения пока не синхронизируются.');
   }
 }
 function scheduleSync(){
-  if(!sb||!user||!accountReady)return;
+  if(!sb||!user||!accountReady||!syncAllowed)return;
   clearTimeout(syncTimer);
   syncTimer=setTimeout(pushRemote,800);
 }
 async function pushRemote(){
-  if(!sb||!user||!accountReady)return;
+  if(!sb||!user||!accountReady||!syncAllowed)return;
   const uid=user.id;
   const payload={};KEYS.forEach(k=>payload[k]=S[k]);
   const {error}=await sb.from('user_data').upsert({user_id:uid,data:payload,updated_at:new Date().toISOString()});
@@ -549,7 +552,7 @@ async function logout(){
   toast('Вы вышли из аккаунта');
 }
 function accountCard(){
-  if(user)return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как '+esc(user.email)+'. Данные этого аккаунта отделены от данных на устройстве.</p>'+(accountReady&&!accountHasData&&guestHasData()?'<button class="ghost" data-act="import-device-data">Перенести данные с этого устройства в аккаунт</button>':'')+'<button class="ghost" data-act="logout">Выйти</button></div>';
+  if(user)return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как '+esc(user.email)+'. Данные этого аккаунта отделены от данных на устройстве.</p>'+(accountReady&&syncAllowed&&!accountHasData&&guestHasData()?'<button class="ghost" data-act="import-device-data">Перенести данные с этого устройства в аккаунт</button>':'')+'<button class="ghost" data-act="logout">Выйти</button></div>';
   return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Войдите, чтобы данные были на всех ваших устройствах. Пароль не нужен: пришлём ссылку на почту.</p><form class="chatform" data-form="login"><input name="email" type="email" required placeholder="you@example.com" autocomplete="email"><button class="primary">Получить ссылку</button></form></div>';
 }
 const TOUR=[
@@ -619,7 +622,7 @@ document.addEventListener('click',e=>{
     case'tour-skip':return endTour('skipped');
     case'logout':return logout();
     case'import-device-data':
-      if(!user||!accountReady||accountHasData||!guestHasData())return;
+      if(!user||!accountReady||!syncAllowed||accountHasData||!guestHasData())return;
       if(!confirm('Перенести локальные данные в пустой аккаунт? Данные аккаунта будут заменены данными этого устройства.'))return;
       applyState(readLocalState(KEY));
       save();render();renderPanel();toast('Данные перенесены. Дождитесь завершения синхронизации.');
