@@ -1080,7 +1080,9 @@ async function claimUsername(username){
     const messages={username_taken:'Этот логин уже занят.',authentication_required:'Сессия истекла. Войдите ещё раз.',username_update_failed:'Не удалось изменить логин.'};
     return toast(messages[data?.error]||'Не удалось сохранить логин.');
   }
-  await sb.auth.refreshSession();
+  const refreshed=await sb.auth.refreshSession();
+  if(refreshed.data?.user)user=refreshed.data.user;
+  else if(refreshed.data?.session?.user)user=refreshed.data.session.user;
   toast('Логин сохранён. Ваши финансовые данные на месте.');
   renderPanel();
 }
