@@ -54,3 +54,31 @@ jobs:
           for file in /tmp/inline-*.js; do node --check "$file"; done
       - name: Type-check Supabase Edge Function
         run: deno check supabase/functions/username-auth/index.ts
+      - name: Verify username auth security contract
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html = Path("index.html").read_text(encoding="utf-8")
+          edge = Path("supabase/functions/username-auth/index.ts").read_text(encoding="utf-8")
+          required_html = [
+              "username-auth", "signInWithPassword", "authSetPassword",
+              "detectSessionInUrl:false", "auth.signOut({scope:'local'})",
+          ]
+          required_edge = [
+              "consume_username_registration_attempt", "cf-connecting-ip",
+              "email_confirm: true", "updateUserById", "auth.getUser(token)",
+              'Access-Control-Allow-Origin',
+          ]
+          forbidden_html = [
+              "PASSWORD_RECOVERY", "authRecoveryForm", "saveRecoveredPassword",
+              "detectSessionInUrl:true", "authReset", "sendLink",
+              "SUPABASE_SERVICE_ROLE_KEY", "service_role",
+          ]
+          for item in required_html:
+              assert item in html, f"Missing frontend auth requirement: {item}"
+          for item in required_edge:
+              assert item in edge, f"Missing server auth requirement: {item}"
+          for item in forbidden_html:
+              assert item not in html, f"Forbidden frontend auth content: {item}"
+          print("Username auth contract checks passed")
+          PY
