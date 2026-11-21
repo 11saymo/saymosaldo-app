@@ -542,6 +542,30 @@ function go(p){
   render();
 }
 
+function editGoal(id){
+  const g=S.goals.find(x=>String(x.id)===String(id));
+  if(!g){toast('Цель не найдена.');return}
+  const d=$('#dlg');
+  d.innerHTML=`<form class="dlgf"><h2>Редактировать цель</h2>
+    ${field('name','Название','text',`value="${esc(g.name)}" required maxlength="80"`)}
+    ${field('target','Сумма цели, ₽','number',`value="${esc(g.target)}" required min="1" step="1"`)}
+    ${field('saved','Уже отложено, ₽','number',`value="${esc(g.saved)}" required min="0" step="1"`)}
+    ${field('date','Срок (необязательно)','date',`value="${esc(g.date||'')}"`)}
+    <p class="muted" style="margin:0 0 12px">Накопленная сумма сохранится без изменений, если вы её не поменяете. Прогресс пересчитается автоматически.</p>
+    <p class="err" id="dlgErr"></p><div class="row end"><button type="button" data-act="dlg-cancel">Отмена</button><button class="primary">Сохранить изменения</button></div></form>`;
+  d.querySelector('form').addEventListener('submit',e=>{
+    e.preventDefault();
+    const v=Object.fromEntries(new FormData(e.target));
+    const name=String(v.name||'').trim(),target=Math.round(Number(v.target)),saved=Math.round(Number(v.saved));
+    if(!name){$('#dlgErr').textContent='Укажите название цели.';return}
+    if(!Number.isFinite(target)||target<=0){$('#dlgErr').textContent='Сумма цели должна быть больше нуля.';return}
+    if(!Number.isFinite(saved)||saved<0){$('#dlgErr').textContent='Уже отложенная сумма не может быть отрицательной.';return}
+    g.name=name;g.target=target;g.saved=saved;g.date=v.date||'';
+    save();render();d.close();toast('Цель обновлена');
+  });
+  d.showModal();
+}
+
 function ask(title,fields,cb){
   const d=$('#dlg');
   d.innerHTML=`<form class="dlgf"><h2>${esc(title)}</h2>${fields.map(f=>field(f.n,f.l,'number',`value="${esc(f.v??'')}" required`)).join('')}<p class="err" id="dlgErr"></p><div class="row end"><button type="button" data-act="dlg-cancel">Отмена</button><button class="primary">Сохранить</button></div></form>`;
@@ -557,7 +581,7 @@ function ask(title,fields,cb){
 const ICON={'Продукты':'🛒','Кафе и рестораны':'☕','Транспорт':'🚌','Покупки':'🛍️','Дом':'🏠','Здоровье':'💊','Развлечения':'🎬','Подписки':'📺','Кредиты и долги':'🏦','Зарплата':'💼','Подработка':'🛠️','Подарок':'🎁'};
 const items=(list,del)=>list.map(x=>`<div class="item"><div style="display:flex;align-items:center;min-width:0"><span class="ico">${ICON[x.category]||'📦'}</span><div style="min-width:0"><b>${esc(x.comment||x.category)}</b><small>${x.comment?esc(x.category)+' · ':''}${fmtDate(x.date)}</small></div></div><div class="amt ${x.type==='income'?'pos':''}">${x.type==='income'?'+':'−'}${money(x.amount)}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`).join('');
 const bar=(l,v,max)=>`<div class="bl"><div class="row"><span>${esc(l)}</span><b>${money(v)}</b></div><div class="bar"><i style="width:${Math.max(2,v/max*100)}%"></i></div></div>`;
-const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="card goal-card"><div class="goal-head"><b class="goal-title">${esc(g.name)}</b><span class="goal-percent">${Math.round(p)}%</span></div><div class="goal-meta"><span>Накоплено</span><b>${money(g.saved)} <span>из ${money(g.target)}</span></b>${g.date?`<small>Срок: ${fmtDate(g.date)}</small>`:''}</div><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
+const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="card goal-card"><div class="goal-head"><b class="goal-title">${esc(g.name)}</b><span class="goal-percent">${Math.round(p)}%</span></div><div class="goal-meta"><span>Накоплено</span><b>${money(g.saved)} <span>из ${money(g.target)}</span></b>${g.date?`<small>Срок: ${fmtDate(g.date)}</small>`:''}</div><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost" data-act="goal-edit" data-id="${esc(g.id)}">Редактировать</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
 
 function render(){
   const k=nowMk(), m=monthTx(k), inc=sumType(m,'income'), out=sumType(m,'expense');
@@ -990,6 +1014,7 @@ document.addEventListener('click',e=>{
   const confirmDo=(msg,fn)=>{if(confirm(msg)){fn();save();render()}};
   switch(act){
     case'tx-del':return confirmDo('Удалить операцию?',()=>{S.tx=S.tx.filter(x=>String(x.id)!==id)});
+    case'goal-edit':return editGoal(id);
     case'goal-fund':return ask('Пополнить цель',[{n:'amount',l:'Сумма, ₽'}],f=>{
       const v=Math.round(+f.amount),g=S.goals.find(x=>x.id===id);
       if(!g)return'Цель не найдена.';
