@@ -19,10 +19,12 @@ self.addEventListener('fetch',e=>{
   if(e.request.method!=='GET'||url.origin!==location.origin)return;
   e.respondWith(
     fetch(e.request)
-      .then(res=>{
-        if(res.ok){const copy=res.clone();caches.open(CACHE).then(c=>c.put(e.request,copy))}
+      .then(async res=>{
+        if(res.ok){
+          try{const cache=await caches.open(CACHE);await cache.put(e.request,res.clone())}catch(err){}
+        }
         return res;
       })
-      .catch(()=>caches.match(e.request).then(r=>r||(e.request.mode==='navigate'?caches.match('./index.html'):undefined)))
+      .catch(()=>caches.open(CACHE).then(cache=>cache.match(e.request).then(r=>r||(e.request.mode==='navigate'?cache.match('./index.html'):undefined))))
   );
 });
