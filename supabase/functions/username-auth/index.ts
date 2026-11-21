@@ -107,7 +107,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (payload.action === "claim") {
-    const token = (req.headers.get("authorization") || "").replace(/^Bearer\\s+/i, "");
+    const token = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
     if (!token) return response({ error: "authentication_required" }, origin, 401);
 
     const verifier = createClient(SUPABASE_URL, ANON_KEY, {
