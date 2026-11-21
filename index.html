@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>SaymoSaldo</title>
 <script>try{var t=localStorage.getItem('saymosaldo_theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/dist/umd/supabase.js"></script>
 <style>
 :root{--bg:#f5f5f3;--card:#fff;--fg:#121212;--mut:#6e6e6a;--line:#e4e4e0;--acc:#7a1f2b;--warn:#b26a00;--bad:#b42318;--r:14px;color-scheme:light}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d0e0d;--card:#161816;--fg:#f0f0ec;--mut:#8d8f8a;--line:#262826;--acc:#e0707d;--warn:#e9a23b;--bad:#f07167;color-scheme:dark}}
@@ -214,9 +214,13 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const KEY='saymosaldo_';
+const KEYS=['tx','goals','budgets','recurring','debts'];
+const storagePrefix=()=>user?.id?KEY+'user_'+user.id+'_':KEY;
+const scopedKey=k=>storagePrefix()+k;
 const load=(k,d)=>{try{return JSON.parse(localStorage.getItem(KEY+k))??d}catch{return d}};
+const loadScoped=(prefix,k,d)=>{try{return JSON.parse(localStorage.getItem(prefix+k))??d}catch{return d}};
 const S={tx:load('tx',[]),goals:load('goals',[]),budgets:load('budgets',[]),recurring:load('recurring',[]),debts:load('debts',[])};
-const save=()=>{for(const k in S)localStorage.setItem(KEY+k,JSON.stringify(S[k]));scheduleSync()};
+const save=()=>{for(const k of KEYS)localStorage.setItem(scopedKey(k),JSON.stringify(S[k]));if(user&&accountReady)scheduleSync()};
 const CATS={expense:['Продукты','Кафе и рестораны','Транспорт','Покупки','Дом','Здоровье','Развлечения','Подписки','Кредиты и долги','Другое'],income:['Зарплата','Подработка','Подарок','Другое']};
 const DEBT_KINDS=['Ипотека','Кредит','Кредитная карта','Рассрочка','Частный долг'];
 const ymd=d=>d.toLocaleDateString('en-CA');
@@ -381,7 +385,7 @@ $('#txForm').addEventListener('submit',e=>{
 
 function payRecurring(id){
   const r=S.recurring.find(x=>x.id===id);if(!r)return;
-  const key=KEY+'paid_'+nowMk()+'_'+id;
+  const key=scopedKey('paid_'+nowMk()+'_'+id);
   if(localStorage.getItem(key))return toast('Этот платёж уже отмечен в этом месяце');
   const dt=new Date(),last=new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate();
   const date=nowMk()+'-'+String(Math.min(r.day,last)).padStart(2,'0');
@@ -425,7 +429,7 @@ function importData(e){
   r.readAsText(f);
 }
 
-const chatKey=()=>KEY+'chat_'+mode;
+const chatKey=()=>scopedKey('chat_'+mode);
 function loadChatItems(){try{return JSON.parse(localStorage.getItem(chatKey()))||[]}catch{return[]}}
 function renderChat(){
   const el=$('#chat');if(!el)return;
@@ -459,40 +463,94 @@ function finance(q){
 
 const SB_URL='https://pmrrslmkrulhuapxtltm.supabase.co';
 const SB_KEY='sb_publishable_yqDwOCq3n3rZ7E0WOMLUtg_84VOefBt';
-const KEYS=['tx','goals','budgets','recurring','debts'];
-let sb=null, user=null, syncTimer=null;
+let sb=null, user=null, syncTimer=null, accountReady=false, accountHasData=false, authGeneration=0;
+const emptyState=()=>({tx:[],goals:[],budgets:[],recurring:[],debts:[]});
+const stateHasData=d=>KEYS.some(k=>Array.isArray(d[k])&&d[k].length>0);
+function applyState(d){KEYS.forEach(k=>S[k]=Array.isArray(d[k])?d[k]:[])}
+function readLocalState(prefix){const d={};KEYS.forEach(k=>d[k]=loadScoped(prefix,k,[]));return d}
+function writeLocalState(prefix){KEYS.forEach(k=>localStorage.setItem(prefix+k,JSON.stringify(S[k])))}
+function guestHasData(){return stateHasData(readLocalState(KEY))}
 function initSB(){
   if(!window.supabase){renderPanel();return}
   sb=window.supabase.createClient(SB_URL,SB_KEY);
-  sb.auth.onAuthStateChange((_e,s)=>{const was=user&&user.id;user=(s&&s.user)||null;if(user&&user.id!==was)pullRemote();renderPanel()});
+  sb.auth.onAuthStateChange((_event,session)=>{
+    const nextUser=(session&&session.user)||null;
+    if((nextUser?.id||null)===(user?.id||null)&&accountReady)return;
+    user=nextUser;
+    accountReady=false;
+    clearTimeout(syncTimer);
+    syncTimer=null;
+    renderPanel();
+    setTimeout(()=>activateAccount(nextUser),0);
+  });
 }
-function scheduleSync(){if(!user)return;clearTimeout(syncTimer);syncTimer=setTimeout(pushRemote,800)}
+async function activateAccount(nextUser){
+  const generation=++authGeneration;
+  if(!nextUser){
+    applyState(readLocalState(KEY));
+    accountHasData=false;
+    accountReady=true;
+    render();renderPanel();
+    return;
+  }
+  const prefix=KEY+'user_'+nextUser.id+'_';
+  applyState(emptyState());
+  try{
+    const {data,error}=await sb.from('user_data').select('data').eq('user_id',nextUser.id).maybeSingle();
+    if(generation!==authGeneration)return;
+    if(error)throw error;
+    const remote=(data&&data.data)||{};
+    if(stateHasData(remote)){
+      applyState(remote);
+      accountHasData=true;
+    }else{
+      const cached=readLocalState(prefix);
+      if(stateHasData(cached))applyState(cached);
+      else applyState(emptyState());
+      accountHasData=stateHasData(cached);
+    }
+    writeLocalState(prefix);
+    accountReady=true;
+    render();renderPanel();
+    if(accountHasData)toast('Данные вашего аккаунта загружены');
+    else if(guestHasData())toast('Данные этого устройства не переносились. Их можно перенести отдельно.');
+  }catch(error){
+    if(generation!==authGeneration)return;
+    applyState(readLocalState(prefix));
+    accountHasData=stateHasData(S);
+    accountReady=true;
+    render();renderPanel();
+    toast('Не удалось загрузить облачные данные. Изменения пока не синхронизируются.');
+  }
+}
+function scheduleSync(){
+  if(!sb||!user||!accountReady)return;
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(pushRemote,800);
+}
 async function pushRemote(){
-  if(!sb||!user)return;
+  if(!sb||!user||!accountReady)return;
+  const uid=user.id;
   const payload={};KEYS.forEach(k=>payload[k]=S[k]);
-  const {error}=await sb.from('user_data').upsert({user_id:user.id,data:payload,updated_at:new Date().toISOString()});
-  if(error)toast('Не удалось сохранить в облако. Данные сохранены на этом устройстве.');
-}
-async function pullRemote(){
-  if(!sb||!user)return;
-  const {data,error}=await sb.from('user_data').select('data').eq('user_id',user.id).maybeSingle();
-  if(error){toast('Не удалось загрузить данные из облака');return}
-  const remote=(data&&data.data)||{};
-  if(Object.keys(remote).length){
-    const local={};KEYS.forEach(k=>local[k]=S[k]);
-    try{localStorage.setItem(KEY+'before_cloud',JSON.stringify(local))}catch(e){}
-    KEYS.forEach(k=>{if(Array.isArray(remote[k]))S[k]=remote[k]});
-    save();render();toast('Данные загружены из облака');
-  }else{await pushRemote()}
+  const {error}=await sb.from('user_data').upsert({user_id:uid,data:payload,updated_at:new Date().toISOString()});
+  if(uid!==user?.id)return;
+  if(error)toast('Не удалось сохранить в облако. Данные остались на этом устройстве.');
+  else accountHasData=stateHasData(payload);
 }
 async function sendLink(email){
   if(!sb){toast('Вход пока не настроен');return}
-  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split('#')[0]}});
-  toast(error?'Не удалось отправить ссылку: '+error.message:'Ссылка отправлена на почту');
+  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split('#')[0],shouldCreateUser:true}});
+  toast(error?'Не удалось отправить ссылку: '+error.message:'Ссылка отправлена на почту. Проверьте также папку «Спам».');
+}
+async function logout(){
+  if(!sb)return;
+  const {error}=await sb.auth.signOut();
+  if(error){toast('Не удалось выйти из аккаунта: '+error.message);return}
+  toast('Вы вышли из аккаунта');
 }
 function accountCard(){
-  if(user)return `<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как ${esc(user.email)}. Данные синхронизируются между устройствами.</p><button class="ghost" data-act="logout">Выйти</button></div>`;
-  return `<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Войдите, чтобы данные были на всех ваших устройствах. Пароль не нужен: пришлём ссылку на почту.</p><form class="chatform" data-form="login"><input name="email" type="email" required placeholder="you@example.com" autocomplete="email"><button class="primary">Получить ссылку</button></form></div>`;
+  if(user)return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как '+esc(user.email)+'. Данные этого аккаунта отделены от данных на устройстве.</p>'+(accountReady&&!accountHasData&&guestHasData()?'<button class="ghost" data-act="import-device-data">Перенести данные с этого устройства в аккаунт</button>':'')+'<button class="ghost" data-act="logout">Выйти</button></div>';
+  return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Войдите, чтобы данные были на всех ваших устройствах. Пароль не нужен: пришлём ссылку на почту.</p><form class="chatform" data-form="login"><input name="email" type="email" required placeholder="you@example.com" autocomplete="email"><button class="primary">Получить ссылку</button></form></div>';
 }
 const TOUR=[
  {view:'home',sel:'#balance',t:'Главная',x:'Здесь видно баланс месяца, доходы и расходы. Всё обновляется сразу после записи операции.'},
@@ -559,7 +617,13 @@ document.addEventListener('click',e=>{
     case'tour-next':if(tourI<TOUR.length-1){tourI++;return showTourStep()}return endTour('done');
     case'tour-back':tourI--;return showTourStep();
     case'tour-skip':return endTour('skipped');
-    case'logout':if(sb)sb.auth.signOut();toast('Вы вышли из аккаунта');return;
+    case'logout':return logout();
+    case'import-device-data':
+      if(!user||!accountReady||accountHasData||!guestHasData())return;
+      if(!confirm('Перенести локальные данные в пустой аккаунт? Данные аккаунта будут заменены данными этого устройства.'))return;
+      applyState(readLocalState(KEY));
+      save();render();renderPanel();toast('Данные перенесены. Дождитесь завершения синхронизации.');
+      return;
     case'export':return exportData();
     case'import':return $('#importFile').click();
     case'dlg-cancel':return $('#dlg').close();
