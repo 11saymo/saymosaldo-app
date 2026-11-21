@@ -332,7 +332,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
 .home-debt-total>button{width:100%;margin-top:10px}
 #homeDebts>.empty{background:var(--surface-soft);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:left;box-shadow:var(--surface-shadow)}
 @media(min-width:760px){
- .view[data-view=home]>:nth-child(13),.view[data-view=home]>:nth-child(14),.view[data-view=home]>:nth-child(15){grid-column:1/-1}
+ .view[data-view=home]>:nth-child(13),.view[data-view=home]>:nth-child(14),.view[data-view=home]>:nth-child(15),.view[data-view=home]>:nth-child(16),.view[data-view=home]>:nth-child(17){grid-column:1/-1}
 }
 
 </style>
@@ -815,7 +815,7 @@ document.addEventListener('click',e=>{
   const t=e.target.closest('[data-go],[data-tab],[data-mode],[data-q],[data-act],[data-theme-set]');
   if(!t)return;
   if(t.dataset.themeSet){setTheme(t.dataset.themeSet);return renderPanel()}
-  if(t.dataset.go)return go(t.dataset.go);
+  if(t.dataset.go){if(t.dataset.tabTarget)tab=t.dataset.tabTarget;return go(t.dataset.go)}
   if(t.dataset.tab){tab=t.dataset.tab;return renderPanel()}
   if(t.dataset.mode){mode=t.dataset.mode;return renderPanel()}
   if(t.dataset.q)return askAssistant(t.dataset.q);
