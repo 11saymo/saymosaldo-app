@@ -609,10 +609,12 @@ const PANELS={
     <form class="card" data-form="debt"><label class="field"><span>Тип</span><select name="kind">${DEBT_KINDS.map(k=>`<option>${k}</option>`).join('')}</select></label>${field('name','Название','text','required placeholder="Ипотека, банк"')}${field('original','Первоначальная сумма, ₽','number','required min="1"')}${field('remaining','Текущий остаток, ₽','number','required min="0"')}${field('monthly','Ежемесячный платёж, ₽','number','required min="1"')}${field('day','День платежа (1–31)','number','required min="1" max="31"')}${field('rate','Ставка, % годовых (необязательно)','number','min="0" max="100"')}<button class="primary">Добавить</button></form>`;
   },
 
-  assistant:()=>`<p class="muted">Анализ ваших записей. Всё считается в браузере, данные никуда не отправляются.</p>
+  assistant:()=>`<p class="muted">Бесплатный финансовый аналитик SaymoSaldo. Отчёты и ответы рассчитываются прямо на устройстве — финансовые записи не отправляются внешнему ИИ.</p>
+    <div id="assistantReport"></div>
+    <div class="sec"><h2>Спросите о своих финансах</h2></div>
     <div id="chat" class="chat"></div>
-    <div class="chips">${['На что я больше всего трачу?','Как изменились мои расходы?','Какие лимиты превышены?','Дайте совет по экономии'].map(q=>`<button class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
-    <form class="chatform" data-form="chat"><input name="q" autocomplete="off" placeholder="Например, на что ушло больше всего"><button class="primary">Отправить</button></form>
+    <div class="chips">${['На что я больше всего трачу?','Сравни с прошлым месяцем','Какие лимиты под угрозой?','Как сократить расходы?','Сколько уходит на платежи?','Как продвигаются мои цели?'].map(q=>`<button class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <form class="chatform" data-form="chat"><input name="q" autocomplete="off" placeholder="Например, сколько я могу отложить?"><button class="primary">Отправить</button></form>
     <div class="actions"><button class="link" data-act="chat-clear">Очистить историю этого режима</button></div>`,
 
   settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `${accountCard()}<div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
@@ -624,7 +626,7 @@ const PANELS={
 function renderPanel(){
   $$('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
   $('#panel').innerHTML=PANELS[tab]();
-  if(tab==='assistant')renderChat();
+  if(tab==='assistant'){renderFinanceReport();renderChat();}
 }
 
 const FORMS={
@@ -726,20 +728,44 @@ function askAssistant(q){
   renderChat();
 }
 
+function financeReportData(){
+  const key=nowMk(), current=monthTx(key), expenses=current.filter(x=>x.type==='expense'&&Number(x.amount)>0), incomes=current.filter(x=>x.type==='income'&&Number(x.amount)>0);
+  const by={};expenses.forEach(x=>{const c=String(x.category||'Другое');by[c]=(by[c]||0)+Number(x.amount||0)});
+  const top=Object.entries(by).sort((a,b)=>b[1]-a[1]), spent=total(expenses.map(x=>x.amount)), earned=total(incomes.map(x=>x.amount));
+  const now=new Date(),day=now.getDate(),days=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const prevDate=new Date(now.getFullYear(),now.getMonth()-1,1),prevKey=ymd(prevDate).slice(0,7),prevDay=Math.min(day,new Date(prevDate.getFullYear(),prevDate.getMonth()+1,0).getDate());
+  const prevRows=monthTx(prevKey).filter(x=>Number(String(x.date).slice(8,10))<=prevDay),prevSpent=sumType(prevRows,'expense');
+  const budgets=S.budgets.map(b=>({category:b.category,limit:Number(b.limit)||0,spent:by[b.category]||0})).filter(b=>b.limit>0).sort((a,b)=>b.spent/b.limit-a.spent/a.limit);
+  const recurring=total(S.recurring.map(x=>x.amount))+total(S.debts.filter(x=>Number(x.remaining)>0).map(x=>x.monthly));
+  const goals=S.goals.map(g=>({name:g.name,target:Number(g.target)||0,saved:Number(g.saved)||0,date:g.date||''}));
+  return {key,current,expenses,incomes,by,top,spent,earned,day,days,prevKey,prevDay,prevSpent,budgets,recurring,goals,forecast:spent/day*days};
+}
+function renderFinanceReport(){
+  const el=$('#assistantReport');if(!el)return;
+  const d=financeReportData(),alerts=d.budgets.filter(b=>b.spent>=b.limit*.8),net=d.earned-d.spent;
+  const advice=alerts.length?alerts.map(b=>`«${esc(b.category)}»: использовано ${Math.round(b.spent/b.limit*100)}% лимита`).join('; ')
+    :d.top.length?`Основная статья расходов — «${esc(d.top[0][0])}» (${money(d.top[0][1])}). Проверьте, можно ли установить для неё комфортный лимит.`
+    :'Добавьте несколько расходов, чтобы получить первые рекомендации.';
+  el.innerHTML=`<div class="card forecast-card"><div class="forecast-head"><b>Ваш финансовый обзор</b><span class="forecast-tag">${esc(monthName(d.key))}</span></div>
+    <div class="forecast-grid"><div class="forecast-metric"><span>Доходы</span><b>${money(d.earned)}</b></div><div class="forecast-metric"><span>Расходы</span><b>${money(d.spent)}</b></div><div class="forecast-metric"><span>Разница</span><b class="${net>=0?'pos':''}">${money(net)}</b></div><div class="forecast-metric"><span>Прогноз расходов</span><b>${d.day>=5&&d.expenses.length>=3?money(d.forecast):'Пока рано'}</b></div></div>
+    ${d.top.length?`<div class="insight-line"><b>Самая затратная категория</b><br>${esc(d.top[0][0])} — ${money(d.top[0][1])} (${Math.round(d.top[0][1]/Math.max(1,d.spent)*100)}% расходов)</div>`:''}
+    ${d.prevSpent>0?`<p class="forecast-note">За первые ${d.prevDay} дней прошлого месяца расходы составили ${money(d.prevSpent)}. Сейчас: ${money(d.spent)}. Сравнение по одинаковому числу дней.</p>`:''}
+    <div class="insight-line"><b>Что стоит проверить</b><br>${advice}</div>
+    <p class="forecast-note">Расчёт по внесённым операциям, не по банковским данным. Это не финансовая рекомендация.</p></div>
+    <div class="card" style="margin-top:10px"><div class="row"><b>Регулярные платежи и долги</b><b>${money(d.recurring)} / мес.</b></div><small class="muted">По введённым вами регулярным платежам и ежемесячным платежам по долгам.</small></div>
+    ${d.goals.length?`<div class="card" style="margin-top:10px"><b>Накопительные цели</b>${d.goals.map(g=>`<div style="margin-top:10px"><div class="row"><span>${esc(g.name)}</span><b>${money(g.saved)} / ${money(g.target)}</b></div><div class="bar"><i style="width:${g.target?Math.min(100,g.saved/g.target*100):0}%"></i></div></div>`).join('')}</div>`:''}`;
+}
 function finance(q){
-  if(!S.tx.length)return'Пока нет операций. Добавьте доходы и расходы, и я смогу показать наблюдения.';
-  const m=monthTx(nowMk()),exp=m.filter(x=>x.type==='expense');
-  const by={};exp.forEach(x=>by[x.category]=(by[x.category]||0)+(+x.amount||0));
-  const top=Object.entries(by).sort((a,b)=>b[1]-a[1]);
-  const pd=new Date();pd.setDate(1);pd.setMonth(pd.getMonth()-1);
-  const prev=sumType(monthTx(ymd(pd).slice(0,7)),'expense'), cur=sumType(m,'expense');
-  const over=S.budgets.filter(b=>(by[b.category]||0)>b.limit);
-  const s=q.toLowerCase();
-  if(/трач|категор|больше/.test(s))return top.length?`В этом месяце больше всего расходов в категории «${top[0][0]}»: ${money(top[0][1])}.`:'В этом месяце расходов пока нет.';
-  if(/изменил|сравн|прошл/.test(s))return prev?`В этом месяце расходы составили ${money(cur)}, в прошлом — ${money(prev)}.`:`В этом месяце расходы составили ${money(cur)}. Данных за прошлый месяц пока нет.`;
-  if(/лимит|превыш/.test(s))return over.length?'Превышены лимиты: '+over.map(b=>`«${b.category}»`).join(', ')+'.':'В этом месяце превышений лимитов нет.';
-  if(/совет|эконом/.test(s))return top.length?`Чаще всего деньги уходят в «${top[0][0]}». Можно установить лимит на эту категорию в разделе «Лимиты».`:'Добавьте расходы, и я подскажу, где можно сократить.';
-  return'Могу ответить на вопросы: на что больше всего трачу, как изменились расходы, какие лимиты превышены, и дать совет по экономии.';
+  const d=financeReportData(),s=String(q||'').toLowerCase();
+  if(!S.tx.length)return'Пока нет операций. Добавьте доходы и расходы — тогда я смогу показать аналитику.';
+  if(/цель|накоп/.test(s))return d.goals.length?'Ваши цели: '+d.goals.map(g=>`«${g.name}» — ${money(g.saved)} из ${money(g.target)} (${g.target?Math.round(g.saved/g.target*100):0}%).`).join(' '):'Вы пока не создали накопительные цели. Добавьте цель в разделе «Бюджет».';
+  if(/платеж|подпис|регуляр|долг|кредит/.test(s))return d.recurring?`По вашим записям регулярные платежи и ежемесячные платежи по долгам составляют примерно ${money(d.recurring)} в месяц. Проверьте, все ли записи актуальны.`:'Вы пока не добавили регулярные платежи или долги.';
+  if(/доход|заработ|отлож|сбереж/.test(s))return d.earned?`В этом месяце внесено доходов на ${money(d.earned)} и расходов на ${money(d.spent)}. Разница — ${money(d.earned-d.spent)}. Это сумма по записанным операциям, а не гарантированно свободные деньги.`:'В этом месяце пока нет записанных доходов.';
+  if(/трач|категор|больше/.test(s))return d.top.length?`Больше всего в этом месяце уходит на «${d.top[0][0]}»: ${money(d.top[0][1])} (${Math.round(d.top[0][1]/Math.max(1,d.spent)*100)}% расходов).`:'В этом месяце расходов пока нет.';
+  if(/изменил|сравн|прошл|динамик/.test(s))return d.prevSpent?`За первые ${d.prevDay} дней прошлого месяца расходы были ${money(d.prevSpent)}, за первые ${d.day} дней этого — ${money(d.spent)}. ${d.spent>d.prevSpent?'Сейчас потрачено больше.':'Сейчас потрачено меньше или столько же.'}`:`В этом месяце расходы составили ${money(d.spent)}. Данных за соответствующий период прошлого месяца пока нет.`;
+  if(/лимит|превыш|угроз/.test(s)){const hit=d.budgets.filter(b=>b.spent>=b.limit*.8);return hit.length?'Обратите внимание на лимиты: '+hit.map(b=>`«${b.category}» — ${Math.round(b.spent/b.limit*100)}% (${money(b.spent)} из ${money(b.limit)})`).join('; ')+'.':'Пока ни один лимит не достиг 80%. Продолжайте следить за расходами.'}
+  if(/совет|эконом|сократ/.test(s)){if(d.budgets.some(b=>b.spent>b.limit))return'Сначала стоит остановить рост расходов в категориях, где уже превышен лимит: '+d.budgets.filter(b=>b.spent>b.limit).map(b=>b.category).join(', ')+'. Пересмотрите ближайшие необязательные покупки.';return d.top.length?`Начните с категории «${d.top[0][0]}» — сейчас это ${money(d.top[0][1])}. Посмотрите последние операции и выберите одну небольшую регулярную трату, которую комфортно сократить. Не урезайте необходимые расходы.`:'Добавьте расходы, и я смогу предложить конкретные способы экономии.'}
+  return'Я могу проанализировать расходы по категориям, сравнить месяцы, проверить лимиты, оценить регулярные платежи и показать прогресс накопительных целей. Попробуйте одну из подсказок выше.';
 }
 
 const SB_URL='https://pmrrslmkrulhuapxtltm.supabase.co';
