@@ -1,5 +1,5 @@
 // Network-first: при онлайне всегда свежая версия, при офлайне — из кеша.
-const CACHE='saymosaldo-v9';
+const CACHE='saymosaldo-v10';
 const ASSETS=['./','./index.html','./manifest.json','./icon.svg','./icon-180.png','./icon-192.png','./icon-512.png','./icon-maskable-512.png'];
 
 self.addEventListener('install',e=>{
@@ -23,6 +23,6 @@ self.addEventListener('fetch',e=>{
         if(res.ok){const copy=res.clone();caches.open(CACHE).then(c=>c.put(e.request,copy))}
         return res;
       })
-      .catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html')))
+      .catch(()=>caches.match(e.request).then(r=>r||(e.request.mode==='navigate'?caches.match('./index.html'):undefined)))
   );
 });
