@@ -426,11 +426,6 @@ body.auth-locked .auth-gate{display:grid}
     <div class="auth-links"><button class="link" type="button" data-auth-gate="legacy">У меня уже есть аккаунт по почте</button><button class="link" type="button" id="authGateMode" data-auth-gate="signup">Создать аккаунт</button></div>
     <p class="auth-hint" id="authGateHint">Логин — от 3 до 24 символов: латинские буквы, цифры, точка, дефис или подчёркивание. Пароль — от 12 символов. Восстановление пароля по почте не предусмотрено.</p>
     <p class="auth-status" id="authGateStatus" role="status" aria-live="polite"></p>
-    <form id="authRecoveryForm" class="auth-form" data-form="auth-recovery" hidden>
-      <label class="field"><span>Новый пароль</span><input name="password" type="password" minlength="12" maxlength="72" required autocomplete="new-password" placeholder="Не менее 12 символов"></label>
-      <label class="field"><span>Повторите новый пароль</span><input name="confirmPassword" type="password" minlength="12" maxlength="72" required autocomplete="new-password" placeholder="Повторите пароль"></label>
-      <button class="primary auth-submit" type="submit">Сохранить новый пароль</button>
-    </form>
   </div></section>
 <div class="app">
   <header class="top"><h1 id="title">Главная</h1></header>
@@ -713,7 +708,6 @@ document.addEventListener('submit',e=>{
   if(!f)return;
   e.preventDefault();
   const values=Object.fromEntries(new FormData(e.target));
-  if(f==='auth-recovery')return saveRecoveredPassword(values.password,values.confirmPassword);
   if(f==='auth-gate'){
     const action=e.submitter?.dataset.authAction;
     if(action==='signup'){
@@ -891,12 +885,8 @@ function writeLocalState(prefix){KEYS.forEach(k=>localStorage.setItem(prefix+k,J
 function guestHasData(){return stateHasData(readLocalState(KEY))}
 function initSB(){
   if(!window.supabase){renderPanel();return}
-  sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
   sb.auth.onAuthStateChange((event,session)=>{
-    if(event==='PASSWORD_RECOVERY'){
-      showRecoveryScreen();
-      return;
-    }
     const nextUser=(session&&session.user)||null;
     if((nextUser?.id||null)===(user?.id||null)&&accountReady)return;
     user=nextUser;
@@ -1078,34 +1068,6 @@ async function claimUsername(username){
   else if(refreshed.data?.session?.user)user=refreshed.data.session.user;
   toast('Логин сохранён. Ваши финансовые данные на месте.');
   renderPanel();
-}
-function showRecoveryScreen(){
-  document.body.classList.add('auth-locked');
-  $('#authGateTitle').textContent='Новый пароль';
-  $('#authGateLead').textContent='Придумайте новый пароль для своего аккаунта.';
-  $('#authGateForm').hidden=true;
-  document.querySelector('.auth-links').hidden=true;
-  $('#authGateHint').hidden=true;
-  $('#authGateStatus').textContent='';
-  $('#authRecoveryForm').hidden=false;
-}
-async function saveRecoveredPassword(password,confirmation){
-  const status=$('#authGateStatus');
-  if(password!==confirmation){status.textContent='Пароли не совпадают.';return}
-  if(!validPassword(password)){status.textContent='Пароль должен содержать от 12 до 72 символов.';return}
-  status.textContent='Сохраняем новый пароль…';
-  try{
-    const {error}=await sb.auth.updateUser({password});
-    if(error){status.textContent='Не удалось изменить пароль: '+error.message;return}
-    await sb.auth.signOut({scope:'local'});
-    $('#authRecoveryForm').reset();
-    $('#authRecoveryForm').hidden=true;
-    $('#authGateForm').hidden=false;
-    document.querySelector('.auth-links').hidden=false;
-    $('#authGateHint').hidden=false;
-    setAuthGateMode('signin');
-    status.textContent='Пароль успешно изменён. Теперь войдите с новым паролем.';
-  }catch(error){status.textContent='Не удалось изменить пароль. Откройте ссылку из письма ещё раз.'}
 }
 async function authSetPassword(currentPassword,password,confirmation){
   if(!sb||!user?.email)return toast('Сначала войдите в аккаунт.');
