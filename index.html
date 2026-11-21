@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="SaymoSaldo — учёт расходов, бюджета и долгов. Данные хранятся на вашем устройстве.">
+<meta name="description" content="SaymoSaldo — учёт расходов, бюджета и задолженности. Данные хранятся на вашем устройстве.">
 <meta name="theme-color" content="#0d0e0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SaymoSaldo">
@@ -127,7 +127,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 body{background:radial-gradient(ellipse at 12% 0%,rgba(122,31,43,.055),transparent 34%),var(--bg)}
 .app{max-width:1120px;padding:calc(env(safe-area-inset-top) + 30px) 28px calc(env(safe-area-inset-bottom) + 116px)}
 .top{margin-bottom:26px;align-items:center}
-h1{font-size:30px;letter-spacing:-.035em}
+h1{font-size:30px;letter-spacing:-.015em}
 .card,.item{border-radius:18px;box-shadow:var(--shadow)}
 .card{padding:20px}
 .hero{padding:26px;background:linear-gradient(125deg,#852d3a 0%,#5a1724 58%,#3e1420 100%);box-shadow:0 14px 34px rgba(92,23,36,.18)}
@@ -163,7 +163,7 @@ input,select{border-radius:12px}
 }
 @media(max-width:759px){
   .app{max-width:560px;padding-left:16px;padding-right:16px}
-  h1{font-size:26px}
+  h1{font-size:26px;letter-spacing:-.01em}
   .card{padding:16px}
   .hero{padding:20px}
   .hero .big{font-size:34px}
@@ -314,6 +314,27 @@ body::after{content:"";position:fixed;z-index:-1;pointer-events:none;width:420px
  #homeGoals>.item,#recent>.item,#allItems>.item{padding:13px}
 }
 
+
+/* Typography refinement: calmer tracking and more comfortable reading rhythm */
+body{font-size:15px;line-height:1.56;letter-spacing:0}
+h1,h2,.sec h2,.big,.item b,.card b{letter-spacing:normal}
+h1{line-height:1.2;font-weight:650}
+h2,.sec h2{line-height:1.35;font-weight:620}
+p,small,.muted,.note,.label{letter-spacing:0;line-height:1.55}
+button,input,select{letter-spacing:0;line-height:1.4}
+.item b{line-height:1.35}
+.home-debt-total{padding:18px!important}
+.home-debt-total>.big{margin:5px 0 14px;font-size:clamp(26px,4vw,34px)}
+.home-debt-row{padding:12px 0;border-top:1px solid var(--line)}
+.home-debt-row .row{gap:10px}
+.home-debt-row .row b:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+.home-debt-row small{display:block;margin-top:3px}
+.home-debt-total>button{width:100%;margin-top:10px}
+#homeDebts>.empty{background:var(--surface-soft);border:1px solid var(--line);border-radius:16px;padding:16px;text-align:left;box-shadow:var(--surface-shadow)}
+@media(min-width:760px){
+ .view[data-view=home]>:nth-child(13),.view[data-view=home]>:nth-child(14),.view[data-view=home]>:nth-child(15){grid-column:1/-1}
+}
+
 </style>
 </head>
 <body>
@@ -343,6 +364,8 @@ body::after{content:"";position:fixed;z-index:-1;pointer-events:none;width:420px
       <div id="homeLimits" class="list"></div>
       <div class="sec"><h2>Цели</h2><button class="link" data-go="stats">Управлять</button></div>
       <div id="homeGoals" class="list"></div>
+      <div class="sec"><h2>Задолженность</h2><button class="link" data-go="more" data-tab-target="debts">Подробнее</button></div>
+      <div id="homeDebts" class="list"></div>
       <div class="sec"><h2>Последние операции</h2><button class="link" data-go="ops">Все</button></div>
       <div id="recent" class="list"></div>
       <p class="note">Данные хранятся в этом браузере. Делайте резервную копию в разделе «Ещё».</p>
@@ -383,7 +406,7 @@ body::after{content:"";position:fixed;z-index:-1;pointer-events:none;width:420px
     <section class="view" data-view="more" hidden>
       <div class="tabs" id="tabs" role="tablist">
         <button data-tab="recurring">Платежи</button>
-        <button data-tab="debts">Долги</button>
+        <button data-tab="debts">Задолженность</button>
         <button data-tab="assistant">Помощник</button>
         <button data-tab="settings">Настройки</button><button data-tab="data">Данные</button>
       </div>
@@ -483,6 +506,8 @@ function render(){
   $('#allItems').innerHTML=items(list,true)||empty('Нет операций по выбранному фильтру.');
   const ring=p=>`<svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" class="rt"/><circle cx="18" cy="18" r="15.9" class="rv" stroke-dasharray="${Math.min(100,p)} 100"/></svg>`;
   $('#homeGoals').innerHTML=S.goals.slice(0,3).map(g=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="item"><div style="display:flex;align-items:center;min-width:0"><div class="ringbox">${ring(p)}<span>${Math.round(p)}%</span></div><div style="min-width:0"><b>${esc(g.name)}</b><small>${money(g.saved)} из ${money(g.target)}</small></div></div></div>`}).join('')||empty('Цели пока не добавлены.');
+  const debtTotal=total(S.debts.map(d=>d.remaining));
+  $('#homeDebts').innerHTML=S.debts.length?`<div class="card home-debt-total"><span class="label">Общая задолженность</span><div class="big">${money(debtTotal)}</div>${S.debts.slice(0,3).map(d=>{const original=Math.max(+d.original||0,+d.remaining||0),paid=Math.max(0,original-(+d.remaining||0)),p=original?paid/original*100:0;return `<div class="home-debt-row"><div class="row"><b>${esc(d.name)}</b><b>${money(d.remaining)}</b></div><small>${esc(d.kind)} · платёж ${money(d.monthly)} в месяц</small><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')}${S.debts.length>3?`<small>И ещё ${S.debts.length-3} обязательств</small>`:''}<button class="ghost" data-go="more" data-tab-target="debts">Открыть задолженность</button></div>`:empty('Задолженностей пока нет. Добавьте кредит или другое обязательство в разделе «Ещё».');
   $('#homeLimits').innerHTML=S.budgets.slice(0,3).map(b=>{const sp=spent(b.category),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><small>${money(sp)} из ${money(b.limit)}</small></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div></div>`}).join('')||empty('Лимиты не установлены. Их можно задать в разделе «Бюджет».');
   const by={};
   m.filter(x=>x.type==='expense').forEach(x=>by[x.category]=(by[x.category]||0)+(+x.amount||0));
@@ -517,7 +542,7 @@ const PANELS={
 
   debts:()=>{
     const rem=total(S.debts.map(d=>d.remaining));
-    return `<div class="card"><span class="label">Общий остаток долгов</span><div class="big">${money(rem)}</div><small>Каждый закрытый платёж — шаг вперёд. Сравнивать свой путь с чужим не нужно.</small></div>
+    return `<div class="card"><span class="label">Общая задолженность</span><div class="big">${money(rem)}</div><small>Каждый закрытый платёж — шаг вперёд. Сравнивать свой путь с чужим не нужно.</small></div>
     ${S.debts.map(d=>{const rm=+d.remaining||0,o=Math.max(+d.original||0,rm),pd=Math.max(0,o-rm),p=o?pd/o*100:0;return `<div class="card"><div class="row"><b>${esc(d.name)}</b><b>${money(rm)}</b></div><small>${esc(d.kind)} · платёж ${money(d.monthly)} · ${d.day}-го${d.rate?` · ${esc(d.rate)}% годовых`:''}</small><div class="bar"><i style="width:${p}%"></i></div><small>${Math.round(p)}% · погашено ${money(pd)} из ${money(o)}</small><div class="actions"><button class="ghost" data-act="debt-pay" data-id="${esc(d.id)}"${rm<=0?' disabled':''}>Отметить платёж</button><button class="ghost danger" data-act="debt-del" data-id="${esc(d.id)}">Удалить</button></div></div>`}).join('')||empty('Здесь появится общий остаток, когда вы добавите обязательство.')}
     <div class="sec"><h2>Новое обязательство</h2></div>
     <form class="card" data-form="debt"><label class="field"><span>Тип</span><select name="kind">${DEBT_KINDS.map(k=>`<option>${k}</option>`).join('')}</select></label>${field('name','Название','text','required placeholder="Ипотека, банк"')}${field('original','Первоначальная сумма, ₽','number','required min="1"')}${field('remaining','Текущий остаток, ₽','number','required min="0"')}${field('monthly','Ежемесячный платёж, ₽','number','required min="1"')}${field('day','День платежа (1–31)','number','required min="1" max="31"')}${field('rate','Ставка, % годовых (необязательно)','number','min="0" max="100"')}<button class="primary">Добавить</button></form>`;
@@ -757,7 +782,7 @@ const TOUR=[
  {view:'ops',sel:'#allItems',t:'Операции',x:'Здесь все записи. Фильтр покажет только расходы или только доходы, а лишнюю операцию можно удалить.'},
  {view:'stats',sel:'#budgetWrap',t:'Бюджет',x:'Цели накопления и лимиты по категориям. Лимит подскажет, когда категория близка к пределу.'},
  {view:'more',tab:'recurring',sel:'#panel',t:'Платежи',x:'Аренда, интернет, подписки. Отмечайте оплату, и расход сразу появится в истории.'},
- {view:'more',tab:'debts',sel:'#panel',t:'Долги',x:'Ипотека и кредиты: видно остаток и процент погашения. Каждый платёж уменьшает долг.'},
+ {view:'more',tab:'debts',sel:'#panel',t:'Задолженность',x:'Кредиты и другие обязательства: видно остаток и процент погашения. Каждый платёж помогает отслеживать, как уменьшается задолженность.'},
  {view:'more',tab:'data',sel:'#panel',t:'Данные и вход',x:'Сохраняйте резервную копию в разделе «Данные». Войдите по email в «Настройках», чтобы данные были на всех устройствах.'}
 ];
 let tourI=0;
