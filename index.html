@@ -1196,8 +1196,8 @@ document.addEventListener('change',e=>{if(e.target.id==='importFile')importData(
 $('#filter').addEventListener('change',render);
 
 fillTx();
-lockApp();
 initSB();
+unlockApp();
 go('home');
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
