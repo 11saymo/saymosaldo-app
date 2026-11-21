@@ -61,7 +61,9 @@ Deno.serve(async (req: Request) => {
       return response({ error: "password_invalid" }, 400);
     }
 
-    const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "unknown";
+    const forwardedFor = req.headers.get("x-forwarded-for")?.split(",").map((value) => value.trim()).filter(Boolean);
+    const ip = req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || forwardedFor?.at(-1);
+    if (!ip) return response({ error: "temporarily_unavailable" }, 503);
     const ipHash = await sha256(ip);
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
       auth: { autoRefreshToken: false, persistSession: false },
