@@ -704,7 +704,6 @@ const FORMS={
   budget(d){const limit=Math.round(+d.limit);if(!(limit>0))return'Укажите лимит больше нуля.';const b=S.budgets.find(x=>x.category===d.category);if(b)b.limit=limit;else S.budgets.push({category:d.category,limit});toast('Лимит сохранён')},
   rec(d){const name=d.name.trim(),amount=Math.round(+d.amount),day=Math.round(+d.day);if(!name||!(amount>0))return'Укажите название и сумму.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';S.recurring.push({id:uid(),name,amount,category:d.category,day});toast('Платёж добавлен')},
   debt(d){const name=d.name.trim(),original=Math.round(+d.original),remaining=Math.round(+d.remaining),monthly=Math.round(+d.monthly),day=Math.round(+d.day),rate=d.rate===''?null:+d.rate;if(!name)return'Укажите название.';if(!(original>0))return'Первоначальная сумма должна быть больше нуля.';if(!(remaining>=0&&remaining<=original))return'Остаток должен быть от 0 до первоначальной суммы.';if(!(monthly>0))return'Укажите ежемесячный платёж.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';if(rate!==null&&!(rate>=0&&rate<=100))return'Ставка — от 0 до 100.';S.debts.push({id:uid(),kind:d.kind,name,original,remaining,monthly,day,rate,history:[]});toast('Обязательство добавлено')},
-  login(d){sendLink(d.email)},
   chat(d){askAssistant(d.q)}
 };
 
@@ -732,7 +731,6 @@ document.addEventListener('submit',e=>{
   }
   if(f==='set-password')return authSetPassword(values.password);
   if(f==='claim-username')return claimUsername(values.username);
-  if(f==='login')return sendLink(values.email);
   const err=FORMS[f](values);
   if(err)return toast(err);
   e.target.reset();
@@ -1020,11 +1018,6 @@ function setLegacyGateMode(){
 }
 function unlockApp(){document.body.classList.remove('auth-locked');$('#authGateStatus').textContent='';if(user&&accountReady&&!localStorage.getItem(KEY+'onboarding'))showWelcome()}
 function lockApp(){document.body.classList.add('auth-locked');setAuthGateMode('signin')}
-async function sendLink(email){
-  if(!sb){toast('Вход пока не настроен');return}
-  const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split('#')[0],shouldCreateUser:true}});
-  toast(error?'Не удалось отправить ссылку: '+error.message:'Ссылка отправлена на почту. Проверьте также папку «Спам».');
-}
 function validPassword(password){return typeof password==='string'&&password.length>=12&&password.length<=72}
 function normalizeUsername(value){return typeof value==='string'?value.trim().toLowerCase():''}
 function usernameEmail(username){return normalizeUsername(username)+'@accounts.saymosaldo.app'}
@@ -1113,17 +1106,6 @@ async function saveRecoveredPassword(password,confirmation){
     setAuthGateMode('signin');
     status.textContent='Пароль успешно изменён. Теперь войдите с новым паролем.';
   }catch(error){status.textContent='Не удалось изменить пароль. Откройте ссылку из письма ещё раз.'}
-}
-async function authReset(email,fromGate=false){
-  const status=fromGate?$('#authGateStatus'):null;
-  if(!sb){if(status)status.textContent='Восстановление пока не настроено.';else toast('Восстановление пока не настроено');return}
-  if(!email){const msg='Сначала укажите адрес почты.';if(status)status.textContent=msg;else toast(msg);return}
-  if(status)status.textContent='Отправляем письмо…';
-  try{
-    const {error}=await sb.auth.resetPasswordForEmail(email.trim(),{redirectTo:location.href.split('#')[0]});
-    const msg=error?'Не удалось отправить письмо для восстановления: '+error.message:'Если аккаунт с такой почтой существует, письмо для восстановления отправлено.';
-    if(status)status.textContent=msg;else toast(msg);
-  }catch(error){const msg='Не удалось отправить письмо. Проверьте подключение к интернету.';if(status)status.textContent=msg;else toast(msg)}
 }
 async function authSetPassword(password){
   if(!sb||!user)return toast('Сначала войдите в аккаунт.');
@@ -1233,8 +1215,6 @@ document.addEventListener('click',e=>{
     case'tour-back':tourI--;return showTourStep();
     case'tour-skip':return endTour('skipped');
     case'logout':return logout();
-    case'auth-reset':return authReset($('#authEmail')?.value||'');
-    case'auth-link':return sendLink($('#authEmail')?.value||'');
     case'import-device-data':
       if(!user||!accountReady||!syncAllowed||accountHasData||!guestHasData())return;
       if(!confirm('Перенести локальные данные в пустой аккаунт? Данные аккаунта будут заменены данными этого устройства.'))return;
