@@ -98,6 +98,29 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nav .fab svg{stroke:var(--bg);width:24px;height:24px}
 .nav button{font-size:11px}
+.greet{font-size:15px;color:var(--mut);margin:-6px 0 6px}
+.status{color:var(--mut);font-size:15px;margin:0 0 14px}
+.quick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 4px}
+.qbtn{display:grid;justify-items:center;gap:6px;padding:14px 8px;font-size:13px;border-radius:var(--r)}
+.qbtn span{font-size:20px;line-height:1}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;height:130px}
+.wd{display:grid;grid-template-rows:1fr auto;gap:6px;justify-items:center;min-height:0}
+.wb{height:100%;width:100%;display:flex;align-items:flex-end}
+.wb i{display:block;width:100%;border-radius:8px;background:var(--acc)}
+.wd small{font-size:11px;color:var(--mut)}
+.ico{width:40px;height:40px;border-radius:13px;background:var(--line);display:grid;place-items:center;font-size:19px;flex:none;margin-right:12px}
+.ring{width:46px;height:46px;transform:rotate(-90deg);display:block}
+.ring circle{fill:none;stroke-width:3.4}
+.ring .rt{stroke:var(--line)}
+.ring .rv{stroke:var(--acc);stroke-linecap:round}
+.ringbox{position:relative;width:46px;height:46px;margin-right:12px;flex:none}
+.ringbox span{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:700}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:20px;z-index:80}
+.ov-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;max-width:360px;width:100%}
+.ov-card h2{font-size:20px;margin-bottom:8px}
+.ov-card p{margin-bottom:18px}
+.tour-card{position:fixed;left:14px;right:14px;bottom:calc(env(safe-area-inset-bottom) + 92px);max-width:420px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;z-index:70;box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.tour-hl{outline:3px solid var(--acc)!important;outline-offset:4px;border-radius:12px}
 </style>
 </head>
 <body>
@@ -106,7 +129,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 
   <main>
     <section class="view" data-view="home">
-      <p class="muted" id="status" style="margin:0 0 12px;font-size:15px"></p>
+      <p class="greet" id="greet"></p>
       <div class="card hero">
         <span class="label" id="monthLabel"></span>
         <div class="big" id="balance">—</div>
@@ -115,12 +138,20 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
           <div><span class="label">Расходы</span><b id="expense">—</b></div>
         </div>
       </div>
-      <div class="sec"><h2>Последние операции</h2><button class="link" data-go="ops">Все операции</button></div>
-      <div id="recent" class="list"></div>
-      <div class="sec"><h2>Лимиты</h2><button class="link" data-go="more">Управлять</button></div>
+      <p class="status" id="status"></p>
+      <div class="quick">
+        <button class="qbtn" data-go="add"><span>＋</span>Операция</button>
+        <button class="qbtn" data-go="stats"><span>◎</span>Бюджет</button>
+        <button class="qbtn" data-go="more"><span>↻</span>Платежи</button>
+      </div>
+      <div class="sec"><h2>Последние 7 дней</h2></div>
+      <div class="card"><div class="week" id="week"></div></div>
+      <div class="sec"><h2>Лимиты</h2><button class="link" data-go="stats">Управлять</button></div>
       <div id="homeLimits" class="list"></div>
-      <div class="sec"><h2>Цели</h2><button class="link" data-go="more">Управлять</button></div>
+      <div class="sec"><h2>Цели</h2><button class="link" data-go="stats">Управлять</button></div>
       <div id="homeGoals" class="list"></div>
+      <div class="sec"><h2>Последние операции</h2><button class="link" data-go="ops">Все</button></div>
+      <div id="recent" class="list"></div>
       <p class="note">Данные хранятся в этом браузере. Делайте резервную копию в разделе «Ещё».</p>
     </section>
 
@@ -149,14 +180,15 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
     </section>
 
     <section class="view" data-view="stats" hidden>
-      <div class="card"><h2>Расходы по категориям</h2><div id="catStats" style="margin-top:6px"></div></div>
-      <div class="card"><h2>Динамика за 6 месяцев</h2><div id="monthStats" style="margin-top:6px"></div></div>
+      <div id="budgetWrap"></div>
+      <div class="sec"><h2>Расходы по категориям</h2></div>
+      <div class="card"><div id="catStats"></div></div>
+      <div class="sec"><h2>Динамика за 6 месяцев</h2></div>
+      <div class="card"><div id="monthStats"></div></div>
     </section>
 
     <section class="view" data-view="more" hidden>
       <div class="tabs" id="tabs" role="tablist">
-        <button data-tab="goals">Цели</button>
-        <button data-tab="budgets">Лимиты</button>
         <button data-tab="recurring">Платежи</button>
         <button data-tab="debts">Долги</button>
         <button data-tab="assistant">Помощник</button>
@@ -200,7 +232,7 @@ const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const empty=t=>`<div class="empty">${t}</div>`;
 const catOpts=t=>CATS[t].map(c=>`<option>${esc(c)}</option>`).join('');
 const field=(n,l,t='number',x='')=>`<label class="field"><span>${l}</span><input name="${n}" type="${t}" ${t==='number'?'inputmode="decimal" step="any"':''} ${x}></label>`;
-let mode='finance', tab='goals', cur='home';
+let mode='finance', tab='recurring', cur='home';
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2400)}
 
@@ -227,26 +259,34 @@ function ask(title,fields,cb){
   d.showModal();
 }
 
-const items=(list,del)=>list.map(x=>`<div class="item"><div><b>${esc(x.comment||x.category)}</b><small>${x.comment?esc(x.category)+' · ':''}${fmtDate(x.date)}</small></div><div class="amt ${x.type==='income'?'pos':''}">${x.type==='income'?'+':'−'}${money(x.amount)}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`).join('');
+const ICON={'Продукты':'🛒','Кафе и рестораны':'☕','Транспорт':'🚌','Покупки':'🛍️','Дом':'🏠','Здоровье':'💊','Развлечения':'🎬','Подписки':'📺','Кредиты и долги':'🏦','Зарплата':'💼','Подработка':'🛠️','Подарок':'🎁'};
+const items=(list,del)=>list.map(x=>`<div class="item"><div style="display:flex;align-items:center;min-width:0"><span class="ico">${ICON[x.category]||'📦'}</span><div style="min-width:0"><b>${esc(x.comment||x.category)}</b><small>${x.comment?esc(x.category)+' · ':''}${fmtDate(x.date)}</small></div></div><div class="amt ${x.type==='income'?'pos':''}">${x.type==='income'?'+':'−'}${money(x.amount)}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`).join('');
 const bar=(l,v,max)=>`<div class="bl"><div class="row"><span>${esc(l)}</span><b>${money(v)}</b></div><div class="bar"><i style="width:${Math.max(2,v/max*100)}%"></i></div></div>`;
 const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="card"><div class="row"><b>${esc(g.name)}</b><small>${Math.round(p)}%</small></div><small>${money(g.saved)} из ${money(g.target)}${g.date?' · до '+fmtDate(g.date):''}</small><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
 
 function render(){
   const k=nowMk(), m=monthTx(k), inc=sumType(m,'income'), out=sumType(m,'expense');
+  const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(x=>x.amount));
+  const overN=S.budgets.filter(b=>spent(b.category)>b.limit).length;
+  const h=new Date().getHours();
+  $('#greet').textContent=h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер';
   $('#monthLabel').textContent=monthName(k);
   $('#balance').textContent=money(inc-out);
   $('#income').textContent=money(inc);
   $('#expense').textContent=money(out);
+  $('#status').textContent=!S.tx.length?'Добавьте первую операцию, и картина месяца появится здесь.':overN?`Превышено лимитов: ${overN}. Проверьте категории ниже.`:'Всё под контролем.';
+  const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(ymd(d))}
+  const dv=days.map(dd=>S.tx.filter(x=>x.type==='expense'&&x.date===dd).reduce((v,x)=>v+(+x.amount||0),0));
+  const wmax=Math.max(...dv,1);
+  $('#week').innerHTML=days.map((dd,i)=>`<div class="wd"><div class="wb"><i style="height:${Math.max(4,dv[i]/wmax*100)}%"></i></div><small>${new Date(dd+'T12:00').toLocaleDateString('ru-RU',{weekday:'short'}).slice(0,2)}</small></div>`).join('');
   const sorted=[...S.tx].sort((a,b)=>String(b.date).localeCompare(String(a.date))||(b.created||0)-(a.created||0));
-  $('#recent').innerHTML=items(sorted.slice(0,4),false)||empty('Операций пока нет. Добавьте первую — это займёт минуту.');
+  $('#recent').innerHTML=items(sorted.slice(0,3),false)||empty('Операций пока нет. Добавьте первую — это займёт минуту.');
   const f=$('#filter').value, list=sorted.filter(x=>f==='all'||x.type===f);
   $('#count').textContent=list.length+' шт.';
   $('#allItems').innerHTML=items(list,true)||empty('Нет операций по выбранному фильтру.');
-  $('#homeGoals').innerHTML=S.goals.slice(0,3).map(g=>goalCard(g,true)).join('')||empty('Цели пока не добавлены.');
-  const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(x=>x.amount));
-  const overN=S.budgets.filter(b=>spent(b.category)>b.limit).length;
-  $('#status').textContent=!S.tx.length?'Добавьте первую операцию, и картина месяца появится здесь.':overN?`Превышено лимитов: ${overN}. Проверьте категории ниже.`:'Всё под контролем.';
-  $('#homeLimits').innerHTML=S.budgets.slice(0,3).map(b=>{const sp=spent(b.category),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><small>${money(sp)} из ${money(b.limit)}</small></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div></div>`}).join('')||empty('Лимиты не установлены. Их можно задать в разделе «Ещё → Лимиты».');
+  const ring=p=>`<svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" class="rt"/><circle cx="18" cy="18" r="15.9" class="rv" stroke-dasharray="${Math.min(100,p)} 100"/></svg>`;
+  $('#homeGoals').innerHTML=S.goals.slice(0,3).map(g=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="item"><div style="display:flex;align-items:center;min-width:0"><div class="ringbox">${ring(p)}<span>${Math.round(p)}%</span></div><div style="min-width:0"><b>${esc(g.name)}</b><small>${money(g.saved)} из ${money(g.target)}</small></div></div></div>`}).join('')||empty('Цели пока не добавлены.');
+  $('#homeLimits').innerHTML=S.budgets.slice(0,3).map(b=>{const sp=spent(b.category),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><small>${money(sp)} из ${money(b.limit)}</small></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div></div>`}).join('')||empty('Лимиты не установлены. Их можно задать в разделе «Бюджет».');
   const by={};
   m.filter(x=>x.type==='expense').forEach(x=>by[x.category]=(by[x.category]||0)+(+x.amount||0));
   const ents=Object.entries(by).sort((a,b)=>b[1]-a[1]), max=ents[0]?.[1]||1;
@@ -254,8 +294,9 @@ function render(){
   const ks=[];for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);ks.push(ymd(d).slice(0,7))}
   const vals=ks.map(q=>sumType(monthTx(q),'expense')), mx=Math.max(...vals,1);
   $('#monthStats').innerHTML=ks.map((q,i)=>bar(monthName(q),vals[i],mx)).join('');
+  $('#budgetWrap').innerHTML=PANELS.goals()+PANELS.budgets();
   renderPanel();
-}
+ }
 
 const PANELS={
   goals:()=>`${S.goals.map(g=>goalCard(g)).join('')||empty('Цели пока не добавлены. Например, накопления на отпуск.')}
@@ -291,7 +332,7 @@ const PANELS={
     <form class="chatform" data-form="chat"><input name="q" autocomplete="off" placeholder="Например, на что ушло больше всего"><button class="primary">Отправить</button></form>
     <div class="actions"><button class="link" data-act="chat-clear">Очистить историю этого режима</button></div>`,
 
-  settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `${accountCard()}<div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
+  settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `${accountCard()}<div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
   data:()=>`<div class="card"><p>Резервная копия содержит операции, цели, лимиты, платежи и долги. Файл содержит ваши финансовые записи, не передавайте его посторонним.</p>
     <div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div>
     <p class="note">Данные хранятся только в этом браузере. Очистка данных сайта может их удалить, поэтому делайте копию регулярно. Не вводите пароли, коды подтверждения и номера карт.</p>`
@@ -312,7 +353,7 @@ const FORMS={
   chat(d){askAssistant(d.q)}
 };
 
-$('#panel').addEventListener('submit',e=>{
+document.addEventListener('submit',e=>{
   const f=e.target.dataset.form;
   if(!f)return;
   e.preventDefault();
@@ -453,6 +494,39 @@ function accountCard(){
   if(user)return `<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как ${esc(user.email)}. Данные синхронизируются между устройствами.</p><button class="ghost" data-act="logout">Выйти</button></div>`;
   return `<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Войдите, чтобы данные были на всех ваших устройствах. Пароль не нужен: пришлём ссылку на почту.</p><form class="chatform" data-form="login"><input name="email" type="email" required placeholder="you@example.com" autocomplete="email"><button class="primary">Получить ссылку</button></form></div>`;
 }
+const TOUR=[
+ {view:'home',sel:'#balance',t:'Главная',x:'Здесь видно баланс месяца, доходы и расходы. Всё обновляется сразу после записи операции.'},
+ {view:'home',sel:'nav button[data-go="add"]',t:'Новая операция',x:'Нажмите «+», чтобы записать трату или доход. Укажите сумму и категорию, дата подставится сама.'},
+ {view:'ops',sel:'#allItems',t:'Операции',x:'Здесь все записи. Фильтр покажет только расходы или только доходы, а лишнюю операцию можно удалить.'},
+ {view:'stats',sel:'#budgetWrap',t:'Бюджет',x:'Цели накопления и лимиты по категориям. Лимит подскажет, когда категория близка к пределу.'},
+ {view:'more',tab:'recurring',sel:'#panel',t:'Платежи',x:'Аренда, интернет, подписки. Отмечайте оплату, и расход сразу появится в истории.'},
+ {view:'more',tab:'debts',sel:'#panel',t:'Долги',x:'Ипотека и кредиты: видно остаток и процент погашения. Каждый платёж уменьшает долг.'},
+ {view:'more',tab:'data',sel:'#panel',t:'Данные и вход',x:'Сохраняйте резервную копию в разделе «Данные». Войдите по email в «Настройках», чтобы данные были на всех устройствах.'}
+];
+let tourI=0;
+function showWelcome(){
+  const d=document.createElement('div');d.id='welcome';d.className='overlay';
+  d.innerHTML='<div class="ov-card"><h2>Добро пожаловать в SaymoSaldo</h2><p class="muted">Хотите пройти короткое обучение? Оно займёт около минуты и покажет основные разделы. Открыть его позже можно в «Ещё → Настройки».</p><div style="display:grid;gap:8px"><button class="primary" data-act="welcome-yes">Пройти обучение</button><button class="ghost" data-act="welcome-no">Пропустить</button></div></div>';
+  document.body.appendChild(d);
+}
+function closeWelcome(){document.getElementById('welcome')?.remove()}
+function startTour(){closeWelcome();tourI=0;showTourStep()}
+function showTourStep(){
+  document.querySelectorAll('.tour-hl').forEach(e=>e.classList.remove('tour-hl'));
+  const st=TOUR[tourI]; if(st.tab)tab=st.tab;
+  go(st.view);
+  const el=document.querySelector(st.sel);
+  if(el){el.classList.add('tour-hl');el.scrollIntoView({block:'center'})}
+  let c=document.getElementById('tour');
+  if(!c){c=document.createElement('div');c.id='tour';c.className='tour-card';document.body.appendChild(c)}
+  const last=tourI===TOUR.length-1;
+  c.innerHTML=`<small class="muted">Шаг ${tourI+1} из ${TOUR.length}</small><h2 style="font-size:17px;margin:4px 0 6px">${st.t}</h2><p style="margin-bottom:14px">${st.x}</p><div class="row"><button class="link" data-act="tour-skip">Пропустить</button><div style="display:flex;gap:8px">${tourI>0?'<button class="ghost" data-act="tour-back">Назад</button>':''}<button class="primary" data-act="tour-next" style="width:auto">${last?'Готово':'Дальше'}</button></div></div>`;
+}
+function endTour(state){
+  try{localStorage.setItem(KEY+'onboarding',state)}catch(e){}
+  document.querySelectorAll('.tour-hl').forEach(e=>e.classList.remove('tour-hl'));
+  document.getElementById('tour')?.remove();
+}
 function setTheme(v){try{localStorage.setItem('saymosaldo_theme',v)}catch(e){}if(v==='light'||v==='dark')document.documentElement.dataset.theme=v;else delete document.documentElement.dataset.theme}
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-go],[data-tab],[data-mode],[data-q],[data-act],[data-theme-set]');
@@ -479,6 +553,12 @@ document.addEventListener('click',e=>{
     case'debt-pay':return payDebt(id);
     case'debt-del':return confirmDo('Удалить обязательство? История расходов останется.',()=>{S.debts=S.debts.filter(x=>x.id!==id)});
     case'chat-clear':if(confirm('Очистить историю этого режима на этом устройстве?')){localStorage.removeItem(chatKey());renderChat()}return;
+    case'welcome-yes':return startTour();
+    case'welcome-no':try{localStorage.setItem(KEY+'onboarding','skipped')}catch(e){}closeWelcome();return;
+    case'tour-start':return startTour();
+    case'tour-next':if(tourI<TOUR.length-1){tourI++;return showTourStep()}return endTour('done');
+    case'tour-back':tourI--;return showTourStep();
+    case'tour-skip':return endTour('skipped');
     case'logout':if(sb)sb.auth.signOut();toast('Вы вышли из аккаунта');return;
     case'export':return exportData();
     case'import':return $('#importFile').click();
@@ -492,6 +572,7 @@ $('#filter').addEventListener('change',render);
 fillTx();
 initSB();
 go('home');
+if(!localStorage.getItem(KEY+'onboarding'))showWelcome();
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
