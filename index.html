@@ -593,7 +593,7 @@ function render(){
   $('#balance').textContent=money(inc-out);
   $('#income').textContent=money(inc);
   $('#expense').textContent=money(out);
-  $('#status').textContent=!S.tx.length?'Добавьте первую операцию, и картина месяца появится здесь.':overN?`Превышено лимитов: ${overN}. Проверьте категории ниже.`:'Всё под контролем.';
+  $('#status').textContent=!S.tx.length?'Добавьте первую операцию, и общая картина появится здесь.':overN?`Превышено лимитов: ${overN}. Проверьте категории ниже.`:'Всё под контролем.';
    const insightEl=$('#moneyInsight');
    const todayDate=new Date(),dayOfMonth=todayDate.getDate(),daysInMonth=new Date(todayDate.getFullYear(),todayDate.getMonth()+1,0).getDate();
    const expenseRows=m.filter(x=>x.type==='expense'&&Number(x.amount)>0);
