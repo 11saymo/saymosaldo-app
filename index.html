@@ -693,7 +693,8 @@ function payDebt(id){
 }
 
 function exportData(){
-  const data={app:'SaymoSaldo',version:4,exportedAt:new Date().toISOString(),...S};
+  const data={app:'SaymoSaldo',version:5,exportedAt:new Date().toISOString(),...S};
+  try{data.chatFinance=JSON.parse(localStorage.getItem(scopedKey('chat_finance'))||'[]')}catch{data.chatFinance=[]}
   const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   const a=document.createElement('a');a.href=url;a.download=`SaymoSaldo-backup-${today()}.json`;a.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -701,14 +702,17 @@ function exportData(){
 
 function importData(e){
   const f=e.target.files[0];e.target.value='';if(!f)return;
+  if(f.size>10*1024*1024)return toast('Файл слишком большой для восстановления (максимум 10 МБ).');
   const r=new FileReader();
   r.onload=()=>{
     let d;try{d=JSON.parse(r.result)}catch{return toast('Файл повреждён или не является JSON')}
-    if(!['tx','goals','budgets','recurring'].every(k=>Array.isArray(d[k])))return toast('Это не резервная копия SaymoSaldo');
-    if(!confirm('Заменить текущие данные данными из копии?'))return;
+    if(!d||typeof d!=='object'||d.app!=='SaymoSaldo'||!['tx','goals','budgets','recurring'].every(k=>Array.isArray(d[k]))||('debts'in d&&!Array.isArray(d.debts))||('chatFinance'in d&&!Array.isArray(d.chatFinance)))return toast('Это не резервная копия SaymoSaldo');
+    if(!confirm('Заменить текущие финансовые данные данными из копии? Это действие нельзя отменить.'))return;
     S.tx=d.tx;S.goals=d.goals;S.budgets=d.budgets;S.recurring=d.recurring;S.debts=Array.isArray(d.debts)?d.debts:[];
-    save();render();toast('Данные восстановлены');
+    if(Array.isArray(d.chatFinance))localStorage.setItem(scopedKey('chat_finance'),JSON.stringify(d.chatFinance));
+    save();render();renderPanel();toast('Данные восстановлены. Если вы вошли в аккаунт, дождитесь облачной синхронизации.');
   };
+  r.onerror=()=>toast('Не удалось прочитать файл резервной копии');
   r.readAsText(f);
 }
 
