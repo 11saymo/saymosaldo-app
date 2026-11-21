@@ -200,6 +200,56 @@ body::after{content:"";position:fixed;z-index:-1;pointer-events:none;width:420px
  linear-gradient(90deg,rgba(224,112,125,.035) 1px,transparent 1px)}
 :root[data-theme=dark] body::after{border-color:rgba(224,112,125,.15);box-shadow:0 0 0 28px rgba(224,112,125,.035),0 0 0 58px rgba(224,112,125,.025),0 0 0 90px rgba(224,112,125,.018)}
 
+
+/* Soft square surfaces for every secondary-section category */
+.tabs{gap:8px;padding:4px 2px 8px}
+.tabs button,.tabs button[aria-selected=true]{
+  flex:0 0 auto;
+  min-height:42px;
+  padding:10px 15px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:var(--card);
+  color:var(--fg);
+  box-shadow:0 3px 12px rgba(24,28,24,.045);
+}
+.tabs button[aria-selected=true]{
+  background:color-mix(in srgb,var(--acc) 11%,var(--card));
+  color:var(--acc);
+  border-color:color-mix(in srgb,var(--acc) 28%,var(--line));
+  font-weight:650;
+}
+.chips{gap:9px}
+.chip{
+  background:var(--card);
+  color:var(--fg);
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:10px 13px;
+  line-height:1.35;
+  box-shadow:0 3px 12px rgba(24,28,24,.045);
+  white-space:normal;
+  text-align:left;
+}
+.bl{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:13px 14px 8px;
+  margin:0 0 9px;
+  box-shadow:var(--shadow);
+}
+#panel>.muted{display:block;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+#panel .card,#budgetWrap .card,#budgetWrap .item,#allItems .item{
+  background:var(--card);
+  border-color:var(--line);
+}
+#panel .field>span{color:var(--fg);opacity:.78}
+@media(prefers-color-scheme:dark){
+ .tabs button,.chip,.bl{box-shadow:0 4px 16px rgba(0,0,0,.16)}
+}
+:root[data-theme=dark] .tabs button,:root[data-theme=dark] .chip,:root[data-theme=dark] .bl{box-shadow:0 4px 16px rgba(0,0,0,.16)}
+
 </style>
 </head>
 <body>
