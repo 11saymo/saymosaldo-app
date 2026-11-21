@@ -394,9 +394,38 @@ button,input,select{letter-spacing:0;line-height:1.4}
 .seo-intro h3{font-size:14px;font-weight:650;margin:18px 0 7px}
 .seo-intro ul{padding-left:20px;color:var(--mut);font-size:14px;line-height:1.75}
 .seo-intro strong{color:var(--fg);font-weight:650}
+/* First screen: account sign-in gate */
+body.auth-locked{overflow:hidden}
+body.auth-locked .app,body.auth-locked .nav,body.auth-locked #dlg,body.auth-locked #importFile,body.auth-locked .seo-intro{display:none!important}
+.auth-gate{display:none;position:fixed;inset:0;z-index:200;overflow-y:auto;place-items:center;padding:24px 18px;background:radial-gradient(ellipse 560px 440px at 10% 0%,rgba(122,31,43,.14),transparent 70%),radial-gradient(ellipse 500px 420px at 100% 100%,rgba(190,151,105,.12),transparent 70%),var(--bg)}
+body.auth-locked .auth-gate{display:grid}
+.auth-shell{width:min(100%,420px);padding:clamp(24px,6vw,38px);border:1px solid var(--line);border-radius:24px;background:var(--card);box-shadow:0 20px 70px rgba(30,20,20,.10)}
+.auth-mark{width:46px;height:46px;display:grid;place-items:center;border-radius:15px;background:var(--acc);color:white;font-size:25px;font-weight:800;margin-bottom:16px}
+.auth-brand{font-size:14px;font-weight:750;letter-spacing:.04em;color:var(--acc);margin-bottom:24px}
+.auth-shell h1{font-size:clamp(27px,6vw,34px);margin-bottom:8px}
+.auth-lead{color:var(--mut);font-size:14px;line-height:1.6;margin-bottom:24px}
+.auth-form{display:grid;gap:2px}.auth-form .field{margin-bottom:12px}.auth-submit{margin-top:5px;min-height:50px}
+.auth-links{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}.auth-links .link{font-size:13px}
+.auth-hint,.auth-status{font-size:12px;line-height:1.55;color:var(--mut);margin-top:18px}.auth-status:empty{display:none}.auth-status:not(:empty){padding:10px 12px;border-radius:10px;background:var(--bg)}
+@media(max-width:420px){.auth-shell{padding:24px 20px;border-radius:20px}}
+@media(prefers-reduced-motion:no-preference){.auth-shell{animation:auth-enter .28s ease-out both}@keyframes auth-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}}
 </style>
 </head>
-<body>
+<body class="auth-locked">
+<section id="authGate" class="auth-gate" aria-labelledby="authGateTitle">
+  <div class="auth-shell"><div class="auth-mark" aria-hidden="true">S</div>
+    <p class="auth-brand">SaymoSaldo</p><h1 id="authGateTitle">С возвращением</h1>
+    <p class="auth-lead" id="authGateLead">Войдите, чтобы открыть свой финансовый кабинет.</p>
+    <form id="authGateForm" class="auth-form" data-form="auth-gate">
+      <label class="field"><span>Электронная почта</span><input id="authGateEmail" name="email" type="email" required autocomplete="email" placeholder="you@example.com"></label>
+      <label class="field"><span>Пароль</span><input id="authGatePassword" name="password" type="password" minlength="12" maxlength="72" required autocomplete="current-password" placeholder="Не менее 12 символов"></label>
+      <label class="field" id="authGateConfirmWrap" hidden><span>Повторите пароль</span><input id="authGateConfirm" name="confirmPassword" type="password" minlength="12" maxlength="72" autocomplete="new-password" placeholder="Повторите пароль"></label>
+      <button class="primary auth-submit" id="authGateSubmit" type="submit" data-auth-action="signin">Войти</button>
+    </form>
+    <div class="auth-links"><button class="link" type="button" data-auth-gate="reset">Забыли пароль?</button><button class="link" type="button" id="authGateMode" data-auth-gate="signup">Создать аккаунт</button></div>
+    <p class="auth-hint" id="authGateHint">Ваши финансовые данные доступны только после входа в аккаунт.</p>
+    <p class="auth-status" id="authGateStatus" role="status" aria-live="polite"></p>
+  </div></section>
 <div class="app">
   <header class="top"><h1 id="title">Главная</h1></header>
 
@@ -679,6 +708,14 @@ document.addEventListener('submit',e=>{
   if(!f)return;
   e.preventDefault();
   const values=Object.fromEntries(new FormData(e.target));
+  if(f==='auth-gate'){
+    const action=e.submitter?.dataset.authAction;
+    if(action==='signup'){
+      if(values.password!==values.confirmPassword){$('#authGateStatus').textContent='Пароли не совпадают.';return}
+      return authSignUp(values.email,values.password,true);
+    }
+    return authSignIn(values.email,values.password,true);
+  }
   if(f==='auth'){
     const action=e.submitter?.dataset.authAction;
     if(action==='signup')return authSignUp(values.email,values.password);
@@ -862,11 +899,10 @@ function initSB(){
 }
 async function activateAccount(nextUser,generation){
   if(!nextUser){
-    applyState(readLocalState(KEY));
     accountHasData=false;
     syncAllowed=false;
     accountReady=true;
-    render();renderPanel();
+    lockApp();
     return;
   }
   const prefix=KEY+'user_'+nextUser.id+'_';
@@ -891,6 +927,7 @@ async function activateAccount(nextUser,generation){
     syncAllowed=true;
     accountReady=true;
     render();renderPanel();
+    unlockApp();
     if(accountHasData)toast('Данные вашего аккаунта загружены');
     else if(guestHasData())toast('Данные этого устройства не переносились. Их можно перенести отдельно.');
   }catch(error){
@@ -900,6 +937,7 @@ async function activateAccount(nextUser,generation){
     syncAllowed=false;
     accountReady=true;
     render();renderPanel();
+    unlockApp();
     toast('Не удалось загрузить облачные данные. Изменения пока не синхронизируются.');
   }
 }
@@ -932,30 +970,62 @@ async function pushRemote(){
   if(syncInFlight===task)syncInFlight=null;
   return ok;
 }
+let authGateMode='signin';
+function setAuthGateMode(mode){
+  authGateMode=mode==='signup'?'signup':'signin';
+  const signup=authGateMode==='signup';
+  $('#authGateTitle').textContent=signup?'Создать аккаунт':'С возвращением';
+  $('#authGateLead').textContent=signup?'Зарегистрируйтесь по электронной почте, чтобы начать пользоваться SaymoSaldo.':'Войдите, чтобы открыть свой финансовый кабинет.';
+  $('#authGateConfirmWrap').hidden=!signup;$('#authGateConfirm').required=signup;
+  $('#authGatePassword').autocomplete=signup?'new-password':'current-password';
+  $('#authGateSubmit').textContent=signup?'Создать аккаунт':'Войти';
+  $('#authGateSubmit').dataset.authAction=signup?'signup':'signin';
+  $('#authGateMode').textContent=signup?'Уже есть аккаунт? Войти':'Создать аккаунт';
+  $('#authGateMode').dataset.authGate=signup?'signin':'signup';
+  $('#authGateHint').textContent=signup?'Пароль должен содержать не менее 12 символов. После регистрации подтвердите почту по ссылке из письма.':'Ваши финансовые данные доступны только после входа в аккаунт.';
+  $('#authGateStatus').textContent='';
+}
+function unlockApp(){document.body.classList.remove('auth-locked');$('#authGateStatus').textContent='';if(user&&accountReady&&!localStorage.getItem(KEY+'onboarding'))showWelcome()}
+function lockApp(){document.body.classList.add('auth-locked');setAuthGateMode('signin')}
 async function sendLink(email){
   if(!sb){toast('Вход пока не настроен');return}
   const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split('#')[0],shouldCreateUser:true}});
   toast(error?'Не удалось отправить ссылку: '+error.message:'Ссылка отправлена на почту. Проверьте также папку «Спам».');
 }
 function validPassword(password){return typeof password==='string'&&password.length>=12&&password.length<=72}
-async function authSignIn(email,password){
-  if(!sb)return toast('Вход пока не настроен');
-  if(!email||!password)return toast('Укажите почту и пароль.');
-  const {error}=await sb.auth.signInWithPassword({email:email.trim(),password});
-  if(error)toast('Не удалось войти. Проверьте почту и пароль или воспользуйтесь входом по ссылке.');
+async function authSignIn(email,password,fromGate=false){
+  const status=fromGate?$('#authGateStatus'):null;
+  if(!sb){if(status)status.textContent='Сервис входа пока не подключён.';else toast('Вход пока не настроен');return}
+  if(!email||!password){if(status)status.textContent='Укажите почту и пароль.';else toast('Укажите почту и пароль.');return}
+  if(status)status.textContent='Проверяем данные…';
+  try{
+    const {error}=await sb.auth.signInWithPassword({email:email.trim(),password});
+    if(error){const msg='Не удалось войти. Проверьте почту и пароль.';if(status)status.textContent=msg;else toast(msg)}
+  }catch(error){const msg='Не удалось выполнить вход. Проверьте подключение к интернету.';if(status)status.textContent=msg;else toast(msg)}
 }
-async function authSignUp(email,password){
-  if(!sb)return toast('Регистрация пока не настроена');
-  if(!email||!validPassword(password))return toast('Пароль должен содержать не менее 12 символов.');
-  const {error}=await sb.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:location.href.split('#')[0]}});
-  if(error){toast('Не удалось создать аккаунт: '+error.message);return}
-  toast('Проверьте почту и подтвердите адрес. После подтверждения можно войти по паролю.');
+async function authSignUp(email,password,fromGate=false){
+  const status=fromGate?$('#authGateStatus'):null;
+  if(!sb){if(status)status.textContent='Регистрация пока не настроена.';else toast('Регистрация пока не настроена');return}
+  if(!email||!validPassword(password)){const msg='Пароль должен содержать не менее 12 символов.';if(status)status.textContent=msg;else toast(msg);return}
+  if(status)status.textContent='Создаём аккаунт…';
+  try{
+    const {error}=await sb.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:location.href.split('#')[0]}});
+    if(error){const msg='Не удалось создать аккаунт: '+error.message;if(status)status.textContent=msg;else toast(msg);return}
+    const msg='Аккаунт создан. Проверьте почту и подтвердите адрес по ссылке из письма, затем войдите.';
+    if(status)status.textContent=msg;else toast(msg);
+    if(fromGate){$('#authGateForm').reset();setAuthGateMode('signin');$('#authGateStatus').textContent=msg}
+  }catch(error){const msg='Не удалось создать аккаунт. Проверьте подключение к интернету.';if(status)status.textContent=msg;else toast(msg)}
 }
-async function authReset(email){
-  if(!sb)return toast('Восстановление пока не настроено');
-  if(!email)return toast('Сначала укажите адрес почты.');
-  const {error}=await sb.auth.resetPasswordForEmail(email.trim(),{redirectTo:location.href.split('#')[0]});
-  toast(error?'Не удалось отправить письмо для восстановления: '+error.message:'Если аккаунт с такой почтой существует, письмо для восстановления уже отправлено.');
+async function authReset(email,fromGate=false){
+  const status=fromGate?$('#authGateStatus'):null;
+  if(!sb){if(status)status.textContent='Восстановление пока не настроено.';else toast('Восстановление пока не настроено');return}
+  if(!email){const msg='Сначала укажите адрес почты.';if(status)status.textContent=msg;else toast(msg);return}
+  if(status)status.textContent='Отправляем письмо…';
+  try{
+    const {error}=await sb.auth.resetPasswordForEmail(email.trim(),{redirectTo:location.href.split('#')[0]});
+    const msg=error?'Не удалось отправить письмо для восстановления: '+error.message:'Если аккаунт с такой почтой существует, письмо для восстановления отправлено.';
+    if(status)status.textContent=msg;else toast(msg);
+  }catch(error){const msg='Не удалось отправить письмо. Проверьте подключение к интернету.';if(status)status.textContent=msg;else toast(msg)}
 }
 async function authSetPassword(password){
   if(!sb||!user)return toast('Сначала войдите в аккаунт.');
@@ -1013,6 +1083,14 @@ function endTour(state){
 }
 function setTheme(v){try{localStorage.setItem('saymosaldo_theme',v)}catch(e){}if(v==='light'||v==='dark')document.documentElement.dataset.theme=v;else delete document.documentElement.dataset.theme}
 document.addEventListener('click',e=>{
+  const gateAction=e.target.closest('[data-auth-gate]')?.dataset.authGate;
+  if(gateAction){
+    e.preventDefault();
+    if(gateAction==='signup'||gateAction==='signin')return setAuthGateMode(gateAction);
+    if(gateAction==='reset')return authReset($('#authGateEmail').value,true);
+  }
+});
+document.addEventListener('click',e=>{
   if(user&&!accountReady)return;
   const t=e.target.closest('[data-go],[data-tab],[data-mode],[data-q],[data-act],[data-theme-set]');
   if(!t)return;
@@ -1065,9 +1143,9 @@ document.addEventListener('change',e=>{if(e.target.id==='importFile')importData(
 $('#filter').addEventListener('change',render);
 
 fillTx();
+lockApp();
 initSB();
 go('home');
-if(!localStorage.getItem(KEY+'onboarding'))showWelcome();
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
