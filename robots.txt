@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://11saymo.github.io/saymosaldo-app/sitemap.xml
