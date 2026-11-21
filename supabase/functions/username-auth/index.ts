@@ -70,19 +70,14 @@ Deno.serve(async (req: Request) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const { error: insertError } = await admin
-      .from("username_auth_rate_limits")
-      .insert({ ip_hash: ipHash });
-    if (insertError) return response({ error: "temporarily_unavailable" }, 503);
-
-    const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-    const { count, error: countError } = await admin
-      .from("username_auth_rate_limits")
-      .select("id", { count: "exact", head: true })
-      .eq("ip_hash", ipHash)
-      .gte("created_at", since);
-    if (countError) return response({ error: "temporarily_unavailable" }, 503);
-    if ((count ?? 0) > 5) return response({ error: "rate_limited" }, 429);
+    const { data: allowed, error: rateLimitError } = await admin.rpc(
+      "consume_username_registration_attempt",
+      { p_ip_hash: ipHash },
+    );
+    if (rateLimitError || typeof allowed !== "boolean") {
+      return response({ error: "temporarily_unavailable" }, 503);
+    }
+    if (!allowed) return response({ error: "rate_limited" }, 429);
 
     const { data, error } = await admin.auth.admin.createUser({
       email: usernameEmail(username),
