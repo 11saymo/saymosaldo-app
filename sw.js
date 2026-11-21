@@ -1,6 +1,6 @@
 // Network-first: при онлайне всегда свежая версия, при офлайне — из кеша.
-const CACHE='saymosaldo-v8';
-const ASSETS=['./','./index.html','./manifest.json','./icon.svg','./icon-180.png','./icon-192.png','./icon-512.png'];
+const CACHE='saymosaldo-v9';
+const ASSETS=['./','./index.html','./manifest.json','./icon.svg','./icon-180.png','./icon-192.png','./icon-512.png','./icon-maskable-512.png'];
 
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
