@@ -678,7 +678,16 @@ document.addEventListener('submit',e=>{
   const f=e.target.dataset.form;
   if(!f)return;
   e.preventDefault();
-  const err=FORMS[f](Object.fromEntries(new FormData(e.target)));
+  const values=Object.fromEntries(new FormData(e.target));
+  if(f==='auth'){
+    const action=e.submitter?.dataset.authAction;
+    if(action==='signup')return authSignUp(values.email,values.password);
+    if(action==='signin')return authSignIn(values.email,values.password);
+    return;
+  }
+  if(f==='set-password')return authSetPassword(values.password);
+  if(f==='login')return sendLink(values.email);
+  const err=FORMS[f](values);
   if(err)return toast(err);
   e.target.reset();
   save();
@@ -928,6 +937,32 @@ async function sendLink(email){
   const {error}=await sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.href.split('#')[0],shouldCreateUser:true}});
   toast(error?'Не удалось отправить ссылку: '+error.message:'Ссылка отправлена на почту. Проверьте также папку «Спам».');
 }
+function validPassword(password){return typeof password==='string'&&password.length>=12&&password.length<=72}
+async function authSignIn(email,password){
+  if(!sb)return toast('Вход пока не настроен');
+  if(!email||!password)return toast('Укажите почту и пароль.');
+  const {error}=await sb.auth.signInWithPassword({email:email.trim(),password});
+  if(error)toast('Не удалось войти. Проверьте почту и пароль или воспользуйтесь входом по ссылке.');
+}
+async function authSignUp(email,password){
+  if(!sb)return toast('Регистрация пока не настроена');
+  if(!email||!validPassword(password))return toast('Пароль должен содержать не менее 12 символов.');
+  const {error}=await sb.auth.signUp({email:email.trim(),password,options:{emailRedirectTo:location.href.split('#')[0]}});
+  if(error){toast('Не удалось создать аккаунт: '+error.message);return}
+  toast('Проверьте почту и подтвердите адрес. После подтверждения можно войти по паролю.');
+}
+async function authReset(email){
+  if(!sb)return toast('Восстановление пока не настроено');
+  if(!email)return toast('Сначала укажите адрес почты.');
+  const {error}=await sb.auth.resetPasswordForEmail(email.trim(),{redirectTo:location.href.split('#')[0]});
+  toast(error?'Не удалось отправить письмо для восстановления: '+error.message:'Если аккаунт с такой почтой существует, письмо для восстановления уже отправлено.');
+}
+async function authSetPassword(password){
+  if(!sb||!user)return toast('Сначала войдите в аккаунт.');
+  if(!validPassword(password))return toast('Пароль должен содержать не менее 12 символов.');
+  const {error}=await sb.auth.updateUser({password});
+  toast(error?'Не удалось обновить пароль: '+error.message:'Пароль успешно сохранён.');
+}
 async function logout(){
   if(!sb)return;
   if(user&&accountReady&&syncAllowed){
@@ -940,8 +975,8 @@ async function logout(){
   toast('Вы вышли из аккаунта');
 }
 function accountCard(){
-  if(user)return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как '+esc(user.email)+'. Данные этого аккаунта отделены от данных на устройстве.</p>'+(accountReady&&syncAllowed&&!accountHasData&&guestHasData()?'<button class="ghost" data-act="import-device-data">Перенести данные с этого устройства в аккаунт</button>':'')+'<button class="ghost" data-act="logout">Выйти</button></div>';
-  return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Войдите, чтобы данные были на всех ваших устройствах. Пароль не нужен: пришлём ссылку на почту.</p><form class="chatform" data-form="login"><input name="email" type="email" required placeholder="you@example.com" autocomplete="email"><button class="primary">Получить ссылку</button></form></div>';
+  if(user)return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как '+esc(user.email||'аккаунт')+'. Данные этого аккаунта отделены от данных на устройстве.</p><form class="chatform" data-form="set-password"><input name="password" type="password" minlength="12" maxlength="72" required placeholder="Новый пароль (от 12 символов)" autocomplete="new-password"><button class="primary">Установить / изменить пароль</button></form><p class="muted" style="font-size:12px;margin:8px 0">Если вы раньше входили по ссылке из письма, можно задать пароль здесь.</p>'+(accountReady&&syncAllowed&&!accountHasData&&guestHasData()?'<button class="ghost" data-act="import-device-data">Перенести данные с этого устройства в аккаунт</button>':'')+'<button class="ghost" data-act="logout">Выйти</button></div>';
+  return '<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Создайте аккаунт по почте и паролю или войдите в существующий.</p><form class="chatform" data-form="auth"><input id="authEmail" name="email" type="email" required placeholder="Электронная почта" autocomplete="email"><input name="password" type="password" minlength="12" maxlength="72" required placeholder="Пароль (от 12 символов)" autocomplete="current-password"><button class="primary" type="submit" data-auth-action="signin">Войти</button><button class="ghost" type="submit" data-auth-action="signup">Создать аккаунт</button></form><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="link" type="button" data-act="auth-reset">Забыли пароль?</button><button class="link" type="button" data-act="auth-link">Войти по ссылке из письма</button></div><p class="muted" style="font-size:12px;margin-top:10px">Для регистрации подтвердите адрес по ссылке в письме. Пароль должен содержать не менее 12 символов.</p></div>';
 }
 const TOUR=[
  {view:'home',sel:'#balance',t:'Главная',x:'Здесь видно баланс месяца, доходы и расходы. Всё обновляется сразу после записи операции.'},
@@ -1010,6 +1045,8 @@ document.addEventListener('click',e=>{
     case'tour-back':tourI--;return showTourStep();
     case'tour-skip':return endTour('skipped');
     case'logout':return logout();
+    case'auth-reset':return authReset($('#authEmail')?.value||'');
+    case'auth-link':return sendLink($('#authEmail')?.value||'');
     case'import-device-data':
       if(!user||!accountReady||!syncAllowed||accountHasData||!guestHasData())return;
       if(!confirm('Перенести локальные данные в пустой аккаунт? Данные аккаунта будут заменены данными этого устройства.'))return;
