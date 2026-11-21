@@ -358,6 +358,7 @@ const FORMS={
 };
 
 document.addEventListener('submit',e=>{
+  if(user&&!accountReady){e.preventDefault();return}
   const f=e.target.dataset.form;
   if(!f)return;
   e.preventDefault();
@@ -372,6 +373,7 @@ function fillTx(){$('#txCat').innerHTML=catOpts(document.querySelector('#txForm 
 $('#txForm').addEventListener('change',fillTx);
 $('#txForm').addEventListener('submit',e=>{
   e.preventDefault();
+  if(user&&!accountReady)return;
   const f=e.target,d=Object.fromEntries(new FormData(f)),amount=Math.round(+d.amount);
   if(!(amount>0))return toast('Укажите сумму больше нуля.');
   if(!d.date)return toast('Укажите дату.');
@@ -591,6 +593,7 @@ function endTour(state){
 }
 function setTheme(v){try{localStorage.setItem('saymosaldo_theme',v)}catch(e){}if(v==='light'||v==='dark')document.documentElement.dataset.theme=v;else delete document.documentElement.dataset.theme}
 document.addEventListener('click',e=>{
+  if(user&&!accountReady)return;
   const t=e.target.closest('[data-go],[data-tab],[data-mode],[data-q],[data-act],[data-theme-set]');
   if(!t)return;
   if(t.dataset.themeSet){setTheme(t.dataset.themeSet);return renderPanel()}
