@@ -478,14 +478,14 @@ function initSB(){
     if((nextUser?.id||null)===(user?.id||null)&&accountReady)return;
     user=nextUser;
     accountReady=false;
+    const generation=++authGeneration;
     clearTimeout(syncTimer);
     syncTimer=null;
     renderPanel();
-    setTimeout(()=>activateAccount(nextUser),0);
+    setTimeout(()=>activateAccount(nextUser,generation),0);
   });
 }
-async function activateAccount(nextUser){
-  const generation=++authGeneration;
+async function activateAccount(nextUser,generation){
   if(!nextUser){
     applyState(readLocalState(KEY));
     accountHasData=false;
