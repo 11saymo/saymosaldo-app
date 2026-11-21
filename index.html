@@ -618,7 +618,7 @@ const PANELS={
     <div class="actions"><button class="link" data-act="chat-clear">Очистить историю этого режима</button></div>`,
 
   settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `${accountCard()}<div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
-  data:()=>`<div class="card"><h2>Установить на телефон</h2><p class="muted" style="margin:8px 0">Android: откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».</p><p class="muted" style="margin:8px 0">iPhone: откройте сайт в Safari, нажмите «Поделиться», затем «На экран Домой».</p><small>После установки приложение будет открываться отдельным окном. Доступность пункта зависит от браузера.</small></div><div class="card"><p>Резервная копия содержит операции, цели, лимиты, платежи, долги и историю финансового помощника. Файл содержит ваши финансовые записи, не передавайте его посторонним.</p>
+  data:()=>`<div class="card"><h2>Автоматические копии</h2><p>При входе в аккаунт SaymoSaldo сохраняет резервную версию данных в облаке автоматически — не чаще одного раза в 24 часа при изменениях. Хранятся до 30 последних копий.</p><button class="primary" data-act="backups-list" ${user?'':'disabled'}>Посмотреть и восстановить копию</button>${user?'':'<small>Войдите в аккаунт, чтобы включить облачные резервные копии.</small>'}</div><div class="card"><h2>Установить на телефон</h2><p class="muted" style="margin:8px 0">Android: откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».</p><p class="muted" style="margin:8px 0">iPhone: откройте сайт в Safari, нажмите «Поделиться», затем «На экран Домой».</p><small>После установки приложение будет открываться отдельным окном. Доступность пункта зависит от браузера.</small></div><div class="card"><p>Резервная копия содержит операции, цели, лимиты, платежи, долги и историю финансового помощника. Файл содержит ваши финансовые записи, не передавайте его посторонним.</p>
     <div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div>
     <p class="note">${user?'Данные аккаунта синхронизируются с облаком. Для дополнительной защиты регулярно сохраняйте резервную копию.':'Без входа данные хранятся в этом браузере. Очистка данных сайта может их удалить, поэтому регулярно сохраняйте резервную копию.'} Не передавайте файл посторонним и не вводите сюда пароли, коды подтверждения и номера карт.</p>`
 };
@@ -714,6 +714,25 @@ function importData(e){
   };
   r.onerror=()=>toast('Не удалось прочитать файл резервной копии');
   r.readAsText(f);
+}
+
+async function showBackups(){
+  if(!sb||!user||!accountReady||!syncAllowed)return toast('Войдите в аккаунт, чтобы просмотреть облачные копии.');
+  const {data,error}=await sb.rpc('list_my_data_backups');
+  if(error)return toast('Не удалось загрузить список копий. Попробуйте позже.');
+  const list=Array.isArray(data)?data:[];
+  const dlg=$('#dlg');
+  dlg.innerHTML=`<form class="dlgf"><h2>Автоматические копии</h2><p>Выберите версию, если нужно вернуть данные на более ранний момент. Перед восстановлением текущие данные также сохраняются.</p><div class="backup-list">${list.map(b=>`<div class="item"><div><b>${b.backup_type==='before_restore'?'Перед восстановлением':'Автоматическая копия'}</b><small>${new Date(b.created_at).toLocaleString('ru-RU')}</small></div><button type="button" class="ghost" data-act="backup-restore" data-id="${Number(b.id)}">Восстановить</button></div>`).join('')||'<p class="muted">Пока копий нет. Они появятся после первого сохранения данных в аккаунте.</p>'}</div><div class="row end"><button type="button" data-act="dlg-cancel">Закрыть</button></div></form>`;
+  dlg.showModal();
+}
+async function restoreBackup(id){
+  if(!sb||!user||!accountReady||!syncAllowed)return toast('Сначала войдите в аккаунт.');
+  if(!confirm('Восстановить эту версию? Текущие данные заменятся, но перед этим приложение сохранит их отдельной копией.'))return;
+  const {error}=await sb.rpc('restore_my_data_backup',{p_backup_id:Number(id)});
+  if(error)return toast('Не удалось восстановить копию. Текущие данные не изменены.');
+  $('#dlg').close();
+  toast('Копия восстановлена. Обновляем приложение…');
+  location.reload();
 }
 
 const chatKey=()=>scopedKey('chat_'+mode);
@@ -962,6 +981,8 @@ document.addEventListener('click',e=>{
       applyState(readLocalState(KEY));
       save();render();renderPanel();toast('Данные перенесены. Дождитесь завершения синхронизации.');
       return;
+    case'backups-list':return showBackups();
+    case'backup-restore':return restoreBackup(id);
     case'export':return exportData();
     case'import':return $('#importFile').click();
     case'dlg-cancel':return $('#dlg').close();
