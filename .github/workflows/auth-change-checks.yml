@@ -1,0 +1,56 @@
+name: Auth change checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feature/username-password-auth]
+
+permissions:
+  contents: read
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Check inline JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          class Scripts(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.in_script = False
+                  self.external = False
+                  self.parts = []
+                  self.current = []
+              def handle_starttag(self, tag, attrs):
+                  if tag == "script":
+                      self.in_script = True
+                      self.external = any(k == "src" for k, _ in attrs)
+                      self.current = []
+              def handle_data(self, data):
+                  if self.in_script and not self.external:
+                      self.current.append(data)
+              def handle_endtag(self, tag):
+                  if tag == "script" and self.in_script:
+                      if not self.external:
+                          self.parts.append("".join(self.current))
+                      self.in_script = False
+          parser = Scripts()
+          parser.feed(Path("index.html").read_text(encoding="utf-8"))
+          for i, script in enumerate(parser.parts):
+              Path(f"/tmp/inline-{i}.js").write_text(script, encoding="utf-8")
+          print(f"Extracted {len(parser.parts)} inline script(s)")
+          PY
+          for file in /tmp/inline-*.js; do node --check "$file"; done
+      - name: Type-check Supabase Edge Function
+        run: deno check supabase/functions/username-auth/index.ts
