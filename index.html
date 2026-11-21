@@ -548,7 +548,7 @@ async function sendLink(email){
 }
 async function logout(){
   if(!sb)return;
-  const {error}=await sb.auth.signOut();
+  const {error}=await sb.auth.signOut({scope:'local'});
   if(error){toast('Не удалось выйти из аккаунта: '+error.message);return}
   toast('Вы вышли из аккаунта');
 }
