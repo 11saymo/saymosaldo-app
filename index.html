@@ -726,8 +726,8 @@ document.addEventListener('submit',e=>{
   }
   if(f==='auth'){
     const action=e.submitter?.dataset.authAction;
-    if(action==='signup')return authSignUp(values.email,values.password);
-    if(action==='signin')return authSignIn(values.email,values.password);
+    if(action==='signup')return authSignUp(values.username,values.password);
+    if(action==='signin')return authSignIn(values.username,values.password);
     return;
   }
   if(f==='set-password')return authSetPassword(values.password);
