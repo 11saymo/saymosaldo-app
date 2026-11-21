@@ -583,12 +583,13 @@ const bar=(l,v,max)=>`<div class="bl"><div class="row"><span>${esc(l)}</span><b>
 const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="card goal-card"><div class="goal-head"><b class="goal-title">${esc(g.name)}</b><span class="goal-percent">${Math.round(p)}%</span></div><div class="goal-meta"><span>Накоплено</span><b>${money(g.saved)} <span>из ${money(g.target)}</span></b>${g.date?`<small>Срок: ${fmtDate(g.date)}</small>`:''}</div><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost" data-act="goal-edit" data-id="${esc(g.id)}">Редактировать</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
 
 function render(){
-  const k=nowMk(), m=monthTx(k), inc=sumType(m,'income'), out=sumType(m,'expense');
+  const k=nowMk(), m=monthTx(k), monthInc=sumType(m,'income'), monthOut=sumType(m,'expense');
+  const inc=sumType(S.tx,'income'), out=sumType(S.tx,'expense');
   const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(x=>x.amount));
   const overN=S.budgets.filter(b=>spent(b.category)>b.limit).length;
   const h=new Date().getHours();
   $('#greet').textContent=(h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+', рады видеть вас в SaymoSaldo!';
-  $('#monthLabel').textContent=monthName(k);
+  $('#monthLabel').textContent='За всё время';
   $('#balance').textContent=money(inc-out);
   $('#income').textContent=money(inc);
   $('#expense').textContent=money(out);
@@ -599,8 +600,8 @@ function render(){
    const categoryTotals={};
    expenseRows.forEach(x=>{const c=String(x.category||'Другое');categoryTotals[c]=(categoryTotals[c]||0)+Number(x.amount||0)});
    const canForecast=dayOfMonth>=5&&expenseRows.length>=3;
-   const projectedOut=canForecast?out/dayOfMonth*daysInMonth:null;
-   const projectedIn=canForecast?inc/dayOfMonth*daysInMonth:null;
+   const projectedOut=canForecast?monthOut/dayOfMonth*daysInMonth:null;
+   const projectedIn=canForecast?monthInc/dayOfMonth*daysInMonth:null;
    const projectedNet=canForecast?projectedIn-projectedOut:null;
    const topCategory=Object.entries(categoryTotals).sort((a,b)=>b[1]-a[1])[0];
    const nearLimit=S.budgets.map(b=>({category:b.category,spent:categoryTotals[b.category]||0,limit:Number(b.limit)||0})).filter(x=>x.limit>0).sort((a,b)=>b.spent/b.limit-a.spent/a.limit)[0];
