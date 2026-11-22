@@ -5,9 +5,9 @@ const vm = require("node:vm");
 
 const source = fs.readFileSync(path.join(__dirname, "..", "auth.js"), "utf8");
 const edgeSource = fs.readFileSync(path.join(__dirname, "..", "supabase", "functions", "username-auth", "index.ts"), "utf8");
-const migrationSource = fs.readFileSync(path.join(__dirname, "..", "supabase", "migrations", "20261122000000_username_recovery_codes.sql"), "utf8");
+const migrationSource = fs.readFileSync(path.join(__dirname, "..", "supabase", "migrations", "20261122075141_username_recovery_codes.sql"), "utf8");
 const supabaseConfig = fs.readFileSync(path.join(__dirname, "..", "supabase", "config.toml"), "utf8");
-const lookupMigration = fs.readFileSync(path.join(__dirname, "..", "supabase", "migrations", "20261122000001_auth_user_lookup.sql"), "utf8");
+const lookupMigration = fs.readFileSync(path.join(__dirname, "..", "supabase", "migrations", "20261122080138_auth_user_lookup_for_username_recovery.sql"), "utf8");
 for (const required of [
   "email_confirm: true",
   "consume_username_registration_attempt",
