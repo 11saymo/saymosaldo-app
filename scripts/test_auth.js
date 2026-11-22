@@ -112,6 +112,12 @@ assert.ok(appSource.includes("entries[scopedKey('pending_sync')]"), "Local accou
 assert.ok(appHtml.includes('id="authLoginForm"') && appHtml.includes('id="authRegisterForm"') && appHtml.includes('id="authResetForm"'), "Login, registration, and recovery forms must all be present");
 assert.ok(source.includes("credentials: 'omit'"), "Auth requests must not send ambient browser credentials");
 assert.ok(source.indexOf("raw = await response.text()") < source.indexOf("clearTimeout(timeout)"), "The request deadline must cover response-body reading");
+assert.ok(source.includes("let refreshPromise = null;"), "Session refresh must be serialized");
+assert.ok(source.includes("if (refreshPromise) return refreshPromise;"), "Concurrent refresh callers must share one refresh request");
+assert.ok(source.includes("const sessionAtStart = session;"), "A stale refresh response must not overwrite a newer session");
+assert.ok(source.includes("function isInvalidSessionError(error)"), "Only confirmed invalid refresh credentials may clear a session");
+assert.ok(source.includes("A temporary REST/database error must not destroy a valid login session."), "Data loading errors must be isolated from authentication state");
+assert.ok(source.includes("await openApp(session.user);") && source.includes("Вход сохранён"), "Failed account-data loading must preserve the authenticated session");
 assert.ok(edgeSource.includes('"https://11saymo.github.io"'), "The production site must be allowed by Edge Function CORS");
 
 
