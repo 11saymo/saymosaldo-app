@@ -1,7 +1,7 @@
 (function(){
   'use strict';
   const KEY='saymosaldo_fx_rub_v1';
-  const FALLBACK=['RUB','USD','EUR','GBP','CNY','JPY','CHF','TRY','KZT','BYN','AMD','GEL','AED','INR','PLN','CZK','CAD','AUD','SEK','NOK','DKK','UZS','UAH','AZN','ILS','KRW','SGD','HKD','THB','VND','BRL','MXN','ZAR'];
+  const FALLBACK=['RUB','USD','EUR','GBP','CNY','JPY','CHF','TRY','KZT','BYN','AMD','GEL','AED','INR','PLN','CZK','CAD','AUD','SEK','NOK','DKK','UZS','UAH','AZN','ILS','KRW','SGD','HKD','THB','VND','BRL','MXN','ZAR','ALL','BAM','BGN','BHD','BND','BOB','CLP','COP','DZD','EGP','HUF','IDR','ISK','JOD','KES','MAD','MYR','NGN','OMR','PEN','PHP','PKR','QAR','RON','SAR','TWD','TND','UGX','UYU'];
   let data=null;
   try{const cached=JSON.parse(localStorage.getItem(KEY)||'null');if(cached&&cached.rates&&cached.updatedAt)data=cached}catch(e){}
   const validRates=value=>value&&typeof value==='object'&&Object.entries(value).some(([k,v])=>/^[A-Z]{3}$/.test(k)&&Number.isFinite(Number(v))&&Number(v)>0);
