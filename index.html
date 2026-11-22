@@ -960,6 +960,68 @@ dialog{border:1px solid var(--line);border-radius:24px;background:var(--bg);colo
  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
 
+
+/* ICE GLASS — softer palette and TT Travels-inspired typography */
+:root{
+ --bg:#f4f7fb;--card:rgba(255,255,255,.78);--fg:#29394d;--mut:#7d8da1;--line:rgba(143,165,190,.20);
+ --acc:#9bbfdd;--ice:#d5eafa;--ice-strong:#83afd2;--warn:#c6a77c;--bad:#d88e99;
+ --shadow:0 16px 46px rgba(78,104,135,.075);color-scheme:light
+}
+:root[data-theme=light]{
+ --bg:#f4f7fb;--card:rgba(255,255,255,.82);--fg:#29394d;--mut:#7d8da1;--line:rgba(143,165,190,.20);
+ --acc:#9bbfdd;--ice:#d5eafa;--ice-strong:#83afd2;--warn:#c6a77c;--bad:#d88e99;
+ --shadow:0 16px 46px rgba(78,104,135,.075);color-scheme:light
+}
+:root[data-theme=dark]{
+ --bg:#111a27;--card:rgba(34,47,65,.78);--fg:#edf3f9;--mut:#a5b4c5;--line:rgba(191,211,232,.13);
+ --acc:#a8cbe7;--ice:#d6ebfa;--ice-strong:#a8cbe7;--warn:#d9bd96;--bad:#e6a0a9;
+ --shadow:0 18px 52px rgba(0,0,0,.22);color-scheme:dark
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){
+ --bg:#111a27;--card:rgba(34,47,65,.78);--fg:#edf3f9;--mut:#a5b4c5;--line:rgba(191,211,232,.13);
+ --acc:#a8cbe7;--ice:#d6ebfa;--ice-strong:#a8cbe7;--warn:#d9bd96;--bad:#e6a0a9;
+ --shadow:0 18px 52px rgba(0,0,0,.22);color-scheme:dark
+}}
+body{
+ font-family:"TT Travels","Avenir Next",Avenir,"Manrope","Segoe UI",sans-serif;
+ letter-spacing:-.018em;
+ background:
+ radial-gradient(ellipse 760px 560px at 4% -8%,rgba(194,220,242,.34),transparent 70%),
+ radial-gradient(ellipse 680px 540px at 100% 12%,rgba(218,228,243,.42),transparent 72%),
+ radial-gradient(ellipse 720px 560px at 70% 100%,rgba(207,224,240,.25),transparent 72%),var(--bg);
+}
+h1,h2,h3,h4,button,input,select,textarea,.label,.greet{
+ font-family:"TT Travels","Avenir Next",Avenir,"Manrope","Segoe UI",sans-serif;
+ letter-spacing:-.025em;
+}
+h1,h2,h3{font-weight:650}
+.top h1{font-weight:650;letter-spacing:-.04em}
+.hero{
+ background:linear-gradient(132deg,rgba(67,91,119,.96),rgba(50,71,98,.94) 58%,rgba(103,133,164,.91))!important;
+ border-color:rgba(225,239,251,.34);
+ box-shadow:0 24px 64px rgba(66,91,121,.17),inset 0 1px rgba(255,255,255,.24);
+}
+.hero::before{border-color:rgba(231,243,253,.28);box-shadow:0 0 0 24px rgba(220,237,251,.045),0 0 0 55px rgba(220,237,251,.03),0 0 0 90px rgba(220,237,251,.018)}
+.hero::after{background:radial-gradient(circle,rgba(191,224,248,.22),transparent 68%)}
+.hero .big{font-family:"TT Travels","Avenir Next",Avenir,"Manrope","Segoe UI",sans-serif;font-weight:600;letter-spacing:-.055em}
+.card,.item,.tabs,.toolbar select,.auth-card,.recovery-panel,.nav{
+ backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);
+ box-shadow:var(--shadow)
+}
+.qbtn{background:linear-gradient(145deg,rgba(255,255,255,.88),rgba(231,240,248,.68));box-shadow:0 8px 22px rgba(90,119,150,.055)}
+.qbtn span,.auth-mark,.nav .fab{
+ background:linear-gradient(145deg,#edf7ff,#c4def1)!important;color:#496b89!important;
+ box-shadow:inset 0 1px rgba(255,255,255,.96),0 5px 15px rgba(119,161,197,.13)
+}
+.primary{background:linear-gradient(135deg,#dceefa,#b8d6eb)!important;color:#405c76!important;border-color:rgba(255,255,255,.85)!important;box-shadow:0 8px 22px rgba(116,158,194,.15)}
+.tabs button[aria-selected=true],.seg input:checked+span{background:linear-gradient(135deg,#e8f4fc,#c8e0f2);color:#4c6d8b;border-color:transparent;box-shadow:0 4px 12px rgba(116,158,194,.12)}
+.wb i{background:linear-gradient(180deg,#dceefa,#9fc4e1)!important;box-shadow:0 3px 10px rgba(116,158,194,.12)}
+.bar i{background:linear-gradient(90deg,#c1dced,#8fb7d7)!important}
+.nav button[aria-current=page]{color:var(--ice-strong);background:rgba(160,195,224,.13)}
+input,select,textarea{background:rgba(255,255,255,.68)!important}
+:root[data-theme=dark] input,:root[data-theme=dark] select,:root[data-theme=dark] textarea{background:rgba(13,23,36,.52)!important}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) input,:root:not([data-theme=light]) select,:root:not([data-theme=light]) textarea{background:rgba(13,23,36,.52)!important}}
+
 </style>
 </head>
 <body>
