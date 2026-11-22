@@ -134,12 +134,14 @@ Deno.serve(async (req: Request) => {
       return response({ error: "recovery_invalid" }, origin, 400);
     }
 
-    const { data: found, error: findError } = await admin.auth.admin.getUserByEmail(usernameEmail(username));
-    if (findError || !found.user) return response({ error: "recovery_invalid" }, origin, 400);
+    const { data: userId, error: findError } = await admin.rpc("find_auth_user_id_by_email", {
+      p_email: usernameEmail(username),
+    });
+    if (findError || typeof userId !== "string") return response({ error: "recovery_invalid" }, origin, 400);
     const { data: stored, error: storedError } = await admin
       .from("username_recovery_codes")
       .select("code_hash")
-      .eq("user_id", found.user.id)
+      .eq("user_id", userId)
       .maybeSingle();
     if (storedError || !stored?.code_hash) return response({ error: "recovery_invalid" }, origin, 400);
 
@@ -148,7 +150,7 @@ Deno.serve(async (req: Request) => {
       return response({ error: "recovery_invalid" }, origin, 400);
     }
 
-    const { error: passwordError } = await admin.auth.admin.updateUserById(found.user.id, { password });
+    const { error: passwordError } = await admin.auth.admin.updateUserById(userId, { password });
     if (passwordError) return response({ error: "password_reset_failed" }, origin, 503);
 
     // Keep the high-entropy recovery code stable so a lost HTTP response
