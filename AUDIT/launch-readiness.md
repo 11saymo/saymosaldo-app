@@ -61,3 +61,15 @@ A green GitHub Actions run is necessary but not sufficient. Do not describe the 
 - The recovery code is generated with Web Crypto, only its SHA-256 hash is stored in the dedicated table, and the raw code is returned once to the client. The current reset path deliberately keeps the same high-entropy code after password change so a lost response does not lock the user out; review whether the intended recovery threat model requires rotation/revocation.
 - The Edge Function enforces an Origin allowlist and calls a rate-limit RPC. Production behavior still depends on the deployed allowlist, deployed function version, configured secrets, and the actual database function/table state.
 - The app's browser session includes both access and refresh tokens in localStorage. A migration to HttpOnly cookies is not a drop-in change for this static Pages architecture; do not attempt it without designing and testing a server-side session boundary.
+
+
+## Additional review performed on 2026-11-22
+
+- Reviewed the current release-validation script under `scripts/validate_release.py` (the workflow's actual target), the separate quality workflow, the auth client, the username-auth Edge Function, the service worker, and the backup/recovery SQL migrations.
+- The repository has two distinct CI workflows. Before this audit branch was added to their push filters, neither workflow was configured to run for `audit/**`. Updated both workflow branch filters on this audit branch only so this review branch can receive the same automated checks. This does not change `main`.
+- The release validator checks a restrictive script CSP with an exact SHA-256 hash for the one inline theme bootstrap, disallows external stylesheets, checks the approved first-party script list, checks the service worker's same-origin GET scope, verifies PWA assets, and checks that no privileged Supabase key appears in public client files.
+- The backup RLS migration grants authenticated users SELECT and INSERT only, with policies binding rows to `auth.uid()`; restore/list RPCs are SECURITY INVOKER and explicitly restricted to authenticated users. The recovery-code table has RLS enabled and access revoked from public/anon/authenticated, with service_role access only. The email-to-user lookup function is SECURITY DEFINER but execution is revoked from public/anon/authenticated and granted only to service_role.
+- Important limitation: source-level SQL review cannot prove these migrations have actually been applied to the live Supabase project or that deployed Edge Function code/secrets match the repository.
+- The username registration flow is intentionally username + password + recovery code. It does not currently provide email-confirmation registration or email-based password reset. The existing synthetic account email is auto-confirmed by the Edge Function.
+- Automated quality run triggered by the audit branch workflow-filter update: run `45062377398`, initially observed as queued. Final result still needs to be checked.
+- No production app code, database, secrets, user records, or `main` branch were modified.
