@@ -29,6 +29,18 @@
     return normalized ? normalized + '@' + USERNAME_DOMAIN : null;
   }
 
+  // Keep accounts created by the earlier email-based login reachable.
+  // New registrations still create username-only accounts.
+  function loginEmail(value) {
+    if (typeof value !== 'string') return null;
+    const identifier = value.trim();
+    if (identifier.includes('@')) {
+      const email = identifier.toLowerCase();
+      return email.length <= 254 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) ? email : null;
+    }
+    return usernameEmail(identifier);
+  }
+
   function validPassword(value) {
     return typeof value === 'string' && value.length >= 12 && value.length <= 72;
   }
@@ -400,12 +412,12 @@
   }
 
   async function login(usernameValue, password) {
-    const normalized = normalizeUsername(usernameValue);
-    if (!normalized) throw new Error('Логин должен содержать 3–24 символа: латиницу, цифры, точку, дефис или подчёркивание.');
+    const email = loginEmail(usernameValue);
+    if (!email) throw new Error('Введите логин (3–24 символа) или корректный адрес старого аккаунта.');
     if (typeof password !== 'string' || password.length < 1 || password.length > 72) throw new Error('Введите пароль длиной не более 72 символов.');
     const value = await apiRequest('/auth/v1/token?grant_type=password', {
       method: 'POST',
-      body: { email: usernameEmail(normalized), password }
+      body: { email, password }
     });
     storeSession(value);
     await openApp(session.user);
@@ -569,6 +581,7 @@
   const publicApi = {
     normalizeUsername,
     usernameEmail,
+    loginEmail,
     validPassword,
     normalizeCloudData,
     hasData,
