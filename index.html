@@ -903,7 +903,7 @@ h2{font-size:16px;font-weight:650}
 .item{border-radius:17px;padding:14px 16px}
 .list{gap:10px}
 input,select,textarea{border-radius:14px!important;border:1px solid var(--line)!important;background:rgba(255,255,255,.54)!important;color:var(--fg)!important;min-height:46px}
-:root[data-theme=dark] input,:root[data-theme=dark] select,:root[data-theme=dark] textarea,:root:not([data-theme=light]) input,:root:not([data-theme=light]) select,:root:not([data-theme=light]) textarea{background:rgba(5,12,22,.54)!important}
+:root[data-theme=dark] input,:root[data-theme=dark] select,:root[data-theme=dark] textarea{background:rgba(5,12,22,.54)!important}@media(prefers-color-scheme:dark){:root:not([data-theme=light]) input,:root:not([data-theme=light]) select,:root:not([data-theme=light]) textarea{background:rgba(5,12,22,.54)!important}}
 button{border-radius:14px;transition:transform .2s ease,box-shadow .2s ease,background .2s ease,border-color .2s ease}
 button:not(:disabled):active{transform:translateY(1px) scale(.985)}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid rgba(117,186,255,.52)!important;outline-offset:3px}
