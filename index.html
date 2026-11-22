@@ -527,6 +527,48 @@ button,input,select{letter-spacing:0;line-height:1.4}
   #panel .chatform input { min-width:0; }
 }
 
+
+/* Layout correction: keep each section in its original document order */
+@media (min-width: 760px) {
+  .app { width:min(calc(100% - 64px), 1040px); max-width:1040px; }
+  main { width:100%; }
+  .view:not([hidden]) {
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    margin-inline:0 !important;
+  }
+  .view[data-view="home"]:not([hidden]) {
+    display:flex !important;
+    flex-direction:column;
+    align-items:stretch;
+    gap:0;
+  }
+  .view[data-view="home"] > * {
+    grid-column:auto !important;
+    grid-row:auto !important;
+    width:100%;
+    min-width:0;
+  }
+  .view[data-view="home"] > .sec { margin:22px 0 10px; }
+  .view[data-view="home"] > .list { margin-bottom:4px; }
+  .view[data-view="stats"]:not([hidden]) { display:block !important; }
+  .view[data-view="stats"] > * {
+    grid-column:auto !important;
+    width:100%;
+  }
+  .view[data-view="stats"] > .sec { margin:22px 0 10px; }
+  .view[data-view="ops"]:not([hidden]),
+  .view[data-view="add"]:not([hidden]),
+  .view[data-view="more"]:not([hidden]) { width:100% !important; max-width:100% !important; }
+  #budgetWrap, #panel { width:100%; min-width:0; }
+  .nav { width:min(calc(100% - 64px),1040px); max-width:1040px; }
+}
+@media (min-width: 1200px) {
+  .app { width:min(calc(100% - 96px),1040px); max-width:1040px; }
+  .nav { width:min(calc(100% - 96px),1040px); max-width:1040px; }
+}
+
 </style>
 </head>
 <body>
