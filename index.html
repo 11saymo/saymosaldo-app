@@ -6,7 +6,7 @@
 <meta name="description" content="SaymoSaldo — удобный финансовый помощник: учёт доходов и расходов, планирование бюджета, контроль платежей и накоплений.">
 <meta name="robots" content="index, follow">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'sha256-aLzjOTA8E/psXfP/8CYC//Rl4CMAPA3QlUw5lRwciJs=' ; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'sha256-aLzjOTA8E/psXfP/8CYC//Rl4CMAPA3QlUw5lRwciJs=' ; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://pmrrslmkrulhuapxtltm.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="google-site-verification" content="5JxssF-pElOr3sZdiBvC2ko0LklpC0O8AirzG-uq7cI">
 <link rel="canonical" href="https://11saymo.github.io/saymosaldo-app/">
 <meta property="og:type" content="website">
@@ -397,11 +397,60 @@ button,input,select{letter-spacing:0;line-height:1.4}
 .seo-intro strong{color:var(--fg);font-weight:650}
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+.auth-screen{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 12% 0%,rgba(122,31,43,.12),transparent 42%),var(--bg)}
+.auth-card{width:min(100%,430px);background:var(--card);border:1px solid var(--line);border-radius:24px;padding:clamp(22px,6vw,34px);box-shadow:var(--shadow)}
+.auth-mark{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:rgba(122,31,43,.1);color:var(--acc);font-size:27px;margin-bottom:18px}
+.auth-card h1{font-size:27px;margin:0 0 6px}.auth-lead{color:var(--mut);font-size:14px;margin-bottom:22px}
+.auth-notice{display:none;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-size:13px;margin:0 0 14px}
+.auth-notice.on{display:block}.auth-notice.error{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 35%,var(--line))}.auth-notice.success{color:var(--acc)}
+.auth-form{display:grid;gap:2px}.auth-form[hidden],.recovery-panel[hidden]{display:none}
+.auth-links{display:flex;justify-content:space-between;gap:12px;margin-top:10px;flex-wrap:wrap}
+.auth-hint{color:var(--mut);font-size:13px;line-height:1.55;margin:5px 0 14px}
+.auth-foot{color:var(--mut);font-size:12px;text-align:center;margin-top:24px}
+.recovery-panel{display:grid;gap:10px}.recovery-panel h2{font-size:19px}
+.recovery-code{display:block;white-space:normal;overflow-wrap:anywhere;padding:16px;border:1px dashed var(--acc);border-radius:13px;background:var(--bg);font-size:14px;line-height:1.7;user-select:all}
+.sync-status{font-size:12px;color:var(--mut);min-height:18px;margin:-16px 0 14px}
+@media(prefers-reduced-motion:reduce){.auth-card,*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
 </style>
 </head>
 <body>
-<div class="app">
+<div id="authRoot" class="auth-screen" aria-live="polite">
+<section class="auth-card">
+<div class="auth-mark">✦</div><h1 id="authTitle">Войти в SaymoSaldo</h1>
+<p class="auth-lead">Ваши финансы — в вашем личном аккаунте.</p>
+<p id="authNotice" class="auth-notice" role="status" aria-live="polite"></p>
+<form id="authLoginForm" class="auth-form" novalidate>
+<label class="field"><span>Логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Например, saymo_user"></label>
+<label class="field"><span>Пароль</span><input name="password" type="password" minlength="12" maxlength="72" autocomplete="current-password" required placeholder="Не менее 12 символов"></label>
+<button class="primary" type="submit">Войти</button>
+<div class="auth-links"><button type="button" class="link" data-auth-view="register">Создать аккаунт</button><button type="button" class="link" data-auth-view="reset">Забыли пароль?</button></div>
+</form>
+<form id="authRegisterForm" class="auth-form" hidden novalidate>
+<label class="field"><span>Придумайте логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,23}" required placeholder="3–24 символа: латиница, цифры . _ -"></label>
+<label class="field"><span>Пароль</span><input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required placeholder="Не менее 12 символов"></label>
+<label class="field"><span>Повторите пароль</span><input name="passwordConfirm" type="password" minlength="12" maxlength="72" autocomplete="new-password" required placeholder="Повторите пароль"></label>
+<p class="auth-hint">Электронная почта не нужна. После регистрации вы получите код восстановления — сохраните его отдельно.</p>
+<button class="primary" type="submit">Создать аккаунт</button>
+<div class="auth-links"><button type="button" class="link" data-auth-view="login">У меня уже есть аккаунт</button></div>
+</form>
+<form id="authResetForm" class="auth-form" hidden novalidate>
+<label class="field"><span>Логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+<label class="field"><span>Код восстановления</span><input name="recoveryCode" type="text" minlength="48" maxlength="48" autocapitalize="none" spellcheck="false" autocomplete="off" required placeholder="48 символов"></label>
+<label class="field"><span>Новый пароль</span><input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></label>
+<label class="field"><span>Повторите новый пароль</span><input name="passwordConfirm" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></label>
+<p class="auth-hint">Код восстановления выдаётся один раз при регистрации. Без него восстановить забытый пароль невозможно.</p>
+<button class="primary" type="submit">Обновить пароль</button>
+<div class="auth-links"><button type="button" class="link" data-auth-view="login">Вернуться ко входу</button></div>
+</form>
+<section id="recoveryPanel" class="recovery-panel" hidden><h2>Сохраните код восстановления</h2><p id="recoveryMessage" class="auth-hint"></p><code id="recoveryCode" class="recovery-code"></code><button id="copyRecovery" type="button" class="ghost">Скопировать код</button><button id="recoveryContinue" type="button" class="primary">Код сохранён — продолжить</button></section>
+<p class="auth-foot">SaymoSaldo · Личный финансовый помощник</p>
+</section>
+</div>
+<div class="app" id="appShell" hidden>
   <header class="top"><h1 id="title">Главная</h1></header>
+<p id="syncStatus" class="sync-status" role="status" aria-live="polite"></p>
 
   <main>
     <section class="view" data-view="home">
