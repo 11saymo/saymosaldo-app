@@ -391,7 +391,7 @@
   async function login(usernameValue, password) {
     const normalized = normalizeUsername(usernameValue);
     if (!normalized) throw new Error('Логин должен содержать 3–24 символа: латиницу, цифры, точку, дефис или подчёркивание.');
-    if (!validPassword(password)) throw new Error('Пароль должен содержать от 12 до 72 символов.');
+    if (typeof password !== 'string' || password.length < 1 || password.length > 72) throw new Error('Введите пароль длиной не более 72 символов.');
     const value = await apiRequest('/auth/v1/token?grant_type=password', {
       method: 'POST',
       body: { email: usernameEmail(normalized), password }
