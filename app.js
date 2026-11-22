@@ -277,7 +277,7 @@ $('#txForm').addEventListener('submit',e=>{
 });
 
 function goalProjection(g){const target=Number(g.target)||0,saved=Number(g.saved)||0,rate=(g.kind==='deposit'?Number(g.rate)||0:0)/1200;let months=0;if(g.date){const now=new Date(),due=new Date(g.date+'T12:00:00');months=Math.max(0,(due.getFullYear()-now.getFullYear())*12+due.getMonth()-now.getMonth());if(due>now)months=Math.max(1,months);}if(!months)return {months:0,monthly:0,interest:0,future:saved*(1+rate)};const factor=rate>0?(Math.pow(1+rate,months)-1)/rate:months;const futureSaved=saved*Math.pow(1+rate,months);const monthly=Math.max(0,(target-futureSaved)/Math.max(factor,1));const interest=Math.max(0,futureSaved-saved+monthly*(factor-months));return {months,monthly,interest,future:futureSaved+monthly*factor};}
-function goalPreviewText(g){const p=goalProjection(g);if(!g.date)return g.kind==='deposit'&&g.rate?`Ориентировочный доход за месяц: ${money((Number(g.saved)||0)*Number(g.rate)/1200)} при текущем остатке.`:'Укажите срок — приложение рассчитает необходимое ежемесячное пополнение.';if(!p.months)return Number(g.saved)>=Number(g.target)?'Цель уже достигнута.':'До выбранной даты меньше месяца — укажите более поздний срок.';return `До срока: ${p.months} мес. Нужно откладывать примерно ${money(p.monthly)} в месяц.${g.kind==='deposit'?` Прогноз процентов за период — ${money(p.interest)} при ставке ${Number(g.rate)||0}% годовых и ежемесячной капитализации.`:''};}
+function goalPreviewText(g){const p=goalProjection(g);if(!g.date)return g.kind==='deposit'&&g.rate?`Ориентировочный доход за месяц: ${money((Number(g.saved)||0)*Number(g.rate)/1200)} при текущем остатке.`:'Укажите срок — приложение рассчитает необходимое ежемесячное пополнение.';if(!p.months)return Number(g.saved)>=Number(g.target)?'Цель уже достигнута.':'До выбранной даты меньше месяца — укажите более поздний срок.';return `До срока: ${p.months} мес. Нужно откладывать примерно ${money(p.monthly)} в месяц.${g.kind==='deposit'?` Прогноз процентов за период — ${money(p.interest)} при ставке ${Number(g.rate)||0}% годовых и ежемесячной капитализации.`:''}`;}
 function updateGoalPreview(){const f=document.querySelector('form[data-form="goal"]'),el=$('#goalPreview');if(!f||!el)return;const d=Object.fromEntries(new FormData(f));el.textContent=goalPreviewText({target:Number(d.target)||0,saved:Number(d.saved)||0,date:d.date||'',kind:d.kind==='deposit'?'deposit':'standard',});}
 document.addEventListener('input',e=>{if(e.target.closest('form[data-form="goal"]'))updateGoalPreview()});
 document.addEventListener('change',e=>{if(e.target.closest('form[data-form="goal"]'))updateGoalPreview()});
@@ -364,6 +364,7 @@ function importData(e){
     if(!confirm('Заменить текущие финансовые данные данными из копии? Перед восстановлением сохраните текущую копию, если хотите иметь возможность отменить замену.'))return;
     const previousState={tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts};
     const nextState={tx:d.tx,goals:d.goals,budgets:d.budgets,recurring:d.recurring,debts:Array.isArray(d.debts)?d.debts:[]};
+    normalizeRubleData(nextState);
     Object.assign(S,nextState);
     const entries=Object.fromEntries(KEYS.map(k=>[scopedKey(k),JSON.stringify(S[k])]));
     if(Array.isArray(d.chatFinance))entries[chatKey()]=JSON.stringify(d.chatFinance);
