@@ -46,7 +46,7 @@ else:
         "object-src": ["'none'"],
         "base-uri": ["'self'"],
         "form-action": ["'self'"],
-        "connect-src": ["'self'", "https://pmrrslmkrulhuapxtltm.supabase.co", "https://open.er-api.com"],
+        "connect-src": ["'self'", "https://pmrrslmkrulhuapxtltm.supabase.co"],
     }
     for name, values in required.items():
         if directives.get(name) != values:
@@ -64,8 +64,8 @@ else:
     if expected_hashes != declared_hashes:
         errors.append("CSP script hashes do not exactly match the inline JavaScript")
 
-if parser.external_scripts != ["./currency.js", "./app.js", "./auth.js", "./learning.js"]:
-    errors.append("Only approved first-party currency.js, app.js, auth.js, and learning.js scripts may be loaded externally: " + ", ".join(parser.external_scripts))
+if parser.external_scripts != ["./app.js", "./auth.js", "./learning.js"]:
+    errors.append("Only approved first-party app.js, auth.js, and learning.js scripts may be loaded externally: " + ", ".join(parser.external_scripts))
 if parser.external_styles:
     errors.append("External stylesheets are not allowed: " + ", ".join(parser.external_styles))
 
@@ -124,7 +124,7 @@ else:
     if privacy_parser.external_scripts or privacy_parser.external_styles:
         errors.append("privacy.html must not load external scripts or stylesheets")
 
-for filename in ("index.html", "sw.js", "manifest.json", "auth.js", "currency.js"):
+for filename in ("index.html", "sw.js", "manifest.json", "auth.js"):
     content = (ROOT / filename).read_text(encoding="utf-8")
     if re.search(r"\bservice_role\b|\bsb_secret_[A-Za-z0-9_]+", content, flags=re.I):
         errors.append(f"Possible privileged Supabase key found in {filename}")
@@ -133,7 +133,7 @@ for filename in ("index.html", "sw.js", "manifest.json", "auth.js", "currency.js
 sw_content = (ROOT / "sw.js").read_text(encoding="utf-8")
 if "e.request.method!=='GET'||url.origin!==location.origin" not in sw_content:
     errors.append("Service worker must only intercept same-origin GET requests")
-if "./privacy.html" not in sw_content or "./404.html" not in sw_content or "./auth.js" not in sw_content or "./learning.js" not in sw_content or "./currency.js" not in sw_content:
+if "./privacy.html" not in sw_content or "./404.html" not in sw_content or "./auth.js" not in sw_content or "./learning.js" not in sw_content:
     errors.append("Service worker must include the privacy and not-found pages in its app shell cache")
 
 auth_path = ROOT / "auth.js"
