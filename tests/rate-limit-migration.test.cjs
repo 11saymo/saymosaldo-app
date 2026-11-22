@@ -18,5 +18,7 @@ test('rate-limit migration matches the deployed username-auth contract', () => {
   assert.match(sql, /revoke all on function public\.consume_username_registration_attempt\(text\) from public, anon, authenticated/i);
   assert.match(sql, /grant execute on function public\.consume_username_registration_attempt\(text\) to service_role/i);
   assert.match(edge, /cf-connecting-ip/);
+  assert.match(edge, /https:\/\/11saymo\\.github\\.io/);
+  assert.doesNotMatch(edge, /saymosaldo-preview\\.onrender\\.com/);
   assert.match(edge, /rpc\("consume_username_registration_attempt"/);
 });
