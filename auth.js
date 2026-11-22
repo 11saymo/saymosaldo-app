@@ -16,7 +16,6 @@
   let syncAgain = false;
   let loggingOut = false;
   let retryDelay = 2000;
-  let pendingRegistration = null;
   let recoveryUsername = '';
 
   function normalizeUsername(value) {
@@ -183,6 +182,7 @@
     syncTimer = null;
     syncAgain = false;
     clearSession();
+    $('recoveryCode').textContent = '';
     if (window.SaymoSaldoApp) window.SaymoSaldoApp.reset();
     showAuth();
     setNotice('Сеанс завершился. Войдите снова — ваши сохранённые записи останутся в аккаунте.', 'error');
@@ -201,6 +201,7 @@
       if (form) form.hidden = name !== view;
     }
     $('recoveryPanel').hidden = true;
+    $('recoveryCode').textContent = '';
     $('authTitle').textContent = view === 'login' ? 'Войти в SaymoSaldo' :
       view === 'register' ? 'Создать аккаунт' : 'Восстановить пароль';
     setNotice('');
@@ -437,7 +438,6 @@
     try {
       const result = await callUsernameFunction({ action: 'register', username: normalized, password });
       if (!result.ok || !result.recovery_code) throw new Error('Аккаунт не создан полностью. Попробуйте ещё раз.');
-      pendingRegistration = { username: normalized, password };
       setRecoveryCode(result.recovery_code,
         'Этот код понадобится, если вы забудете пароль. Он не отправляется по почте и больше не будет показан.',
         normalized);
@@ -467,7 +467,6 @@
         action: 'reset_password', username: normalized, password, recovery_code: recoveryCode
       });
       if (!result.ok || !result.recovery_code) throw new Error('Пароль не обновлён. Попробуйте ещё раз.');
-      pendingRegistration = null;
       setRecoveryCode(result.recovery_code,
         'Пароль изменён. Код восстановления остаётся действующим — сохраните его надёжно.',
         normalized);
@@ -480,25 +479,14 @@
   }
 
   async function finishRecovery() {
+    const savedUsername = recoveryUsername;
     $('recoveryPanel').hidden = true;
+    $('recoveryCode').textContent = '';
     showView('login');
     const loginForm = $('authLoginForm');
-    loginForm.elements.username.value = recoveryUsername;
+    loginForm.elements.username.value = savedUsername;
     loginForm.elements.password.value = '';
-    if (pendingRegistration) {
-      const credentials = pendingRegistration;
-      pendingRegistration = null;
-      try {
-        setNotice('Код сохранён. Выполняем первый вход…', 'success');
-        await login(credentials.username, credentials.password);
-        loginForm.reset();
-        return;
-      } catch (error) {
-        setNotice('Код сохранён. Теперь войдите с логином и паролем: ' + (error.message || ''), 'error');
-      }
-    } else {
-      setNotice('Код сохранён. Теперь войдите с новым паролем.', 'success');
-    }
+    setNotice('Код сохранён. Теперь войдите с логином и паролем.', 'success');
   }
 
   async function logout() {
