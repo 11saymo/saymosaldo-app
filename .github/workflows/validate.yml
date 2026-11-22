@@ -28,9 +28,12 @@ jobs:
             node --check "$file"
           done
           node --check learning.js
+          node --check currency.js
           node --check sw.js
       - name: Test local data persistence
         run: node scripts/test_storage.js
+      - name: Test currency conversion and savings projections
+        run: node scripts/test_features.js
       - name: Check authentication JavaScript syntax
         run: node --check auth.js
       - name: Set up Deno for Supabase Edge Function checks
