@@ -7,6 +7,7 @@ const root = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const learning = fs.readFileSync(path.join(root, 'learning.js'), 'utf8');
 const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
 
 test('Soft Blue Banking is the active visual direction', () => {
@@ -50,5 +51,5 @@ test('PWA manifest and service worker refresh the published visual assets', () =
   assert.match(sw, /saymosaldo-v47/);
   assert.match(sw, /fetch\(e\.request,\{cache:'no-store'\}\)/);
   assert.match(sw, /self\.skipWaiting\(\)/);
-  assert.match(html, /updateViaCache:'none'/);
+  assert.match(app, /updateViaCache:'none'/);
 });
