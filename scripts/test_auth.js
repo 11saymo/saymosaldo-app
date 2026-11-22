@@ -7,6 +7,7 @@ const source = fs.readFileSync(path.join(__dirname, "..", "auth.js"), "utf8");
 const edgeSource = fs.readFileSync(path.join(__dirname, "..", "supabase", "functions", "username-auth", "index.ts"), "utf8");
 const migrationSource = fs.readFileSync(path.join(__dirname, "..", "supabase", "migrations", "20261122000000_username_recovery_codes.sql"), "utf8");
 const supabaseConfig = fs.readFileSync(path.join(__dirname, "..", "supabase", "config.toml"), "utf8");
+const lookupMigration = fs.readFileSync(path.join(__dirname, "..", "supabase", "migrations", "20261122000001_auth_user_lookup.sql"), "utf8");
 for (const required of [
   "email_confirm: true",
   "consume_username_registration_attempt",
@@ -15,11 +16,17 @@ for (const required of [
   "crypto.getRandomValues",
   "crypto.subtle.digest",
   "constantTimeEqual",
-  "updateUserById"
+  "updateUserById",
+  "find_auth_user_id_by_email"
 ]) assert.ok(edgeSource.includes(required), "Edge function missing security requirement: " + required);
 assert.ok(migrationSource.includes("enable row level security"));
 assert.ok(migrationSource.includes("revoke all on table public.username_recovery_codes from public, anon, authenticated"));
 assert.ok(supabaseConfig.includes("verify_jwt = false"));
+assert.ok(!edgeSource.includes("getUserByEmail"), "Use the supported server-side user lookup RPC");
+assert.ok(lookupMigration.includes("security definer"));
+assert.ok(lookupMigration.includes("set search_path = pg_catalog, auth"));
+assert.ok(lookupMigration.includes("grant execute on function public.find_auth_user_id_by_email(text) to service_role"));
+assert.ok(lookupMigration.includes("revoke all on function public.find_auth_user_id_by_email(text) from public, anon, authenticated"));
 assert.ok(!edgeSource.includes("sb_secret_"), "No secret key may be hard-coded in the edge function");
 
 const handlers = {};
