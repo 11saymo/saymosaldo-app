@@ -4,6 +4,24 @@ const path = require("node:path");
 const vm = require("node:vm");
 
 const source = fs.readFileSync(path.join(__dirname, "..", "auth.js"), "utf8");
+const edgeSource = fs.readFileSync(path.join(__dirname, "..", "supabase", "functions", "username-auth", "index.ts"), "utf8");
+const migrationSource = fs.readFileSync(path.join(__dirname, "..", "supabase", "migrations", "20261122000000_username_recovery_codes.sql"), "utf8");
+const supabaseConfig = fs.readFileSync(path.join(__dirname, "..", "supabase", "config.toml"), "utf8");
+for (const required of [
+  "email_confirm: true",
+  "consume_username_registration_attempt",
+  "rate_limited",
+  "username_recovery_codes",
+  "crypto.getRandomValues",
+  "crypto.subtle.digest",
+  "constantTimeEqual",
+  "updateUserById"
+]) assert.ok(edgeSource.includes(required), "Edge function missing security requirement: " + required);
+assert.ok(migrationSource.includes("enable row level security"));
+assert.ok(migrationSource.includes("revoke all on table public.username_recovery_codes from public, anon, authenticated"));
+assert.ok(supabaseConfig.includes("verify_jwt = false"));
+assert.ok(!edgeSource.includes("sb_secret_"), "No secret key may be hard-coded in the edge function");
+
 const handlers = {};
 const calls = [];
 const fakeDocument = {
