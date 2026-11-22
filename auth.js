@@ -462,7 +462,7 @@
       if (!result.ok || !result.recovery_code) throw new Error('Пароль не обновлён. Попробуйте ещё раз.');
       pendingRegistration = null;
       setRecoveryCode(result.recovery_code,
-        'Пароль изменён. Мы выдали новый код восстановления — старый больше не используйте.',
+        'Пароль изменён. Код восстановления остаётся действующим — сохраните его надёжно.',
         normalized);
       form.reset();
     } catch (error) {
