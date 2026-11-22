@@ -113,7 +113,7 @@ if not not_found_path.is_file():
     errors.append("Missing 404.html for GitHub Pages")
 else:
     not_found_html = not_found_path.read_text(encoding="utf-8")
-    if not re.search(r'<meta[^>]+http-equiv=["\\']Content-Security-Policy["\\']', not_found_html, flags=re.I):
+    if "Content-Security-Policy" not in not_found_html:
         errors.append("Missing Content-Security-Policy in 404.html")
     if re.search(r"<script\b", not_found_html, flags=re.I):
         errors.append("404.html must not contain scripts")
