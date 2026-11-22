@@ -619,6 +619,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
           <div><span class="label">Расходы</span><b id="expense">—</b></div>
         </div>
       </div>
+      <div class="card"><h2 style="margin-bottom:10px">Остатки по валютам</h2><div id="currencyBalances" class="list"><small class="muted">Остатки появятся после добавления операций.</small></div></div>
       <p class="status" id="status"></p>
       <div id="moneyInsight"></div>
       <div class="quick">
@@ -656,7 +657,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
           <label><input type="radio" name="type" value="expense" checked><span>Расход</span></label>
           <label><input type="radio" name="type" value="income"><span>Доход</span></label>
         </div>
-        <label class="field"><span>Сумма</span><input name="amount" type="number" inputmode="decimal" min="0.01" step="any" required placeholder="450"><small class="field-help">Введите сумму в выбранной валюте. Итог будет автоматически пересчитан в рубли.</small></label><label class="field"><span>Валюта операции</span><select name="currency" id="txCurrency"></select><small class="field-help" id="txCurrencyHelp">Основная валюта приложения — рубль. Для другой валюты используется актуальный курс.</small><small class="field-help" id="txCurrencyPreview" aria-live="polite"></small></label>
+        <label class="field"><span>Сумма</span><input name="amount" type="number" inputmode="decimal" min="0.01" step="any" required placeholder="450"><small class="field-help">Введите сумму в выбранной валюте. Сумма сохранится в выбранной валюте. Рублёвый эквивалент показывается отдельно.</small></label><label class="field"><span>Валюта операции</span><select name="currency" id="txCurrency"></select><small class="field-help" id="txCurrencyHelp">Выберите валюту, в которой фактически получили или потратили деньги. Баланс изменится именно в этой валюте.</small><small class="field-help" id="txCurrencyPreview" aria-live="polite"></small></label>
         <label class="field"><span>Категория</span><select name="category" id="txCat"></select><small class="field-help">Выберите наиболее подходящую категорию — так статистика будет точнее.</small></label>
         <label class="field"><span>Дата операции</span><input name="date" type="date" required><small class="field-help">Укажите день, когда деньги фактически получили или потратили. Месяц учёта определяется автоматически по этой дате.</small></label>
         <label class="field"><span>Комментарий (необязательно)</span><input name="comment" maxlength="80" placeholder="Например, обед"><small class="field-help">Добавьте уточнение, чтобы позже вспомнить, за что была операция.</small></label>
