@@ -48,7 +48,7 @@ test('mobile, desktop, safe areas and reduced-motion behavior remain covered', (
 test('visual refresh does not replace app scripts or change currency contract', () => {
   const scripts = [...html.matchAll(/<script\b[^>]*src="([^"]+)"/g)].map(match => match[1].split('?')[0]);
   assert.deepEqual(scripts, ['./app.js', './auth.js', './learning.js']);
-  assert.doesNotMatch(html, /(?:app|auth|learning)\\.js\\?/);
+  assert.ok(!html.includes('app.js?') && !html.includes('auth.js?') && !html.includes('learning.js?'));
   assert.match(html, /Сумма, ₽/);
   assert.doesNotMatch(html, /За месяц|За всё время|За все время/);
 });
