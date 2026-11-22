@@ -1,6 +1,26 @@
 
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let KEY='saymosaldo_';
+(function clearPreviousTestDataOnce() {
+  const resetKey = 'saymosaldo_local_reset_google_v1';
+  try {
+    if (localStorage.getItem(resetKey) === 'done') return;
+    const exact = new Set([
+      'saymosaldo_tx', 'saymosaldo_goals', 'saymosaldo_budgets',
+      'saymosaldo_recurring', 'saymosaldo_debts', 'saymosaldo_chat_finance',
+      'saymosaldo_local_modified_at', 'saymosaldo_pending_sync',
+      'saymosaldo_guest_migration_handled', 'saymosaldo_auth_session'
+    ]);
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (exact.has(key) || key.startsWith('saymosaldo_user_') ||
+          key.startsWith('saymosaldo_chat_')) localStorage.removeItem(key);
+    }
+    localStorage.setItem(resetKey, 'done');
+  } catch (error) {
+    // The app can still start; the server-side reset remains authoritative.
+  }
+})();
 const KEYS=['tx','goals','budgets','recurring','debts'];
 const scopedKey=k=>KEY+k;
 const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(KEY+k));return Array.isArray(v)?v:d}catch{return d}};
