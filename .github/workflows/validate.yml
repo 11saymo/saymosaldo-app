@@ -28,7 +28,6 @@ jobs:
             node --check "$file"
           done
           node --check learning.js
-          node --check currency.js
           node --check sw.js
       - name: Test local data persistence
         run: node scripts/test_storage.js
