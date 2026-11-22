@@ -12,7 +12,9 @@ test('Ice Glass design tokens use the softer silver-blue palette', () => {
     assert.ok(html.includes(token), 'missing design token ' + token);
   }
   const layer = html.slice(html.indexOf('SAYMOSALDO ICE GLASS'), html.indexOf('</style>'));
-  assert.doesNotMatch(layer, /#7a1f2b|#4a0f1a|burgundy/i);
+  assert.doesNotMatch(layer, /#7a1f2b|#4a0f1a|burgundy|rgba\\(122,31,43/i);
+  assert.match(layer, /body::before/);
+  assert.match(layer, /rgba\\(160,199,236/);
 });
 
 test('rounded TT Travels-inspired typography and softer metallic palette are present', () => {
