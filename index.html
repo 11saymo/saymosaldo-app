@@ -6,7 +6,7 @@
 <meta name="description" content="SaymoSaldo — удобный финансовый помощник: учёт доходов и расходов, планирование бюджета, контроль платежей и накоплений.">
 <meta name="robots" content="index, follow">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'self'  ; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://pmrrslmkrulhuapxtltm.supabase.co https://open.er-api.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'self'  ; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://pmrrslmkrulhuapxtltm.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="google-site-verification" content="5JxssF-pElOr3sZdiBvC2ko0LklpC0O8AirzG-uq7cI">
 <link rel="canonical" href="https://11saymo.github.io/saymosaldo-app/">
 <meta property="og:type" content="website">
@@ -171,7 +171,7 @@ input,select{border-radius:12px}
 .ov-card p{line-height:1.6}
 @media(min-width:760px){
   .view[data-view=home]:not([hidden]){display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:18px;row-gap:12px;align-items:start}
-  .view[data-view=home]>#greet,.view[data-view=home]>#homeCurrencyCard{grid-column:1/-1}
+  .view[data-view=home]>#greet{grid-column:1/-1}
   .view[data-view=home]>.hero,.view[data-view=home]>.quick{grid-column:1/8}
   .view[data-view=home]>#status,.view[data-view=home]>#moneyInsight{grid-column:8/13}
   .view[data-view=home]>.home-sec-week,.view[data-view=home]>#homeWeekCard{grid-column:8/13}
@@ -571,19 +571,6 @@ button,input,select{letter-spacing:0;line-height:1.4}
 }
 
 
-/* Multicurrency summary inside the burgundy dashboard card */
-.hero-period{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:18px 0 14px;padding:4px;border-radius:12px;background:rgba(255,255,255,.13)}
-.hero-period button{min-width:0;padding:9px 8px;border:1px solid transparent;border-radius:9px;background:transparent;color:rgba(255,255,255,.78);font-size:13px}
-.hero-period button[aria-pressed=true]{background:#fff;color:#5a1724;font-weight:700}
-.hero-currency-title{font-size:13px;font-weight:650;margin:8px 0}
-.hero-currency-list{display:grid;gap:8px}
-.hero-currency-row{display:grid;grid-template-columns:minmax(48px,.65fr) repeat(3,minmax(0,1fr));gap:6px;align-items:center;padding:10px 9px;border:1px solid rgba(255,255,255,.16);border-radius:11px;background:rgba(255,255,255,.075)}
-.hero-currency-row>div{min-width:0;display:grid;gap:3px}
-.hero-currency-row .hc-code{font-weight:750;font-size:14px}
-.hero-currency-row small{font-size:10px;color:rgba(255,255,255,.68);white-space:nowrap}
-.hero-currency-row b{font-size:12px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-.hero .hero-currency-empty{font-size:12px;color:rgba(255,255,255,.72);padding:8px 0}
-@media(max-width:390px){.hero-currency-row{gap:4px;padding:9px 6px}.hero-currency-row b{font-size:11px}.hero-currency-row small{font-size:9px}}
 </style>
 </head>
 <body>
@@ -637,8 +624,6 @@ button,input,select{letter-spacing:0;line-height:1.4}
           <button type="button" data-hero-period="month" aria-pressed="false">За месяц</button>
           <button type="button" data-hero-period="all" aria-pressed="true">За всё время</button>
         </div>
-        <div class="hero-currency-title">Разбивка по валютам</div>
-        <div id="currencyBalances" class="hero-currency-list" aria-live="polite"></div>
       </div>
       <p class="status" id="status"></p>
       <div id="moneyInsight"></div>
@@ -657,7 +642,6 @@ button,input,select{letter-spacing:0;line-height:1.4}
       <div id="homeDebts" class="list"></div>
       <div class="sec home-sec-recent"><h2>Последние операции</h2><button class="link" data-go="ops">Все</button></div>
       <div id="recent" class="list"></div>
-      <div class="card" id="homeCurrencyCard"><div class="row"><h2>Курс валют к рублю</h2><button class="link" data-go="more" data-tab-target="settings">Все курсы</button></div><div id="homeCurrencyRates" class="list"><small class="muted">Загружаем актуальные курсы…</small></div><small id="homeCurrencyUpdated" class="muted"></small></div>
       
     </section>
 
@@ -677,7 +661,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
           <label><input type="radio" name="type" value="expense" checked><span>Расход</span></label>
           <label><input type="radio" name="type" value="income"><span>Доход</span></label>
         </div>
-        <label class="field"><span>Сумма</span><input name="amount" type="number" inputmode="decimal" min="0.01" step="any" required placeholder="450"><small class="field-help">Введите сумму в выбранной валюте. Сумма сохранится в выбранной валюте. Рублёвый эквивалент показывается отдельно.</small></label><label class="field"><span>Валюта операции</span><select name="currency" id="txCurrency"></select><small class="field-help" id="txCurrencyHelp">Выберите валюту, в которой фактически получили или потратили деньги. Баланс изменится именно в этой валюте.</small><small class="field-help" id="txCurrencyPreview" aria-live="polite"></small></label>
+        <label class="field"><span>Сумма, ₽</span><input name="amount" type="number" inputmode="decimal" min="0.01" step="any" required placeholder="450"><small class="field-help">Укажите сумму в российских рублях.</small></label>
         <label class="field"><span>Категория</span><select name="category" id="txCat"></select><small class="field-help">Выберите наиболее подходящую категорию — так статистика будет точнее.</small></label>
         <label class="field"><span>Дата операции</span><input name="date" type="date" required><small class="field-help">Укажите день, когда деньги фактически получили или потратили. Месяц учёта определяется автоматически по этой дате.</small></label>
         <label class="field"><span>Комментарий (необязательно)</span><input name="comment" maxlength="80" placeholder="Например, обед"><small class="field-help">Добавьте уточнение, чтобы позже вспомнить, за что была операция.</small></label>
@@ -718,9 +702,8 @@ ion>
 <div id="toast" class="toast" role="status"></div>
 <input id="importFile" type="file" accept="application/json,.json" hidden>
 
-<script src="./currency.js?v=41"></script>
-<script src="./app.js?v=41"></script>
-<script src="./auth.js?v=41"></script>
-<script src="./learning.js?v=41" defer></script>
+<script src="./app.js?v=42"></script>
+<script src="./auth.js?v=42"></script>
+<script src="./learning.js?v=42" defer></script>
 </body>
 </html>
