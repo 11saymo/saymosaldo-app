@@ -7,14 +7,14 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
 test('Ice Glass design tokens replace the old burgundy visual identity', () => {
   assert.match(html, /SAYMOSALDO ICE GLASS/);
-  for (const token of ['--bg:#edf2f7', '--ice:#a9d8ff', '--ice-strong:#4d9fe8', '--bg:#080d16']) {
+  for (const token of ['--bg:#f4f7fb', '--ice:#d5eafa', '--ice-strong:#83afd2', '--bg:#111a27']) {
     assert.ok(html.includes(token), 'missing design token ' + token);
   }
   const layer = html.slice(html.indexOf('SAYMOSALDO ICE GLASS'), html.indexOf('</style>'));
   assert.doesNotMatch(layer, /#7a1f2b|#4a0f1a|burgundy/i);
 });
 
-test('light and dark glass themes respect explicit and system preferences', () => {
+test('rounded TT Travels-inspired typography and softer metallic palette are present', () => {\n  assert.match(html, /font-family:\s*"TT Travels","Avenir Next",Avenir,"Manrope","Segoe UI",sans-serif/);\n  assert.match(html, /#f4f7fb/);\n  assert.match(html, /#d5eafa/);\n});\n\ntest('light and dark glass themes respect explicit and system preferences', () => {
   assert.match(html, /:root\[data-theme=light\]/);
   assert.match(html, /:root\[data-theme=dark\]/);
   assert.match(html, /prefers-color-scheme:\s*dark/);
@@ -26,7 +26,7 @@ test('all key app surfaces receive the Ice Glass design layer', () => {
   for (const selector of ['.hero', '.card', '.item', '.auth-card', '.nav', '.tabs', '.qbtn', '.primary']) {
     assert.ok(html.includes(selector), 'missing styled surface ' + selector);
   }
-  assert.match(html, /linear-gradient\(135deg,#bfe4ff,#78b9ef\)/);
+  assert.match(html, /linear-gradient\(135deg,#dceefa,#b8d6eb\)/);
 });
 
 test('mobile, desktop, safe areas and reduced-motion behavior remain covered', () => {
