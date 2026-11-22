@@ -584,23 +584,23 @@ input,select{min-height:48px;font-size:16px}
 .hero .big{font-size:clamp(32px,5vw,48px);line-height:1.15;overflow-wrap:anywhere}
 .split{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(10px,2vw,20px)}
 .split>div{min-width:0}.split b{display:block;overflow-wrap:anywhere}
-.item,.row,.toolbar{min-width:0;flex-wrap:wrap}
-.item>*{min-width:0;max-width:100%}
+.operation-item,.row,.toolbar{min-width:0;flex-wrap:wrap}
+.operation-item>*{min-width:0;max-width:100%}
 .actions button,.tabs button{min-height:44px}
 @media(min-width:760px){.app{padding-top:32px;padding-bottom:132px}.nav{bottom:12px;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.08)}.hero{min-height:190px}.quick{gap:16px}.qbtn{min-height:76px}}
-@media(max-width:420px){.app{width:calc(100% - 24px)}.card{padding:16px}.hero{padding:20px 18px}.split b{font-size:15px}.nav{width:100%;border-radius:0}.item{gap:8px;padding:11px 10px}.amt{font-size:14px}}
+@media(max-width:420px){.app{width:calc(100% - 24px)}.card{padding:16px}.hero{padding:20px 18px}.split b{font-size:15px}.nav{width:100%;border-radius:0}.operation-item{gap:8px;padding:11px 10px}.operation-item .amt{font-size:14px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
-/* Operation rows: fixed two-column layout and safe wrapping */
-.item{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;max-width:100%;padding:14px 16px}
-.item>div:first-child{display:flex!important;align-items:center;gap:12px;flex:1 1 auto;min-width:0;max-width:100%}
-.item>div:first-child>div{display:flex;flex-direction:column;flex:1 1 auto;min-width:0;max-width:100%;gap:4px}
-.item b{display:block;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;word-break:normal;line-height:1.35}
-.item small{display:block;white-space:normal;overflow-wrap:anywhere;line-height:1.4}
-.item .amt{flex:0 0 auto;min-width:max-content;max-width:42%;align-self:center;white-space:nowrap;text-align:right;font-size:clamp(13px,1.5vw,16px);font-variant-numeric:tabular-nums}
-.item .amt .link{display:block;margin-left:auto;min-height:36px}
-.item .ico{width:42px;height:42px;flex:0 0 42px;margin:0}
-@media(max-width:420px){.item{gap:8px;padding:12px}.item>div:first-child{gap:9px}.item .amt{max-width:40%;font-size:13px}.item .ico{width:38px;height:38px;flex-basis:38px}}
+/* Operation rows only: do not leak into home goal cards */
+.operation-item{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;max-width:100%;padding:14px 16px}
+.operation-item>.operation-main{display:flex!important;align-items:center;gap:12px;flex:1 1 auto;min-width:0;max-width:100%}
+.operation-item>.operation-main>div{display:flex;flex-direction:column;flex:1 1 auto;min-width:0;max-width:100%;gap:4px}
+.operation-item b{display:block;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;word-break:normal;line-height:1.35}
+.operation-item small{display:block;white-space:normal;overflow-wrap:anywhere;line-height:1.4}
+.operation-item .amt{flex:0 0 auto;min-width:max-content;max-width:42%;align-self:center;white-space:nowrap;text-align:right;font-size:clamp(13px,1.5vw,16px);font-variant-numeric:tabular-nums}
+.operation-item .amt .link{display:block;margin-left:auto;min-height:36px}
+.operation-item .ico{width:42px;height:42px;flex:0 0 42px;margin:0}
+@media(max-width:420px){.operation-item{gap:8px;padding:12px}.operation-item>.operation-main{gap:9px}.operation-item .amt{max-width:40%;font-size:13px}.operation-item .ico{width:38px;height:38px;flex-basis:38px}}
 </style>
 </head>
 <body>
