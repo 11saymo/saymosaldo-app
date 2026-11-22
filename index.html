@@ -70,6 +70,7 @@ button:disabled{opacity:.4;cursor:default}
 .actions button{padding:8px 12px;font-size:13px;flex:1 1 auto}
 .field{display:grid;gap:6px;margin-bottom:14px}
 .field>span{font-size:13px;color:var(--mut)}
+.field-help{display:block;color:var(--mut);font-size:12px;line-height:1.45;margin-top:-1px}
 input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);font-size:16px;appearance:none}
 input:focus,select:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;padding:3px;margin-bottom:16px;background:var(--bg)}
@@ -422,22 +423,22 @@ button,input,select{letter-spacing:0;line-height:1.4}
 <p class="auth-lead">Ваши финансы — в вашем личном аккаунте.</p>
 <p id="authNotice" class="auth-notice" role="status" aria-live="polite"></p>
 <form id="authLoginForm" class="auth-form" novalidate>
-<label class="field"><span>Логин</span><input name="username" type="text" minlength="3" maxlength="254" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Логин или email прежнего аккаунта"></label>
-<label class="field"><span>Пароль</span><input name="password" type="password" maxlength="72" autocomplete="current-password" required placeholder="Введите пароль"></label>
+<label class="field"><span>Логин</span><input name="username" type="text" minlength="3" maxlength="254" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Логин или email прежнего аккаунта"><small class="field-help">Введите логин, который указывали при регистрации. Для старого аккаунта подойдёт прежний email.</small></label>
+<label class="field"><span>Пароль</span><input name="password" type="password" maxlength="72" autocomplete="current-password" required placeholder="Введите пароль"><small class="field-help">Введите пароль от своего аккаунта. Учитывается регистр букв.</small></label>
 <button class="primary" type="submit">Войти</button>
 <div class="auth-links"><button type="button" class="link" data-auth-view="register">Создать аккаунт</button><button type="button" class="link" data-auth-view="reset">Забыли пароль?</button></div>
 </form>
 <form id="authRegisterForm" class="auth-form" hidden novalidate>
-<label class="field"><span>Придумайте логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,23}" required placeholder="3–24 символа: латиница, цифры . _ -"></label>
-<label class="field"><span>Пароль</span><input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required placeholder="Не менее 12 символов"></label>
-<label class="field"><span>Повторите пароль</span><input name="passwordConfirm" type="password" minlength="12" maxlength="72" autocomplete="new-password" required placeholder="Повторите пароль"></label>
+<label class="field"><span>Придумайте логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,23}" required placeholder="3–24 символа: латиница, цифры . _ -"><small class="field-help">От 3 до 24 символов. Используйте латинские буквы, цифры, точку, дефис или подчёркивание. Без пробелов и кириллицы.</small></label>
+<label class="field"><span>Пароль</span><input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required placeholder="Не менее 12 символов"><small class="field-help">Придумайте уникальный пароль длиной от 12 символов. Не используйте пароль от других сайтов.</small></label>
+<label class="field"><span>Повторите пароль</span><input name="passwordConfirm" type="password" minlength="12" maxlength="72" autocomplete="new-password" required placeholder="Повторите пароль"><small class="field-help">Введите тот же пароль ещё раз — символы должны полностью совпасть.</small></label>
 <p class="auth-hint">Электронная почта не нужна. После регистрации вы получите код восстановления — сохраните его отдельно.</p>
 <button class="primary" type="submit">Создать аккаунт</button>
 <div class="auth-links"><button type="button" class="link" data-auth-view="login">У меня уже есть аккаунт</button></div>
 </form>
 <form id="authResetForm" class="auth-form" hidden novalidate>
 <label class="field"><span>Логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
-<label class="field"><span>Код восстановления</span><input name="recoveryCode" type="text" minlength="48" maxlength="48" autocapitalize="none" spellcheck="false" autocomplete="off" required placeholder="48 символов"></label>
+<label class="field"><span>Код восстановления</span><input name="recoveryCode" type="text" minlength="48" maxlength="48" autocapitalize="none" spellcheck="false" autocomplete="off" required placeholder="48 символов"><small class="field-help">Вставьте все 48 символов кода, выданного при регистрации. Не добавляйте пробелы.</small></label>
 <label class="field"><span>Новый пароль</span><input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></label>
 <label class="field"><span>Повторите новый пароль</span><input name="passwordConfirm" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></label>
 <p class="auth-hint">Код восстановления выдаётся один раз при регистрации. Без него восстановить забытый пароль невозможно.</p>
@@ -499,10 +500,10 @@ button,input,select{letter-spacing:0;line-height:1.4}
           <label><input type="radio" name="type" value="expense" checked><span>Расход</span></label>
           <label><input type="radio" name="type" value="income"><span>Доход</span></label>
         </div>
-        <label class="field"><span>Сумма, ₽</span><input name="amount" type="number" inputmode="decimal" min="1" step="1" required placeholder="450"></label>
-        <label class="field"><span>Категория</span><select name="category" id="txCat"></select></label>
-        <label class="field"><span>Дата операции</span><input name="date" type="date" required></label>
-        <label class="field"><span>Комментарий (необязательно)</span><input name="comment" maxlength="80" placeholder="Например, обед"></label>
+        <label class="field"><span>Сумма, ₽</span><input name="amount" type="number" inputmode="decimal" min="1" step="1" required placeholder="450"><small class="field-help">Укажите сумму одной операции в рублях. Для дохода — сколько получили, для расхода — сколько потратили.</small></label>
+        <label class="field"><span>Категория</span><select name="category" id="txCat"></select><small class="field-help">Выберите наиболее подходящую категорию — так статистика будет точнее.</small></label>
+        <label class="field"><span>Дата операции</span><input name="date" type="date" required><small class="field-help">Укажите день, когда деньги фактически получили или потратили. Месяц учёта определяется автоматически по этой дате.</small></label>
+        <label class="field"><span>Комментарий (необязательно)</span><input name="comment" maxlength="80" placeholder="Например, обед"><small class="field-help">Добавьте уточнение, чтобы позже вспомнить, за что была операция.</small></label>
         <button class="primary">Сохранить</button>
       </form>
     </section>
@@ -619,7 +620,8 @@ const monthTx=k=>S.tx.filter(x=>String(x.date).slice(0,7)===k);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const empty=t=>`<div class="empty">${t}</div>`;
 const catOpts=t=>CATS[t].map(c=>`<option>${esc(c)}</option>`).join('');
-const field=(n,l,t='number',x='')=>`<label class="field"><span>${l}</span><input name="${n}" type="${t}" ${t==='number'?'inputmode="decimal" step="any"':''} ${x}></label>`;
+const FIELD_HELP={name:'Дайте понятное название, чтобы потом легко узнать запись.',target:'Укажите полную сумму, которую хотите накопить.',saved:'Укажите, сколько уже отложено на эту цель. Если пока ничего — оставьте пустым или введите 0.',date:'При желании укажите дату, к которой хотите достичь цели.',limit:'Максимальная сумма расходов по выбранной категории за месяц.',amount:'Введите сумму одного регулярного платежа в рублях.',day:'Введите число месяца от 1 до 31, когда обычно наступает платёж.',original:'Полная сумма обязательства на момент оформления, а не текущий остаток.',remaining:'Сколько осталось выплатить на сегодняшний день. Значение не должно превышать первоначальную сумму.',monthly:'Сколько обычно платите каждый месяц.',rate:'Укажите годовую процентную ставку из договора. Если не знаете — оставьте поле пустым.'};
+const field=(n,l,t='number',x='')=>`<label class="field"><span>${l}</span><input name="${n}" type="${t}" ${t==='number'?'inputmode="decimal" step="any"':''} ${x}>${FIELD_HELP[n]?`<small class="field-help">${FIELD_HELP[n]}</small>`:''}</label>`;
 let mode='finance', tab='recurring', cur='home';
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2400)}
@@ -743,7 +745,7 @@ const PANELS={
     const m=monthTx(nowMk()).filter(x=>x.type==='expense');
     return `${S.budgets.map(b=>{const sp=total(m.filter(x=>x.category===b.category).map(x=>x.amount)),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><button class="link danger" data-act="budget-del" data-cat="${esc(b.category)}">Удалить</button></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div><small>${money(sp)} из ${money(b.limit)} · ${Math.round(p)}%</small><small>${p>100?`Превышение на ${money(sp-b.limit)}`:`Осталось ${money(Math.max(0,b.limit-sp))}`}</small></div>`}).join('')||empty('Лимиты не установлены.')}
     <div class="sec"><h2>Новый лимит на месяц</h2></div>
-    <form class="card" data-form="budget"><label class="field"><span>Категория</span><select name="category">${catOpts('expense')}</select></label>${field('limit','Лимит, ₽','number','required min="1"')}<button class="primary">Сохранить лимит</button></form>`;
+    <form class="card" data-form="budget"><label class="field"><span>Категория</span><select name="category">${catOpts('expense')}</select><small class="field-help">Выберите категорию, для которой хотите ограничить расходы в текущем месяце.</small></label>${field('limit','Лимит, ₽','number','required min="1"')}<button class="primary">Сохранить лимит</button></form>`;
   },
 
   recurring:()=>{
@@ -751,7 +753,7 @@ const PANELS={
     return `<div class="card"><span class="label">Плановые платежи в месяц</span><div class="big">${money(plan)}</div><small>Плановая сумма по введённым данным, а не списание и не банковский прогноз.</small></div>
     ${S.recurring.map(r=>`<div class="card"><div class="row"><b>${esc(r.name)}</b><b>${money(r.amount)}</b></div><small>${esc(r.category)} · ${r.day}-го числа</small><div class="actions"><button class="ghost" data-act="rec-pay" data-id="${esc(r.id)}">Отметить оплаченным</button><button class="ghost danger" data-act="rec-del" data-id="${esc(r.id)}">Удалить</button></div></div>`).join('')||empty('Регулярных платежей пока нет: аренда, связь, подписки.')}
     <div class="sec"><h2>Новый платёж</h2></div>
-    <form class="card" data-form="rec">${field('name','Название','text','required placeholder="Интернет"')}${field('amount','Сумма, ₽','number','required min="1"')}<label class="field"><span>Категория</span><select name="category">${catOpts('expense')}</select></label>${field('day','День месяца (1–31)','number','required min="1" max="31"')}<button class="primary">Добавить</button></form>`;
+    <form class="card" data-form="rec">${field('name','Название','text','required placeholder="Интернет"')}${field('amount','Сумма, ₽','number','required min="1"')}<label class="field"><span>Категория</span><select name="category">${catOpts('expense')}</select><small class="field-help">Выберите категорию, в которой учитывать этот платёж.</small></label>${field('day','День месяца (1–31)','number','required min="1" max="31"')}<button class="primary">Добавить</button></form>`;
   },
 
   debts:()=>{
@@ -759,7 +761,7 @@ const PANELS={
     return `<div class="card"><span class="label">Общая задолженность</span><div class="big">${money(rem)}</div><small>Каждый закрытый платёж — шаг вперёд. Сравнивать свой путь с чужим не нужно.</small></div>
     ${S.debts.map(d=>{const rm=+d.remaining||0,o=Math.max(+d.original||0,rm),pd=Math.max(0,o-rm),p=o?pd/o*100:0;return `<div class="card"><div class="row"><b>${esc(d.name)}</b><b>${money(rm)}</b></div><small>${esc(d.kind)} · платёж ${money(d.monthly)} · ${d.day}-го${d.rate?` · ${esc(d.rate)}% годовых`:''}</small><div class="bar"><i style="width:${p}%"></i></div><small>${Math.round(p)}% · погашено ${money(pd)} из ${money(o)}</small><div class="actions"><button class="ghost" data-act="debt-pay" data-id="${esc(d.id)}"${rm<=0?' disabled':''}>Отметить платёж</button><button class="ghost danger" data-act="debt-del" data-id="${esc(d.id)}">Удалить</button></div></div>`}).join('')||empty('Здесь появится общий остаток, когда вы добавите обязательство.')}
     <div class="sec"><h2>Новое обязательство</h2></div>
-    <form class="card" data-form="debt"><label class="field"><span>Тип</span><select name="kind">${DEBT_KINDS.map(k=>`<option>${k}</option>`).join('')}</select></label>${field('name','Название','text','required placeholder="Ипотека, банк"')}${field('original','Первоначальная сумма, ₽','number','required min="1"')}${field('remaining','Текущий остаток, ₽','number','required min="0"')}${field('monthly','Ежемесячный платёж, ₽','number','required min="1"')}${field('day','День платежа (1–31)','number','required min="1" max="31"')}${field('rate','Ставка, % годовых (необязательно)','number','min="0" max="100"')}<button class="primary">Добавить</button></form>`;
+    <form class="card" data-form="debt"><label class="field"><span>Тип</span><select name="kind">${DEBT_KINDS.map(k=>`<option>${k}</option>`).join('')}</select><small class="field-help">Выберите вид обязательства: например, кредит, ипотека или долг другому человеку.</small></label>${field('name','Название','text','required placeholder="Ипотека, банк"')}${field('original','Первоначальная сумма, ₽','number','required min="1"')}${field('remaining','Текущий остаток, ₽','number','required min="0"')}${field('monthly','Ежемесячный платёж, ₽','number','required min="1"')}${field('day','День платежа (1–31)','number','required min="1" max="31"')}${field('rate','Ставка, % годовых (необязательно)','number','min="0" max="100"')}<button class="primary">Добавить</button></form>`;
   },
 
   assistant:()=>`<p class="muted">Бесплатный финансовый аналитик SaymoSaldo. Отчёты и ответы рассчитываются прямо на устройстве — финансовые записи не отправляются внешнему ИИ.</p>
