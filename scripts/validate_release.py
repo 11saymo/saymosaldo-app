@@ -65,7 +65,7 @@ else:
         errors.append("CSP script hashes do not exactly match the inline JavaScript")
 
 if parser.external_scripts != ["./currency.js", "./auth.js", "./learning.js"]:
-    errors.append("Only approved first-party auth.js and learning.js scripts may be loaded externally: " + ", ".join(parser.external_scripts))
+    errors.append("Only approved first-party currency.js, auth.js, and learning.js scripts may be loaded externally: " + ", ".join(parser.external_scripts))
 if parser.external_styles:
     errors.append("External stylesheets are not allowed: " + ", ".join(parser.external_styles))
 
