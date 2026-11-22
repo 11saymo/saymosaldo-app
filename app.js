@@ -48,19 +48,19 @@ const save=()=>{
   return true;
 };
 let cloudSaveHandler=null;
+if(normalizeRubleData(S))save();
 const CATS={expense:['Продукты','Кафе и рестораны','Транспорт','Покупки','Дом','Здоровье','Развлечения','Подписки','Кредиты и долги','Другое'],income:['Зарплата','Подработка','Подарок','Другое']};
 const DEBT_KINDS=['Ипотека','Кредит','Кредитная карта','Рассрочка','Частный долг'];
 const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const today=()=>ymd(new Date()), nowMk=()=>today().slice(0,7);
 const money=n=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(+n||0)+' ₽';
-const currencyMoney=(n,c='RUB')=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(+n||0)+' '+c;
-const currencySelect=(selected='RUB')=>`<select name="currency">${(window.SaymoSaldoCurrency?.options()||[{code:'RUB',label:'RUB — Российский рубль'},{code:'USD',label:'USD — Доллар США'},{code:'EUR',label:'EUR — Евро'},{code:'CNY',label:'CNY — Китайский юань'}]).map(x=>`<option value="${x.code}" ${x.code===selected?'selected':''}>${esc(x.label)}</option>`).join('')}</select>`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate=s=>new Date(s+'T12:00').toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
 const monthName=k=>new Date(k+'-15T12:00').toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
 const total=a=>a.reduce((v,x)=>v+(+x||0),0);
-const txNativeAmount=x=>Number(x?.originalAmount??x?.amount)||0;
-const txBaseAmount=x=>Object.prototype.hasOwnProperty.call(x||{},'baseAmount')?(Number(x.baseAmount)||0):(Number(x?.amount)||0);
+const txNativeAmount=x=>Number(x?.amount)||0;
+const txBaseAmount=x=>Number(x?.amount)||0;
+function normalizeRubleData(data){if(!data||!Array.isArray(data.tx)||!Array.isArray(data.goals))return false;let changed=false;const goalRates=new Map();for(const g of data.goals){const code=g.currency||'RUB';if(code==='RUB')continue;const linked=data.tx.filter(t=>String(t.goalId)===String(g.id)&&t.currency===code);const rate=linked.map(t=>Number(t.exchangeRate)).find(v=>Number.isFinite(v)&&v>0);if(rate)goalRates.set(String(g.id),rate);}for(const g of data.goals){const rate=goalRates.get(String(g.id));if(rate){g.target=Math.round((Number(g.target)||0)*rate*100)/100;g.saved=Math.round((Number(g.saved)||0)*rate*100)/100;}if(g.currency!=='RUB'){g.currency='RUB';changed=true;}}for(const t of data.tx){const base=Number(t.baseAmount),rate=Number(t.exchangeRate);const rub=Number.isFinite(base)&&t.baseAmount!==null?base:(t.currency&&t.currency!=='RUB'&&Number.isFinite(rate)&&rate>0?Number(t.amount)*rate:Number(t.amount));const value=Math.round((Number.isFinite(rub)?rub:0)*100)/100;if(t.currency!=='RUB'||Number(t.amount)!==value||Number(t.originalAmount)!==value||Number(t.baseAmount)!==value||Number(t.exchangeRate)!==1)changed=true;t.amount=value;t.originalAmount=value;t.baseAmount=value;t.currency='RUB';t.exchangeRate=1;}return changed;}
 const sumType=(a,t)=>total(a.filter(x=>x.type===t).map(txBaseAmount));
 const monthTx=k=>S.tx.filter(x=>String(x.date).slice(0,7)===k);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -91,7 +91,7 @@ function editGoal(id){
     ${field('name','Название','text',`value="${esc(g.name)}" required maxlength="80"`)}
     ${field('target','Сумма цели','number',`value="${esc(g.target)}" required min="1" step="any"`)}
     ${field('saved','Уже отложено','number',`value="${esc(g.saved)}" required min="0" step="any"`)}
-    <label class="field"><span>Валюта цели</span>${currencySelect(g.currency||'RUB')}</label>
+    
     ${field('date','Срок достижения','date',`value="${esc(g.date||'')}"`)}
     <label class="field"><span>Тип цели</span><select name="kind"><option value="standard" ${g.kind==='deposit'?'':'selected'}>Обычная цель</option><option value="deposit" ${g.kind==='deposit'?'selected':''}>Накопительная с процентами</option></select></label>
     ${field('rate','Годовая ставка, %','number',`value="${esc(g.rate||'')}" min="0" max="100" step="0.01"`)}
@@ -100,12 +100,12 @@ function editGoal(id){
   d.querySelector('form').addEventListener('submit',e=>{
     e.preventDefault();
     const v=Object.fromEntries(new FormData(e.target));
-    const name=String(v.name||'').trim(),target=Math.round(Number(v.target)*100)/100,saved=Math.round(Number(v.saved)*100)/100,oldCurrency=g.currency||'RUB',newCurrency=v.currency||'RUB';
+    const name=String(v.name||'').trim(),target=Math.round(Number(v.target)*100)/100,saved=Math.round(Number(v.saved)*100)/100;
     if(!name){$('#dlgErr').textContent='Укажите название цели.';return}
     if(!Number.isFinite(target)||target<=0){$('#dlgErr').textContent='Сумма цели должна быть больше нуля.';return}
     if(!Number.isFinite(saved)||saved<0){$('#dlgErr').textContent='Уже отложенная сумма не может быть отрицательной.';return}
     if(v.kind==='deposit'&&(!Number.isFinite(Number(v.rate))||Number(v.rate)<0||Number(v.rate)>100)){$('#dlgErr').textContent='Ставка должна быть от 0 до 100%.';return}
-    if(newCurrency!==oldCurrency){const oldRate=oldCurrency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(oldCurrency),newRate=newCurrency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(newCurrency);if(!Number.isFinite(oldRate)||!Number.isFinite(newRate)||newRate<=0){$('#dlgErr').textContent='Курс валюты пока недоступен. Не меняйте валюту или попробуйте позже.';return}const factor=oldRate/newRate;g.target=Math.round(target*factor*100)/100;g.saved=Math.round(saved*factor*100)/100;S.tx.filter(tx=>String(tx.goalId)===String(g.id)&&tx.type==='saving').forEach(tx=>{const native=txNativeAmount(tx),base=txBaseAmount(tx);tx.amount=Math.round(native*factor*100)/100;tx.originalAmount=tx.amount;tx.baseAmount=base;tx.currency=newCurrency;tx.exchangeRate=newRate;});}else{g.target=target;g.saved=saved;}g.currency=newCurrency;g.name=name;g.date=v.date||'';g.kind=v.kind==='deposit'?'deposit':'standard';g.rate=g.kind==='deposit'?Number(v.rate)||0:0;
+    g.target=target;g.saved=saved;g.currency='RUB';g.name=name;g.date=v.date||'';g.kind=v.kind==='deposit'?'deposit':'standard';g.rate=g.kind==='deposit'?Number(v.rate)||0:0;
     if(!save())return;render();d.close();toast('Цель обновлена');
   });
   d.showModal();
@@ -124,21 +124,11 @@ function ask(title,fields,cb){
 }
 
 const ICON={'Продукты':'🛒','Кафе и рестораны':'☕','Транспорт':'🚌','Покупки':'🛍️','Дом':'🏠','Здоровье':'💊','Развлечения':'🎬','Подписки':'📺','Кредиты и долги':'🏦','Зарплата':'💼','Подработка':'🛠️','Подарок':'🎁'};
-const items=(list,del)=>list.map(x=>{const saving=x.type==='saving',income=x.type==='income',currency=x.currency||'RUB',original=txNativeAmount(x),foreign=currency!=='RUB'?`<small>≈ ${money(txBaseAmount(x))} в рублях</small>`:'';return `<div class="item"><div style="display:flex;align-items:center;min-width:0"><span class="ico">${saving?'🎯':ICON[x.category]||'📦'}</span><div style="min-width:0"><b>${esc(x.comment||x.category)}</b><small>${x.comment?esc(x.category)+' · ':''}${fmtDate(x.date)}</small>${foreign}</div></div><div class="amt ${income||saving?'pos':''}">${saving?'↗':income?'+':'−'}${currencyMoney(original,currency)}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`}).join('');
+const items=(list,del)=>list.map(x=>{const saving=x.type==='saving',income=x.type==='income';return `<div class="item"><div style="display:flex;align-items:center;min-width:0"><span class="ico">${saving?'🎯':ICON[x.category]||'📦'}</span><div style="min-width:0"><b>${esc(x.comment||x.category)}</b><small>${x.comment?esc(x.category)+' · ':''}${fmtDate(x.date)}</small></div></div><div class="amt ${income||saving?'pos':''}">${saving?'↗':income?'+':'−'}${money(txBaseAmount(x))}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`}).join('');
 const bar=(l,v,max)=>`<div class="bl"><div class="row"><span>${esc(l)}</span><b>${money(v)}</b></div><div class="bar"><i style="width:${Math.max(2,v/max*100)}%"></i></div></div>`;
-const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0,projection=goalProjection(g),c=g.currency||'RUB';return `<div class="card goal-card"><div class="goal-head"><b class="goal-title">${esc(g.name)}</b><span class="goal-percent">${Math.round(p)}%</span></div><div class="goal-meta"><span>Накоплено</span><b>${currencyMoney(g.saved,c)} <span>из ${currencyMoney(g.target,c)}</span></b>${g.date?`<small>Срок: ${fmtDate(g.date)}</small>`:''}${g.kind==='deposit'?`<small>Накопительная · ${Number(g.rate)||0}% годовых</small>`:''}${g.date?`<small>Нужно откладывать: ${currencyMoney(projection.monthly,c)} в месяц</small>`:''}${g.kind==='deposit'?(g.date?`<small>Прогноз процентов за период: ${currencyMoney(projection.interest,c)}</small>`:`<small>Доход за месяц при текущем остатке: ${currencyMoney((Number(g.saved)||0)*(Number(g.rate)||0)/1200,c)}</small>`):''}</div><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost" data-act="goal-edit" data-id="${esc(g.id)}">Редактировать</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
+const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0,projection=goalProjection(g);return `<div class="card goal-card"><div class="goal-head"><b class="goal-title">${esc(g.name)}</b><span class="goal-percent">${Math.round(p)}%</span></div><div class="goal-meta"><span>Накоплено</span><b>${money(g.saved)} <span>из ${money(g.target)}</span></b>${g.date?`<small>Срок: ${fmtDate(g.date)}</small>`:''}${g.kind==='deposit'?`<small>Накопительная · ${Number(g.rate)||0}% годовых</small>`:''}${g.date?`<small>Нужно откладывать: ${money(projection.monthly)} в месяц</small>`:''}${g.kind==='deposit'?(g.date?`<small>Прогноз процентов за период: ${money(projection.interest)}</small>`:`<small>Доход за месяц при текущем остатке: ${money((Number(g.saved)||0)*(Number(g.rate)||0)/1200)}</small>`):''}</div><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost" data-act="goal-edit" data-id="${esc(g.id)}">Редактировать</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
 
-function migrateGoalSavingsToOperations(){
-  let changed=false;
-  for(const goal of S.goals){
-    const saved=Math.max(0,Number(goal.saved)||0);
-    if(!saved)continue;
-    const goalCurrency=goal.currency||'RUB';const logged=S.tx.filter(tx=>tx.type==='saving'&&String(tx.goalId)===String(goal.id)&&(tx.currency||'RUB')===goalCurrency).reduce((sum,tx)=>sum+Math.max(0,txNativeAmount(tx)),0);
-    const missing=Math.round((saved-logged)*100)/100;
-    if(missing>0.009){const fx=goalCurrency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(goalCurrency);S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:missing,baseAmount:Number.isFinite(fx)?Math.round(missing*fx*100)/100:null,category:'Накопления',date:today(),comment:'Учтённый остаток цели: '+goal.name,goalId:goal.id,currency:goalCurrency,originalAmount:missing,exchangeRate:Number.isFinite(fx)?fx:null});changed=true;}
-  }
-  if(changed)save();
-}
+function migrateGoalSavingsToOperations(){let changed=false;for(const g of S.goals){const saved=Math.max(0,Number(g.saved)||0);if(!saved)continue;const logged=S.tx.filter(t=>t.type==='saving'&&String(t.goalId)===String(g.id)).reduce((sum,t)=>sum+Math.max(0,txBaseAmount(t)),0);const missing=Math.round((saved-logged)*100)/100;if(missing>0.009){S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:missing,originalAmount:missing,baseAmount:missing,currency:'RUB',exchangeRate:1,category:'Накопления',date:today(),comment:'Учтённый остаток цели: '+g.name,goalId:g.id});changed=true;}}if(changed)save();}
 
 function render(){
   migrateGoalSavingsToOperations();
@@ -150,16 +140,12 @@ function render(){
   const overN=S.budgets.filter(b=>spent(b.category)>b.limit).length;
   const h=new Date().getHours();
   $('#greet').textContent=(h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+', рады видеть вас в SaymoSaldo!';
-  $('#monthLabel').textContent=(heroPeriod==='month'?monthName(k):'За всё время')+' · общий эквивалент';
+  $('#monthLabel').textContent=(heroPeriod==='month'?monthName(k):'За всё время');
   $('#balance').textContent=money(periodInc-periodOut);
   $('#income').textContent=money(periodInc);
   $('#expense').textContent=money(periodOut);
   $$('.hero-period [data-hero-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.heroPeriod===heroPeriod)));
-  const currencyCodes=['RUB','USD','EUR','CNY'];
-  const currencyStats=Object.fromEntries(currencyCodes.map(code=>[code,{income:0,expense:0}]));
-  periodRows.filter(x=>x.type==='income'||x.type==='expense').forEach(x=>{const code=currencyCodes.includes(x.currency||'RUB')?(x.currency||'RUB'):'RUB';currencyStats[code][x.type]+=txNativeAmount(x)});
-  const balanceEl=$('#currencyBalances');
-  if(balanceEl)balanceEl.innerHTML=currencyCodes.map(code=>{const v=currencyStats[code],net=v.income-v.expense;return `<div class="hero-currency-row"><div class="hc-code">${code}</div><div><small>Доходы</small><b>${currencyMoney(v.income,code)}</b></div><div><small>Расходы</small><b>${currencyMoney(v.expense,code)}</b></div><div><small>Остаток</small><b>${currencyMoney(net,code)}</b></div></div>`}).join('');
+
   $('#status').textContent=!S.tx.length?'Добавьте первую операцию, и общая картина появится здесь.':overN?`Превышено лимитов: ${overN}. Проверьте категории ниже.`:'Всё под контролем.';
    const insightEl=$('#moneyInsight');
    const todayDate=new Date(),dayOfMonth=todayDate.getDate(),daysInMonth=new Date(todayDate.getFullYear(),todayDate.getMonth()+1,0).getDate();
@@ -191,9 +177,8 @@ function render(){
   const f=$('#filter').value, list=sorted.filter(x=>f==='all'||(f==='saving'?x.type==='saving':x.type===f));
   $('#count').textContent=list.length+' шт.';
   $('#allItems').innerHTML=items(list,true)||empty('Нет операций по выбранному фильтру.');
-  renderHomeCurrencyRates();
   const ring=p=>`<svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" class="rt"/><circle cx="18" cy="18" r="15.9" class="rv" stroke-dasharray="${Math.min(100,p)} 100"/></svg>`;
-  $('#homeGoals').innerHTML=S.goals.slice(0,3).map(g=>{const p=g.target?Math.min(100,g.saved/g.target*100):0,c=g.currency||'RUB';return `<div class="item home-goal-item"><div class="ringbox">${ring(p)}<span>${Math.round(p)}%</span></div><div class="home-goal-copy"><b>${esc(g.name)}</b><small><span>Накоплено</span> ${currencyMoney(g.saved,c)} <span>из</span> ${currencyMoney(g.target,c)}</small></div></div>`}).join('')||empty('Цели пока не добавлены.');
+  $('#homeGoals').innerHTML=S.goals.slice(0,3).map(g=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="item home-goal-item"><div class="ringbox">${ring(p)}<span>${Math.round(p)}%</span></div><div class="home-goal-copy"><b>${esc(g.name)}</b><small><span>Накоплено</span> ${money(g.saved)} <span>из</span> ${money(g.target)}</small></div></div>`}).join('')||empty('Цели пока не добавлены.');
   const debtTotal=total(S.debts.map(d=>d.remaining));
   $('#homeDebts').innerHTML=S.debts.length?`<div class="card home-debt-total"><span class="label">Общая задолженность</span><div class="big">${money(debtTotal)}</div>${S.debts.slice(0,3).map(d=>{const original=Math.max(+d.original||0,+d.remaining||0),paid=Math.max(0,original-(+d.remaining||0)),p=original?paid/original*100:0;return `<div class="home-debt-row"><div class="row"><b>${esc(d.name)}</b><b>${money(d.remaining)}</b></div><small>${esc(d.kind)} · платёж ${money(d.monthly)} в месяц</small><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')}${S.debts.length>3?`<small>И ещё ${S.debts.length-3} обязательств</small>`:''}<button class="ghost" data-go="more" data-tab-target="debts">Открыть задолженность</button></div>`:empty('Задолженностей пока нет. Добавьте кредит или другое обязательство в разделе «Ещё».');
   $('#homeLimits').innerHTML=S.budgets.slice(0,3).map(b=>{const sp=spent(b.category),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><small>${money(sp)} из ${money(b.limit)}</small></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div><small>${p>100?`Превышение на ${money(sp-b.limit)}`:`Осталось ${money(Math.max(0,b.limit-sp))}`}</small></div>`}).join('')||empty('Лимиты не установлены. Их можно задать в разделе «Бюджет».');
@@ -211,7 +196,7 @@ function render(){
 const PANELS={
   goals:()=>`${S.goals.map(g=>goalCard(g)).join('')||empty('Цели пока не добавлены. Например, накопления на отпуск.')}
     <div class="sec"><h2>Новая цель</h2></div>
-    <form class="card" data-form="goal"><label class="field"><span>Название</span><input name="name" type="text" required maxlength="80" placeholder="Отпуск"></label>${field('target','Сумма цели','number','required min="0.01" step="any"')}${field('saved','Уже отложено','number','min="0" step="any"')}<label class="field"><span>Валюта цели</span>${currencySelect('RUB')}</label><label class="field"><span>Тип цели</span><select name="kind"><option value="standard">Обычная цель</option><option value="deposit">Накопительная с процентами</option></select></label>${field('rate','Годовая ставка, %','number','min="0" max="100" step="0.01" placeholder="Например, 12"')}<small class="field-help">Для обычной цели оставьте ставку 0. Для накопительной укажите ставку из условий вклада или накопительного счёта.</small>${field('date','Срок достижения','date')}<p class="field-help" id="goalPreview" aria-live="polite"></p><button class="primary">Создать цель</button></form>`,
+    <form class="card" data-form="goal"><label class="field"><span>Название</span><input name="name" type="text" required maxlength="80" placeholder="Отпуск"></label>${field('target','Сумма цели','number','required min="0.01" step="any"')}${field('saved','Уже отложено','number','min="0" step="any"')}<label class="field"><span>Тип цели</span><select name="kind"><option value="standard">Обычная цель</option><option value="deposit">Накопительная с процентами</option></select></label>${field('rate','Годовая ставка, %','number','min="0" max="100" step="0.01" placeholder="Например, 12"')}<small class="field-help">Для обычной цели оставьте ставку 0. Для накопительной укажите ставку из условий вклада или накопительного счёта.</small>${field('date','Срок достижения','date')}<p class="field-help" id="goalPreview" aria-live="polite"></p><button class="primary">Создать цель</button></form>`,
 
   budgets:()=>{
     const m=monthTx(nowMk()).filter(x=>x.type==='expense');
@@ -244,7 +229,7 @@ const PANELS={
     <form class="chatform" data-form="chat"><input name="q" autocomplete="off" placeholder="Например, сколько я могу отложить?"><button class="primary">Отправить</button></form>
     <div class="actions"><button class="link" data-act="chat-clear">Очистить историю этого режима</button></div>`,
 
-  settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `<div class="card"><h2>Курсы валют</h2><p class="muted">Ориентировочные курсы к рублю. Источник — открытый сервис обменных курсов; перед обменом проверьте курс банка.</p><div id="currencyRates" class="list"><small>Загружаем курсы…</small></div><div class="actions"><button class="ghost" data-act="currency-refresh">Обновить курсы</button></div></div><div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как <b>${esc(window.SaymoSaldoAuth?.username||'')}</b>. Данные аккаунта синхронизируются между вашими устройствами.</p><button class="ghost danger" data-auth-action="logout">Выйти</button></div><div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
+  settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как <b>${esc(window.SaymoSaldoAuth?.username||'')}</b>. Данные аккаунта синхронизируются между вашими устройствами.</p><button class="ghost danger" data-auth-action="logout">Выйти</button></div><div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
   data:()=>`<div class="card"><h2>О приложении и доступе</h2><p>SaymoSaldo помогает учитывать доходы и расходы, планировать бюджет, отслеживать цели, регулярные платежи и задолженности.</p><p class="muted" style="margin-top:8px">Финансовые записи синхронизируются через аккаунт и сохраняются локально для быстрой работы и временного доступа без сети. Доступ к облачным записям ограничен вашим аккаунтом. Локальная копия в браузере не шифруется отдельным паролем — защищайте устройство блокировкой экрана.</p><p style="margin-top:8px"><a href="./privacy.html">Политика конфиденциальности</a></p></div><div class="card"><h2>Данные на этом устройстве</h2><p class="muted">Финансовые записи сохраняются в аккаунте и в локальном хранилище браузера для быстрой работы. Локальная копия не шифруется отдельным паролем — защищайте устройство блокировкой экрана.</p></div><div class="card"><h2>Резервная копия</h2><p>Сохраняйте копию вручную, особенно после важных изменений. В ней находятся операции, цели, лимиты, регулярные платежи, долги и история финансового помощника.</p><div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div><div class="card"><h2>Установить на телефон</h2><p class="muted" style="margin:8px 0">Android: откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».</p><p class="muted" style="margin:8px 0">iPhone: откройте сайт в Safari, нажмите «Поделиться», затем «На экран Домой».</p><small>После установки приложение будет открываться отдельным окном. Доступность пункта зависит от браузера.</small></div><p class="note">Финансовые записи синхронизируются с аккаунтом и дополнительно сохраняются в локальном хранилище браузера. При работе без сети новые изменения останутся на этом устройстве до восстановления соединения. Регулярно скачивайте резервную копию. Файл резервной копии содержит личную финансовую информацию — храните его в безопасном месте и не передавайте посторонним.</p>`
 };
 
@@ -252,12 +237,11 @@ function renderPanel(){
   $$('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
   $('#panel').innerHTML=PANELS[tab]();
   if(tab==='assistant'){renderFinanceReport();renderChat();}
-  if(tab==='settings')renderCurrencyRates();
   if(tab==='goals')updateGoalPreview();
 }
 
 const FORMS={
-  goal(d){const name=d.name.trim(),target=Math.round(Number(d.target)*100)/100,saved=Math.round(Number(d.saved||0)*100)/100,rate=d.rate===''?0:Number(d.rate),currency=d.currency||'RUB';if(!name||!Number.isFinite(target)||!(target>0))return'Укажите название и корректную сумму цели.';if(!Number.isFinite(saved)||saved<0)return'Сумма не может быть отрицательной.';if(!Number.isFinite(rate)||rate<0||rate>100)return'Ставка должна быть от 0 до 100% годовых.';const fx=currency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(currency);const goal={id:uid(),name,target,saved,currency,date:d.date||'',kind:d.kind==='deposit'?'deposit':'standard',rate:d.kind==='deposit'?rate:0};S.goals.push(goal);if(saved>0)S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:saved,baseAmount:Number.isFinite(fx)?Math.round(saved*fx*100)/100:null,category:'Накопления',date:today(),comment:'Начальный остаток цели: '+name,goalId:goal.id,currency,originalAmount:saved,exchangeRate:Number.isFinite(fx)?fx:null});toast('Цель создана')},
+  goal(d){const name=d.name.trim(),target=Math.round(Number(d.target)*100)/100,saved=Math.round(Number(d.saved||0)*100)/100,rate=d.rate===''?0:Number(d.rate);if(!name||!Number.isFinite(target)||!(target>0))return'Укажите название и корректную сумму цели.';if(!Number.isFinite(saved)||saved<0)return'Сумма не может быть отрицательной.';if(!Number.isFinite(rate)||rate<0||rate>100)return'Ставка должна быть от 0 до 100% годовых.';const goal={id:uid(),name,target,saved,currency:'RUB',date:d.date||'',kind:d.kind==='deposit'?'deposit':'standard',rate:d.kind==='deposit'?rate:0};S.goals.push(goal);if(saved>0)S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:saved,originalAmount:saved,baseAmount:saved,currency:'RUB',exchangeRate:1,category:'Накопления',date:today(),comment:'Начальный остаток цели: '+name,goalId:goal.id});toast('Цель создана')},
   budget(d){const limit=Math.round(Number(d.limit));if(!Number.isFinite(limit)||!(limit>0))return'Укажите корректный лимит больше нуля.';const b=S.budgets.find(x=>x.category===d.category);if(b)b.limit=limit;else S.budgets.push({category:d.category,limit});toast('Лимит сохранён')},
   rec(d){const name=d.name.trim(),amount=Math.round(Number(d.amount)),day=Math.round(Number(d.day));if(!name||!Number.isFinite(amount)||!(amount>0))return'Укажите название и корректную сумму.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';S.recurring.push({id:uid(),name,amount,category:d.category,day});toast('Платёж добавлен')},
   debt(d){const name=d.name.trim(),original=Math.round(Number(d.original)),remaining=Math.round(Number(d.remaining)),monthly=Math.round(Number(d.monthly)),day=Math.round(Number(d.day)),rate=d.rate===''?null:Number(d.rate);if(!name)return'Укажите название.';if(!Number.isFinite(original)||!(original>0))return'Первоначальная сумма должна быть больше нуля.';if(!Number.isFinite(remaining)||!(remaining>=0&&remaining<=original))return'Остаток должен быть от 0 до первоначальной суммы.';if(!Number.isFinite(monthly)||!(monthly>0))return'Укажите корректный ежемесячный платёж.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';if(rate!==null&&!(rate>=0&&rate<=100))return'Ставка — от 0 до 100.';S.debts.push({id:uid(),kind:d.kind,name,original,remaining,monthly,day,rate,history:[]});toast('Обязательство добавлено')},
@@ -276,20 +260,15 @@ document.addEventListener('submit',e=>{
   render();
 });
 
-function fillTx(){$('#txCat').innerHTML=catOpts(document.querySelector('#txForm [name=type]:checked').value);const sel=$('#txCurrency');if(sel&&window.SaymoSaldoCurrency)sel.innerHTML=window.SaymoSaldoCurrency.options().map(x=>`<option value="${x.code}">${esc(x.label)}</option>`).join('');updateCurrencyPreview()}
-function updateCurrencyPreview(){const f=$('#txForm'),out=$('#txCurrencyPreview');if(!f||!out)return;const c=f.elements.currency?.value||'RUB',v=Number(f.elements.amount?.value||0),rate=window.SaymoSaldoCurrency?.rubPerUnit(c);out.textContent=!v?'':c==='RUB'?`${currencyMoney(v,c)} — сумма сохранится в рублях`:Number.isFinite(rate)?`${currencyMoney(v,c)} сохранится без пересчёта. Эквивалент: ${money(v*rate)}.`:`${currencyMoney(v,c)} сохранится без пересчёта. Рублёвый эквивалент появится после загрузки курса.`}
-$('#txForm').addEventListener('input',e=>{if(e.target.name==='amount'||e.target.name==='currency')updateCurrencyPreview()});
-$('#txForm').addEventListener('change',e=>{if(e.target.name==='type')fillTx();if(e.target.name==='currency')updateCurrencyPreview()});
-window.addEventListener('saymo-rates-updated',()=>{const sel=$('#txCurrency'),current=sel?.value;if(sel){sel.innerHTML=window.SaymoSaldoCurrency.options().map(x=>`<option value="${x.code}">${esc(x.label)}</option>`).join('');sel.value=current||'RUB';}let changed=false;S.tx.forEach(tx=>{if(tx.currency&&tx.currency!=='RUB'&&tx.baseAmount===null){const fx=window.SaymoSaldoCurrency.rubPerUnit(tx.currency);if(Number.isFinite(fx)){tx.baseAmount=Math.round(txNativeAmount(tx)*fx*100)/100;tx.exchangeRate=fx;changed=true;}}});if(changed)save();updateCurrencyPreview();renderCurrencyRates();renderHomeCurrencyRates();render()});
+function fillTx(){$('#txCat').innerHTML=catOpts(document.querySelector('#txForm [name=type]:checked').value)}
 $('#txForm').addEventListener('submit',e=>{
   e.preventDefault();
   
   const f=e.target,d=Object.fromEntries(new FormData(f));
-  const originalAmount=Number(d.amount),currency=d.currency||'RUB',exchangeRate=currency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(currency);
-  if(!Number.isFinite(originalAmount)||!(originalAmount>0))return toast('Укажите корректную сумму больше нуля.');
+  const amount=Number(d.amount);
+  if(!Number.isFinite(amount)||!(amount>0))return toast('Укажите корректную сумму больше нуля.');
   if(!d.date)return toast('Укажите дату.');
-  const baseAmount=Number.isFinite(exchangeRate)&&exchangeRate>0?Math.round(originalAmount*exchangeRate*100)/100:null;
-  S.tx.push({id:uid(),created:Date.now(),type:d.type,amount:originalAmount,originalAmount,baseAmount,currency,exchangeRate:Number.isFinite(exchangeRate)&&exchangeRate>0?exchangeRate:null,category:d.category,date:d.date,comment:(d.comment||'').trim().slice(0,80)});
+  S.tx.push({id:uid(),created:Date.now(),type:d.type,amount,originalAmount:amount,baseAmount:amount,currency:'RUB',exchangeRate:1,category:d.category,date:d.date,comment:(d.comment||'').trim().slice(0,80)});
   if(!save())return;
   f.reset();
   fillTx();
@@ -298,12 +277,10 @@ $('#txForm').addEventListener('submit',e=>{
 });
 
 function goalProjection(g){const target=Number(g.target)||0,saved=Number(g.saved)||0,rate=(g.kind==='deposit'?Number(g.rate)||0:0)/1200;let months=0;if(g.date){const now=new Date(),due=new Date(g.date+'T12:00:00');months=Math.max(0,(due.getFullYear()-now.getFullYear())*12+due.getMonth()-now.getMonth());if(due>now)months=Math.max(1,months);}if(!months)return {months:0,monthly:0,interest:0,future:saved*(1+rate)};const factor=rate>0?(Math.pow(1+rate,months)-1)/rate:months;const futureSaved=saved*Math.pow(1+rate,months);const monthly=Math.max(0,(target-futureSaved)/Math.max(factor,1));const interest=Math.max(0,futureSaved-saved+monthly*(factor-months));return {months,monthly,interest,future:futureSaved+monthly*factor};}
-function goalPreviewText(g){const p=goalProjection(g),c=g.currency||'RUB';if(!g.date)return g.kind==='deposit'&&g.rate?`Ориентировочный доход за месяц: ${currencyMoney((Number(g.saved)||0)*Number(g.rate)/1200,c)} при текущем остатке.`:'Укажите срок — приложение рассчитает необходимое ежемесячное пополнение.';if(!p.months)return Number(g.saved)>=Number(g.target)?'Цель уже достигнута.':'До выбранной даты меньше месяца — укажите более поздний срок.';return `До срока: ${p.months} мес. Нужно откладывать примерно ${currencyMoney(p.monthly,c)} в месяц.${g.kind==='deposit'?` Прогноз процентов за период — ${currencyMoney(p.interest,c)} при ставке ${Number(g.rate)||0}% годовых и ежемесячной капитализации.`:''}`;}
-function updateGoalPreview(){const f=document.querySelector('form[data-form="goal"]'),el=$('#goalPreview');if(!f||!el)return;const d=Object.fromEntries(new FormData(f));el.textContent=goalPreviewText({target:Number(d.target)||0,saved:Number(d.saved)||0,date:d.date||'',kind:d.kind==='deposit'?'deposit':'standard',rate:Number(d.rate)||0,currency:d.currency||'RUB'});}
+function goalPreviewText(g){const p=goalProjection(g);if(!g.date)return g.kind==='deposit'&&g.rate?`Ориентировочный доход за месяц: ${money((Number(g.saved)||0)*Number(g.rate)/1200)} при текущем остатке.`:'Укажите срок — приложение рассчитает необходимое ежемесячное пополнение.';if(!p.months)return Number(g.saved)>=Number(g.target)?'Цель уже достигнута.':'До выбранной даты меньше месяца — укажите более поздний срок.';return `До срока: ${p.months} мес. Нужно откладывать примерно ${money(p.monthly)} в месяц.${g.kind==='deposit'?` Прогноз процентов за период — ${money(p.interest)} при ставке ${Number(g.rate)||0}% годовых и ежемесячной капитализации.`:''};}
+function updateGoalPreview(){const f=document.querySelector('form[data-form="goal"]'),el=$('#goalPreview');if(!f||!el)return;const d=Object.fromEntries(new FormData(f));el.textContent=goalPreviewText({target:Number(d.target)||0,saved:Number(d.saved)||0,date:d.date||'',kind:d.kind==='deposit'?'deposit':'standard',});}
 document.addEventListener('input',e=>{if(e.target.closest('form[data-form="goal"]'))updateGoalPreview()});
 document.addEventListener('change',e=>{if(e.target.closest('form[data-form="goal"]'))updateGoalPreview()});
-function renderCurrencyRates(){const el=$('#currencyRates');if(!el||!window.SaymoSaldoCurrency)return;const snap=window.SaymoSaldoCurrency.snapshot();if(!snap){el.innerHTML='<small>Курсы пока не загружены. Проверьте соединение и нажмите «Обновить курсы».</small>';return;}const codes=['USD','EUR','CNY'];el.innerHTML=codes.map(code=>{const rate=window.SaymoSaldoCurrency.rubPerUnit(code);return Number.isFinite(rate)?`<div class="item"><b>1 ${code}</b><b>${money(rate)}</b></div>`:''}).join('')||'<small>Курсы недоступны.</small>';const stamp=new Date(snap.updatedAt);el.insertAdjacentHTML('beforeend',`<small>Обновлено: ${stamp.toLocaleString('ru-RU')} · <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener noreferrer">Rates By Exchange Rate API</a></small>`);}
-function renderHomeCurrencyRates(){const el=$('#homeCurrencyRates'),stampEl=$('#homeCurrencyUpdated');if(!el||!window.SaymoSaldoCurrency)return;const snap=window.SaymoSaldoCurrency.snapshot();if(!snap){el.innerHTML='<small class="muted">Курсы пока недоступны. Откройте «Все курсы» и попробуйте обновить.</small>';if(stampEl)stampEl.textContent='';return;}const codes=['USD','EUR','CNY'];el.innerHTML=codes.map(code=>{const rate=window.SaymoSaldoCurrency.rubPerUnit(code);return Number.isFinite(rate)?`<div class="item"><b>1 ${code}</b><b>${money(rate)}</b></div>`:''}).join('');if(stampEl)stampEl.textContent='Обновлено: '+new Date(snap.updatedAt).toLocaleString('ru-RU');}
 function payRecurring(id){
   const r=S.recurring.find(x=>x.id===id);if(!r)return;
   const key=scopedKey('paid_'+nowMk()+'_'+id);
@@ -428,7 +405,7 @@ function financeReportData(){
   const prevRows=monthTx(prevKey).filter(x=>Number(String(x.date).slice(8,10))<=prevDay),prevSpent=sumType(prevRows,'expense');
   const budgets=S.budgets.map(b=>({category:b.category,limit:Number(b.limit)||0,spent:by[b.category]||0})).filter(b=>b.limit>0).sort((a,b)=>b.spent/b.limit-a.spent/a.limit);
   const recurring=total(S.recurring.map(x=>x.amount))+total(S.debts.filter(x=>Number(x.remaining)>0).map(x=>x.monthly));
-  const goals=S.goals.map(g=>({name:g.name,target:Number(g.target)||0,saved:Number(g.saved)||0,date:g.date||'',currency:g.currency||'RUB'}));
+  const goals=S.goals.map(g=>({name:g.name,target:Number(g.target)||0,saved:Number(g.saved)||0,date:g.date||''}));
   return {key,current,expenses,incomes,by,top,spent,earned,day,days,prevKey,prevDay,prevSpent,budgets,recurring,goals,forecast:spent/day*days};
 }
 function renderFinanceReport(){
@@ -449,7 +426,7 @@ function renderFinanceReport(){
 function finance(q){
   const d=financeReportData(),s=String(q||'').toLowerCase();
   if(!S.tx.length)return'Пока нет операций. Добавьте доходы и расходы — тогда я смогу показать аналитику.';
-  if(/цель|накоп/.test(s))return d.goals.length?'Ваши цели: '+d.goals.map(g=>`«${g.name}» — ${currencyMoney(g.saved,g.currency)} из ${currencyMoney(g.target,g.currency)} (${g.target?Math.round(g.saved/g.target*100):0}%).`).join(' '):'Вы пока не создали накопительные цели. Добавьте цель в разделе «Бюджет».';
+  if(/цель|накоп/.test(s))return d.goals.length?'Ваши цели: '+d.goals.map(g=>`«${g.name}» — ${money(g.saved)} из ${money(g.target)} (${g.target?Math.round(g.saved/g.target*100):0}%).`).join(' '):'Вы пока не создали накопительные цели. Добавьте цель в разделе «Бюджет».';
   if(/платеж|подпис|регуляр|долг|кредит/.test(s))return d.recurring?`По вашим записям регулярные платежи и ежемесячные платежи по долгам составляют примерно ${money(d.recurring)} в месяц. Проверьте, все ли записи актуальны.`:'Вы пока не добавили регулярные платежи или долги.';
   if(/доход|заработ|отлож|сбереж/.test(s))return d.earned?`В этом месяце внесено доходов на ${money(d.earned)} и расходов на ${money(d.spent)}. Разница — ${money(d.earned-d.spent)}. Это сумма по записанным операциям, а не гарантированно свободные деньги.`:'В этом месяце пока нет записанных доходов.';
   if(/трач|категор|больше/.test(s))return d.top.length?`Больше всего в этом месяце уходит на «${d.top[0][0]}»: ${money(d.top[0][1])} (${Math.round(d.top[0][1]/Math.max(1,d.spent)*100)}% расходов).`:'В этом месяце расходов пока нет.';
@@ -472,7 +449,7 @@ const TOUR=[
 let tourI=0;
 function showWelcome(){
   const d=document.createElement('div');d.id='welcome';d.className='overlay';
-  d.innerHTML='<div class="ov-card"><div style="font-size:34px;margin-bottom:12px">✦</div><h2>Добро пожаловать в SaymoSaldo!</h2><p class="muted">Здесь можно записывать доходы и расходы, планировать бюджет, контролировать регулярные платежи и долги, а также создавать цели накоплений и смотреть финансовую статистику.</p><p class="muted">Основная валюта — рубль; операции в других валютах автоматически пересчитываются по курсу. Накопительные цели показывают прогноз процентов.</p><p class="muted">Сначала коротко покажем основные разделы и объясним, как правильно вносить данные. Обучение можно повторно открыть позже в разделе «Ещё → Настройки».</p><div style="display:grid;gap:8px"><button class="primary" data-act="welcome-yes">Начать обучение</button><button class="ghost" data-act="welcome-no">Перейти к приложению</button></div></div>';
+  d.innerHTML='<div class="ov-card"><div style="font-size:34px;margin-bottom:12px">✦</div><h2>Добро пожаловать в SaymoSaldo!</h2><p class="muted">Здесь можно записывать доходы и расходы, планировать бюджет, контролировать регулярные платежи и долги, а также создавать цели накоплений и смотреть финансовую статистику.</p><p class="muted">Все суммы в приложении указываются только в российских рублях. Накопительные цели показывают прогноз процентов.</p><p class="muted">Сначала коротко покажем основные разделы и объясним, как правильно вносить данные. Обучение можно повторно открыть позже в разделе «Ещё → Настройки».</p><div style="display:grid;gap:8px"><button class="primary" data-act="welcome-yes">Начать обучение</button><button class="ghost" data-act="welcome-no">Перейти к приложению</button></div></div>';
   document.body.appendChild(d);
 }
 function closeWelcome(){document.getElementById('welcome')?.remove()}
@@ -509,10 +486,10 @@ document.addEventListener('click',e=>{
   switch(act){
     case'tx-del':return confirmDo('Удалить операцию?',()=>{const tx=S.tx.find(x=>String(x.id)===id);if(tx?.type==='saving'&&tx.goalId){const goal=S.goals.find(g=>String(g.id)===String(tx.goalId));if(goal&&(tx.currency||'RUB')===(goal.currency||'RUB'))goal.saved=Math.max(0,(Number(goal.saved)||0)-(Number(tx.originalAmount??tx.amount)||0));}S.tx=S.tx.filter(x=>String(x.id)!==id)});
     case'goal-edit':return editGoal(id);
-    case'goal-fund':{const g=S.goals.find(x=>x.id===id);if(!g)return toast('Цель не найдена.');const currency=g.currency||'RUB';return ask('Пополнить цель',[{n:'amount',l:'Сумма, '+currency}],f=>{
-      const v=Math.round(Number(f.amount)*100)/100,fx=currency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(currency);
+    case'goal-fund':{const g=S.goals.find(x=>x.id===id);if(!g)return toast('Цель не найдена.');return ask('Пополнить цель',[{n:'amount',l:'Сумма, ₽'}],f=>{
+      const v=Math.round(Number(f.amount)*100)/100;
       if(!Number.isFinite(v)||!(v>0))return'Введите корректную сумму больше нуля.';
-      g.saved=Math.round((g.saved+v)*100)/100;S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:v,baseAmount:Number.isFinite(fx)?Math.round(v*fx*100)/100:null,category:'Накопления',date:today(),comment:'Пополнение цели: '+g.name,goalId:g.id,currency,originalAmount:v,exchangeRate:Number.isFinite(fx)?fx:null});if(!save())return;render();toast('Пополнение записано в операции');
+      g.saved=Math.round((g.saved+v)*100)/100;S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:v,baseAmount:v,category:'Накопления',date:today(),comment:'Пополнение цели: '+g.name,goalId:g.id,currency:'RUB',originalAmount:v,exchangeRate:1});if(!save())return;render();toast('Пополнение записано в операции');
     });}
     case'goal-del':return confirmDo('Удалить цель?',()=>{S.goals=S.goals.filter(x=>x.id!==id)});
     case'budget-del':return confirmDo('Удалить лимит?',()=>{S.budgets=S.budgets.filter(x=>x.category!==t.dataset.cat)});
@@ -527,8 +504,7 @@ document.addEventListener('click',e=>{
     case'tour-next':if(tourI<TOUR.length-1){tourI++;return showTourStep()}return endTour('done');
     case'tour-back':tourI--;return showTourStep();
     case'tour-skip':return endTour('skipped');
-    case'currency-refresh':return window.SaymoSaldoCurrency?.refresh().then(()=>{renderCurrencyRates();updateCurrencyPreview();toast('Курсы обновлены')}).catch(()=>toast('Не удалось обновить курсы. Попробуйте позже.'));
-    case'export':return exportData();
+        case'export':return exportData();
     case'import':return $('#importFile').click();
     case'dlg-cancel':return $('#dlg').close();
   }
@@ -542,7 +518,7 @@ window.SaymoSaldoApp={
  getGuestData(){if(localStorage.getItem('saymosaldo_guest_migration_handled')==='1')return {tx:[],goals:[],budgets:[],recurring:[],debts:[],chat_finance:[]};return {tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts,chat_finance:readStoredArray('saymosaldo_chat_finance')}},
  getLocalUserData(userId){const prefix='saymosaldo_user_'+userId+'_';let found=false;const data={};for(const key of KEYS){const raw=localStorage.getItem(prefix+key);if(raw!==null)found=true;try{const value=JSON.parse(raw);data[key]=Array.isArray(value)?value:[]}catch(e){data[key]=[]}}const chatRaw=localStorage.getItem(prefix+'chat_finance');if(chatRaw!==null)found=true;try{const value=JSON.parse(chatRaw);data.chat_finance=Array.isArray(value)?value:[]}catch(e){data.chat_finance=[]}if(!found)return null;return {data,updated_at:localStorage.getItem(prefix+'local_modified_at')||'1970-01-01T00:00:00.000Z',pending_sync:localStorage.getItem(prefix+'pending_sync')==='1'}},
  getData(){return {tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts,chat_finance:readStoredArray(chatKey())}},
- activate(userId,data,updatedAt,pendingSync){const oldKey=KEY,previous={tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts};KEY='saymosaldo_user_'+userId+'_';S.tx=Array.isArray(data.tx)?data.tx:[];S.goals=Array.isArray(data.goals)?data.goals:[];S.budgets=Array.isArray(data.budgets)?data.budgets:[];S.recurring=Array.isArray(data.recurring)?data.recurring:[];S.debts=Array.isArray(data.debts)?data.debts:[];const entries=Object.fromEntries(KEYS.map(key=>[scopedKey(key),JSON.stringify(S[key])]));entries[chatKey()]=JSON.stringify(Array.isArray(data.chat_finance)?data.chat_finance:Array.isArray(data.chatFinance)?data.chatFinance:[]);entries[scopedKey('local_modified_at')]=updatedAt||new Date().toISOString();entries[scopedKey('pending_sync')]=pendingSync?'1':'0';if(!persistEntries(entries)){KEY=oldKey;Object.assign(S,previous);return false}try{localStorage.setItem('saymosaldo_guest_migration_handled','1')}catch(e){}fillTx();go('home');renderPanel();$('#appShell').hidden=false;if(!localStorage.getItem(KEY+'onboarding'))showWelcome();return true},
+ activate(userId,data,updatedAt,pendingSync){const oldKey=KEY,previous={tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts};const currencyChanged=normalizeRubleData(data);KEY='saymosaldo_user_'+userId+'_';S.tx=Array.isArray(data.tx)?data.tx:[];S.goals=Array.isArray(data.goals)?data.goals:[];S.budgets=Array.isArray(data.budgets)?data.budgets:[];S.recurring=Array.isArray(data.recurring)?data.recurring:[];S.debts=Array.isArray(data.debts)?data.debts:[];const entries=Object.fromEntries(KEYS.map(key=>[scopedKey(key),JSON.stringify(S[key])]));entries[chatKey()]=JSON.stringify(Array.isArray(data.chat_finance)?data.chat_finance:Array.isArray(data.chatFinance)?data.chatFinance:[]);entries[scopedKey('local_modified_at')]=updatedAt||new Date().toISOString();entries[scopedKey('pending_sync')]=(pendingSync||currencyChanged)?'1':'0';if(!persistEntries(entries)){KEY=oldKey;Object.assign(S,previous);return false}try{localStorage.setItem('saymosaldo_guest_migration_handled','1')}catch(e){}fillTx();go('home');renderPanel();$('#appShell').hidden=false;if(!localStorage.getItem(KEY+'onboarding'))showWelcome();return true},
  setCloudSaveHandler(handler){cloudSaveHandler=typeof handler==='function'?handler:null},
  markSynced(){try{localStorage.setItem(scopedKey('pending_sync'),'0')}catch(e){}},
  hasPendingSync(){try{return localStorage.getItem(scopedKey('pending_sync'))==='1'}catch(e){return false}},
