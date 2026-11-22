@@ -1041,6 +1041,200 @@ input,select{background:#f8fbfe;border-color:#e0eaf3;border-radius:12px}
 :root[data-theme=dark] .nav{background:rgba(25,40,58,.96);border-color:#2a3d51}
 :root[data-theme=dark] .nav button[aria-current=page]{color:#a9d6f3}
 
+
+/* Banking UI — consistent components across every SaymoSaldo section */
+:root{
+ --bank-blue:#5799c9;--bank-blue-deep:#397eaf;--bank-blue-soft:#eaf4fb;
+ --bank-ink:#24364b;--bank-muted:#71849a;--bank-line:#e3ebf3;
+}
+.view:not([hidden]){animation:ss-view-in .22s ease both}
+@keyframes ss-view-in{from{opacity:.72;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.view[data-view=ops] .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;margin:0 0 14px;background:#fff;border:1px solid var(--bank-line);border-radius:16px}
+.view[data-view=ops] .toolbar select{min-width:150px;max-width:68%;padding:11px 36px 11px 13px;border-radius:11px;background-color:#f7fafe!important;border:1px solid var(--bank-line)!important;color:var(--bank-ink)}
+#allItems,#recent{display:grid;gap:9px}
+.operation-item{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;background:#fff;border:1px solid var(--bank-line);border-radius:16px;box-shadow:0 3px 12px rgba(42,77,111,.035)}
+.operation-main{gap:12px}
+.operation-item .ico{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:14px;background:#edf5fb;color:#4e8cba;font-size:18px}
+.operation-item b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--bank-ink);font-size:14px;font-weight:650}
+.operation-item small{display:block;margin-top:4px;color:var(--bank-muted);font-size:12px}
+.operation-item .amt{display:flex;flex-direction:column;align-items:flex-end;gap:5px;white-space:nowrap;color:#bd6571;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.operation-item .amt.pos{color:#398c76}
+.operation-item .amt .link{font-size:11px;font-weight:550}
+.view[data-view=add] form.card{max-width:680px;margin:0 auto;padding:22px;background:#fff;border:1px solid var(--bank-line);border-radius:20px;box-shadow:0 8px 26px rgba(42,77,111,.055)}
+.field{gap:8px;margin-bottom:16px}
+.field>span{color:var(--bank-ink);font-size:13px;font-weight:650}
+.field input,.field select,.field textarea,.toolbar select,.dlgf input,.dlgf select{min-height:46px;padding:11px 13px;border:1px solid var(--bank-line)!important;border-radius:12px;background:#f8fbfe!important;color:var(--bank-ink)}
+.field-help{color:#8799aa;font-size:11px;line-height:1.45}
+.seg{padding:4px;background:#f1f6fa;border:1px solid var(--bank-line);border-radius:13px;margin-bottom:20px}
+.seg label{flex:1}
+.seg span{display:block;text-align:center;padding:10px;border-radius:10px;color:var(--bank-muted);font-weight:650}
+.seg input:checked+span{background:#fff;color:var(--bank-blue-deep);box-shadow:0 2px 8px rgba(42,77,111,.09)}
+.view[data-view=stats] .card,.view[data-view=stats] #budgetWrap>.card{padding:18px 20px;border:1px solid var(--bank-line);border-radius:18px;background:#fff;box-shadow:0 5px 18px rgba(42,77,111,.045)}
+.view[data-view=stats] .sec{margin-top:24px}
+.view[data-view=stats] .sec h2,.view[data-view=more] h2{font-size:16px;font-weight:700;letter-spacing:-.015em;color:var(--bank-ink)}
+.bl{padding:13px 14px;margin:9px 0;background:#f9fbfd;border:1px solid #e8eff5;border-radius:13px;box-shadow:none}
+.bl .row{align-items:center;gap:12px}
+.bl .row span{font-size:13px;color:var(--bank-ink)}
+.bl .row b{font-size:13px;color:var(--bank-ink);font-variant-numeric:tabular-nums}
+.bar{height:7px;margin-top:10px;border-radius:99px;background:#e9f0f6;overflow:hidden}
+.bar i{height:100%;border-radius:99px;background:linear-gradient(90deg,#a9d2ef,#5799c9)!important}
+.bar i.warn{background:linear-gradient(90deg,#f1d49a,#c99543)!important}
+.bar i.over{background:linear-gradient(90deg,#e7a5ae,#c86e7a)!important}
+.goal-card{padding:18px 19px;border:1px solid var(--bank-line);border-radius:18px;background:#fff;box-shadow:0 5px 18px rgba(42,77,111,.045)}
+.goal-head{align-items:center;gap:12px}
+.goal-title{color:var(--bank-ink);font-size:15px;font-weight:700}
+.goal-percent{padding:6px 10px;border-radius:999px;background:#eaf4fb;color:#397eaf;font-size:12px;font-weight:700}
+.goal-meta{display:grid;grid-template-columns:1fr auto;gap:7px 12px;margin:14px 0;color:var(--bank-muted);font-size:12px}
+.goal-meta>b{color:var(--bank-ink);font-size:13px;font-variant-numeric:tabular-nums}
+.goal-meta>b span{color:var(--bank-muted);font-weight:500}
+.goal-meta>small{grid-column:1/-1;color:var(--bank-muted);font-size:11px}
+.goal-card .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}
+.goal-card .actions button,.ghost{min-height:38px;padding:8px 12px;border:1px solid #dce9f3;border-radius:11px;background:#f5f9fc;color:#4c83ad;font-size:12px;font-weight:650}
+.goal-card .actions .danger,.ghost.danger{color:#b85f6b;border-color:#f0dce0;background:#fff8f8}
+.home-goal-item{padding:13px 14px;border:1px solid var(--bank-line);border-radius:15px;background:#fff;box-shadow:none}
+.home-goal-copy>b{color:var(--bank-ink);font-size:13px;font-weight:700}
+.home-goal-copy>small{color:var(--bank-muted);font-size:11px}
+.ring .rt{stroke:#e8eff5}.ring .rv{stroke:#68a6d4}
+.home-debt-total{padding:18px;background:#fff;border:1px solid var(--bank-line);border-radius:18px}
+.home-debt-total>.big{margin:6px 0 16px;color:var(--bank-ink);font-size:28px;font-weight:750;letter-spacing:-.035em}
+.home-debt-row{padding:12px 0;border-top:1px solid #edf2f6}
+.home-debt-row .row b{color:var(--bank-ink);font-size:13px}
+.home-debt-row small{color:var(--bank-muted);font-size:11px}
+.forecast-card{padding:18px 20px;border:1px solid var(--bank-line);border-radius:18px;background:#fff}
+.forecast-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.forecast-head>b{color:var(--bank-ink);font-size:15px}
+.forecast-tag{padding:6px 9px;border-radius:99px;background:#eaf4fb;color:#4384b4;font-size:10px;font-weight:700}
+.forecast-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0}
+.forecast-metric{padding:12px;border:1px solid #e8eff5;border-radius:13px;background:#f8fbfd}
+.forecast-metric span{display:block;color:var(--bank-muted);font-size:11px;line-height:1.4}
+.forecast-metric b{display:block;margin-top:7px;color:var(--bank-ink);font-size:15px;font-variant-numeric:tabular-nums}
+.forecast-note{display:block;color:var(--bank-muted);font-size:10px;line-height:1.5}
+.insight-line{margin-top:13px;padding:12px 13px;border-radius:12px;background:#eef6fc;color:#526f88;font-size:12px;line-height:1.5}
+.insight-line>b{color:#397eaf}
+.view[data-view=more] .tabs{display:flex;gap:7px;overflow-x:auto;padding:5px 2px 12px;border:0;border-radius:0;background:transparent;box-shadow:none;scrollbar-width:none}
+.view[data-view=more] .tabs button{flex:0 0 auto;min-height:39px;padding:9px 13px;border:1px solid var(--bank-line);border-radius:12px;background:#fff;color:var(--bank-muted);font-size:12px;font-weight:650}
+.view[data-view=more] .tabs button[aria-selected=true]{background:#eaf4fb;border-color:#cfe3f2;color:#397eaf}
+#panel>.card,#panel>form.card,#panel>.chat,#panel>.chatform,#panel>.note{border:1px solid var(--bank-line);border-radius:18px;background:#fff;box-shadow:0 5px 18px rgba(42,77,111,.045)}
+#panel>.card,#panel>form.card{padding:18px}
+.chat{padding:16px}
+.msg{border-radius:15px;padding:11px 13px}
+.msg.user{background:#eaf4fb;color:#315c7c}
+.chips{gap:7px}
+.chip{padding:8px 11px;border:1px solid var(--bank-line);border-radius:99px;background:#f7fafd;color:#55728d;font-size:12px}
+.dlgf{padding:22px;border-radius:20px}
+.dlgf h2{margin:0 0 18px;color:var(--bank-ink);font-size:19px;font-weight:720}
+.dlgf .row.end{gap:9px;margin-top:16px}
+.empty{padding:24px 16px;border:1px dashed #d9e5ee;border-radius:15px;background:#f9fbfd;color:var(--bank-muted);text-align:center;font-size:13px}
+.note{padding:13px 15px;border:1px solid #e3edf5;border-radius:13px;background:#f7fafd;color:#637c93;font-size:12px;line-height:1.55}
+@media(max-width:759px){
+ .view[data-view=ops] .toolbar{padding:10px 11px}
+ .operation-item{padding:12px 11px;gap:9px}
+ .operation-item .ico{flex-basis:38px;width:38px;height:38px}
+ .operation-item .amt{font-size:12px}
+ .view[data-view=add] form.card{padding:17px 15px}
+ .view[data-view=stats] .card,.view[data-view=stats] #budgetWrap>.card{padding:15px}
+ .goal-card{padding:15px}
+ .forecast-grid{gap:8px}
+ .forecast-metric{padding:10px}
+ .forecast-metric b{font-size:13px}
+ .view[data-view=more] .tabs{margin:0 -2px}
+}
+@media(max-width:360px){
+ .operation-item .ico{display:none}
+ .operation-item .amt .link{font-size:10px}
+ .forecast-grid{grid-template-columns:1fr 1fr}
+}
+@media(prefers-reduced-motion:reduce){.view:not([hidden]){animation:none}}
+/* Dark theme parity for the full banking component set */
+:root[data-theme=dark] .view[data-view=ops] .toolbar,
+:root[data-theme=dark] .operation-item,
+:root[data-theme=dark] .view[data-view=add] form.card,
+:root[data-theme=dark] .view[data-view=stats] .card,
+:root[data-theme=dark] .view[data-view=stats] #budgetWrap>.card,
+:root[data-theme=dark] .goal-card,
+:root[data-theme=dark] .home-goal-item,
+:root[data-theme=dark] .home-debt-total,
+:root[data-theme=dark] .forecast-card,
+:root[data-theme=dark] .view[data-view=more] .tabs button,
+:root[data-theme=dark] #panel>.card,
+:root[data-theme=dark] #panel>form.card,
+:root[data-theme=dark] #panel>.chat,
+:root[data-theme=dark] #panel>.chatform{background:#1b2a3a;border-color:#2e4257;color:#edf4fb}
+:root[data-theme=dark] .operation-item b,
+:root[data-theme=dark] .goal-title,
+:root[data-theme=dark] .goal-meta>b,
+:root[data-theme=dark] .home-goal-copy>b,
+:root[data-theme=dark] .home-debt-row .row b,
+:root[data-theme=dark] .forecast-head>b,
+:root[data-theme=dark] .forecast-metric b,
+:root[data-theme=dark] .bl .row span,
+:root[data-theme=dark] .bl .row b,
+:root[data-theme=dark] .view[data-view=stats] .sec h2,
+:root[data-theme=dark] .view[data-view=more] h2{color:#edf4fb}
+:root[data-theme=dark] .bl,
+:root[data-theme=dark] .forecast-metric,
+:root[data-theme=dark] .empty,
+:root[data-theme=dark] .note,
+:root[data-theme=dark] .goal-card .actions button,
+:root[data-theme=dark] .ghost{background:#152436;border-color:#2e4257;color:#c2d5e6}
+:root[data-theme=dark] .view[data-view=more] .tabs button[aria-selected=true],
+:root[data-theme=dark] .goal-percent,
+:root[data-theme=dark] .forecast-tag{background:#294763;border-color:#3d6283;color:#c4e2fa}
+:root[data-theme=dark] .insight-line{background:#203a52;color:#c1d5e7}
+:root[data-theme=dark] .insight-line>b{color:#a9d6f3}
+:root[data-theme=dark] .field>span{color:#dce8f3}
+:root[data-theme=dark] .field input,
+:root[data-theme=dark] .field select,
+:root[data-theme=dark] .field textarea,
+:root[data-theme=dark] .toolbar select,
+:root[data-theme=dark] .dlgf input,
+:root[data-theme=dark] .dlgf select{background:#122033!important;border-color:#2e4257!important;color:#edf4fb}
+@media(prefers-color-scheme:dark){
+ :root:not([data-theme=light]) .view[data-view=ops] .toolbar,
+ :root:not([data-theme=light]) .operation-item,
+ :root:not([data-theme=light]) .view[data-view=add] form.card,
+ :root:not([data-theme=light]) .view[data-view=stats] .card,
+ :root:not([data-theme=light]) .view[data-view=stats] #budgetWrap>.card,
+ :root:not([data-theme=light]) .goal-card,
+ :root:not([data-theme=light]) .home-goal-item,
+ :root:not([data-theme=light]) .home-debt-total,
+ :root:not([data-theme=light]) .forecast-card,
+ :root:not([data-theme=light]) .view[data-view=more] .tabs button,
+ :root:not([data-theme=light]) #panel>.card,
+ :root:not([data-theme=light]) #panel>form.card,
+ :root:not([data-theme=light]) #panel>.chat,
+ :root:not([data-theme=light]) #panel>.chatform{background:#1b2a3a;border-color:#2e4257;color:#edf4fb}
+ :root:not([data-theme=light]) .operation-item b,
+ :root:not([data-theme=light]) .goal-title,
+ :root:not([data-theme=light]) .goal-meta>b,
+ :root:not([data-theme=light]) .home-goal-copy>b,
+ :root:not([data-theme=light]) .home-debt-row .row b,
+ :root:not([data-theme=light]) .forecast-head>b,
+ :root:not([data-theme=light]) .forecast-metric b,
+ :root:not([data-theme=light]) .bl .row span,
+ :root:not([data-theme=light]) .bl .row b,
+ :root:not([data-theme=light]) .view[data-view=stats] .sec h2,
+ :root:not([data-theme=light]) .view[data-view=more] h2{color:#edf4fb}
+ :root:not([data-theme=light]) .bl,
+ :root:not([data-theme=light]) .forecast-metric,
+ :root:not([data-theme=light]) .empty,
+ :root:not([data-theme=light]) .note,
+ :root:not([data-theme=light]) .goal-card .actions button,
+ :root:not([data-theme=light]) .ghost{background:#152436;border-color:#2e4257;color:#c2d5e6}
+ :root:not([data-theme=light]) .view[data-view=more] .tabs button[aria-selected=true],
+ :root:not([data-theme=light]) .goal-percent,
+ :root:not([data-theme=light]) .forecast-tag{background:#294763;border-color:#3d6283;color:#c4e2fa}
+ :root:not([data-theme=light]) .insight-line{background:#203a52;color:#c1d5e7}
+ :root:not([data-theme=light]) .insight-line>b{color:#a9d6f3}
+ :root:not([data-theme=light]) .field>span{color:#dce8f3}
+ :root:not([data-theme=light]) .field input,
+ :root:not([data-theme=light]) .field select,
+ :root:not([data-theme=light]) .field textarea,
+ :root:not([data-theme=light]) .toolbar select,
+ :root:not([data-theme=light]) .dlgf input,
+ :root:not([data-theme=light]) .dlgf select{background:#122033!important;border-color:#2e4257!important;color:#edf4fb}
+}
+
 </style>
 </head>
 <body>
