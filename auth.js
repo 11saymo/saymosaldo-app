@@ -46,6 +46,83 @@
     return typeof value === 'string' && value.length >= 12 && value.length <= 72;
   }
 
+  const GOOGLE_PKCE_KEY = 'saymosaldo_google_pkce_verifier';
+
+  function randomVerifier() {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, value => value.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function createCodeChallenge(verifier) {
+    const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+    let binary = '';
+    for (const value of new Uint8Array(digest)) binary += String.fromCharCode(value);
+    return btoa(binary).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
+  }
+
+  function googleAuthorizeUrl(challenge, redirectTo) {
+    const url = new URL(SUPABASE_URL + '/auth/v1/authorize');
+    url.searchParams.set('provider', 'google');
+    url.searchParams.set('redirect_to', redirectTo);
+    url.searchParams.set('code_challenge', challenge);
+    url.searchParams.set('code_challenge_method', 's256');
+    return url.toString();
+  }
+
+  async function startGoogleLogin() {
+    const button = $('googleSignInButton');
+    if (button) { button.disabled = true; button.textContent = 'Переходим к Google…'; }
+    try {
+      const verifier = randomVerifier();
+      const challenge = await createCodeChallenge(verifier);
+      sessionStorage.setItem(GOOGLE_PKCE_KEY, verifier);
+      const redirectTo = window.location.origin + window.location.pathname;
+      window.location.assign(googleAuthorizeUrl(challenge, redirectTo));
+    } catch (error) {
+      if (button) { button.disabled = false; button.textContent = 'Продолжить с Google'; }
+      setNotice('Не удалось начать безопасный вход. Проверьте соединение и попробуйте снова.', 'error');
+    }
+  }
+
+  function cleanOAuthUrl() {
+    const url = new URL(window.location.href);
+    ['code', 'error', 'error_description', 'error_code', 'state'].forEach(key => url.searchParams.delete(key));
+    window.history.replaceState(window.history.state, '', url.toString());
+  }
+
+  async function consumeGoogleCallback() {
+    const url = new URL(window.location.href);
+    const providerError = url.searchParams.get('error');
+    if (providerError) {
+      const description = url.searchParams.get('error_description') || '';
+      try { sessionStorage.removeItem(GOOGLE_PKCE_KEY); } catch (error) {}
+      cleanOAuthUrl();
+      setNotice(/access_denied/i.test(providerError)
+        ? 'Вход через Google отменён. Вы можете попробовать ещё раз.'
+        : 'Google не смог завершить вход. Попробуйте ещё раз позже.', 'error');
+      return false;
+    }
+
+    const code = url.searchParams.get('code');
+    if (!code) return false;
+    const verifier = sessionStorage.getItem(GOOGLE_PKCE_KEY);
+    if (!verifier) {
+      cleanOAuthUrl();
+      setNotice('Не найден ключ безопасного входа. Нажмите «Продолжить с Google» ещё раз.', 'error');
+      return false;
+    }
+
+    const value = await apiRequest('/auth/v1/token?grant_type=pkce', {
+      method: 'POST',
+      body: { auth_code: code, code_verifier: verifier }
+    });
+    sessionStorage.removeItem(GOOGLE_PKCE_KEY);
+    storeSession(value);
+    cleanOAuthUrl();
+    return true;
+  }
+
   function normalizeCloudData(input) {
     const value = input && typeof input === 'object' ? input : {};
     return {
@@ -374,8 +451,8 @@
     const app = window.SaymoSaldoApp;
     if (!app) throw new Error('Приложение не загрузилось. Обновите страницу.');
     const userId = user.id;
-    username = normalizeUsername(user.user_metadata && user.user_metadata.username) ||
-      normalizeUsername(String(user.email || '').split('@')[0]) || 'Пользователь';
+    username = String(user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name) ||
+      String(user.email || '').split('@')[0] || 'Пользователь').trim().slice(0, 80) || 'Пользователь';
 
     let remote = null;
     let remoteFailed = false;
@@ -403,12 +480,9 @@
       updatedAt = local.updated_at;
       needsSync = true;
     } else if (!remoteFailed) {
-      const guest = normalizeCloudData(app.getGuestData());
-      if (hasData(guest) && window.confirm('На этом устройстве найдены записи без аккаунта. Перенести их в новый аккаунт?')) {
-        chosen = guest;
-        updatedAt = new Date().toISOString();
-        needsSync = true;
-      }
+      // Fresh accounts always start empty. Legacy guest/device data is never imported.
+      chosen = localEmptyData();
+      needsSync = false;
     } else {
       throw new Error('Не удалось загрузить данные аккаунта. Проверьте интернет и попробуйте снова.');
     }
@@ -545,6 +619,14 @@
   async function bootstrap() {
     rememberButtonLabels();
     showAuth();
+    try {
+      await consumeGoogleCallback();
+    } catch (error) {
+      try { sessionStorage.removeItem(GOOGLE_PKCE_KEY); } catch (ignore) {}
+      cleanOAuthUrl();
+      setNotice(error.message || 'Не удалось завершить вход через Google. Попробуйте ещё раз.', 'error');
+      return;
+    }
     session = readSession();
     if (!session) return;
 
@@ -593,6 +675,7 @@
       if (view) { showView(view.dataset.authView); return; }
       const action = event.target.closest('[data-auth-action]');
       if (action && action.dataset.authAction === 'logout') logout();
+      if (action && action.dataset.authAction === 'google') startGoogleLogin();
     });
     $('copyRecovery').addEventListener('click', copyRecoveryCode);
     $('recoveryContinue').addEventListener('click', finishRecovery);
@@ -610,6 +693,7 @@
   const publicApi = {
     normalizeUsername,
     usernameEmail,
+    googleAuthorizeUrl,
     loginEmail,
     validPassword,
     normalizeCloudData,
