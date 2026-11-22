@@ -28,10 +28,10 @@ test('authentication entry points and financial input remain available', () => {
 test('responsive visual system covers phone, desktop, theme, and reduced motion', () => {
   assert.match(html, /SaymoSaldo burgundy visual system restored/);
   assert.ok(html.includes('.auth-card'), 'authentication screen must use the restored burgundy design');
-  assert.match(html, /@media\\s*\\(max-width:\\s*759px\\)/);
-  assert.match(html, /@media\\s*\\(min-width:\\s*760px\\)/);
-  assert.match(html, /prefers-reduced-motion:\\s*reduce/);
-  assert.match(html, /:root\\[data-theme=dark\\]/);
+  assert.match(html, /@media\s*\(max-width:\s*759px\)/);
+  assert.match(html, /@media\s*\(min-width:\s*760px\)/);
+  assert.match(html, /prefers-reduced-motion:\s*reduce/);
+  assert.match(html, /:root\[data-theme=dark\]/);
   for (const selector of ['#homeDebts', '#homeGoals', '#homeLimits', '#recent', '#panel', '#budgetWrap']) {
     assert.ok(html.includes(selector), 'responsive styling must cover ' + selector);
   }
