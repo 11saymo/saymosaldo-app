@@ -158,7 +158,7 @@ function render(){
   const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(txBaseAmount));
   const overN=S.budgets.filter(b=>spent(b.category)>b.limit).length;
   const h=new Date().getHours();
-  $('#greet').textContent=(h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+', рады видеть вас в SaymoSaldo!';
+  $('#greet').textContent=(h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+', рады видеть вас в MUNORA!';
   $('#monthLabel').textContent='Общий баланс';
   $('#balance').innerHTML=money(inc-out);
   $('#income').innerHTML=money(inc);
@@ -239,7 +239,7 @@ const PANELS={
     <form class="card" data-form="debt"><label class="field"><span>Тип</span><select name="kind">${DEBT_KINDS.map(k=>`<option>${k}</option>`).join('')}</select><small class="field-help">Выберите вид обязательства: например, кредит, ипотека или долг другому человеку.</small></label>${field('name','Название','text','required placeholder="Ипотека, банк"')}${field('original','Первоначальная сумма, ₽','number','required min="1"')}${field('remaining','Текущий остаток, ₽','number','required min="0"')}${field('monthly','Ежемесячный платёж, ₽','number','required min="1"')}${field('day','День платежа (1–31)','number','required min="1" max="31"')}${field('rate','Ставка, % годовых (необязательно)','number','min="0" max="100"')}<button class="primary">Добавить</button></form>`;
   },
 
-  assistant:()=>`<p class="muted">Бесплатный финансовый аналитик SaymoSaldo. Отчёты и ответы рассчитываются прямо на устройстве — финансовые записи не отправляются внешнему ИИ.</p>
+  assistant:()=>`<p class="muted">Бесплатный финансовый аналитик MUNORA. Отчёты и ответы рассчитываются прямо на устройстве — финансовые записи не отправляются внешнему ИИ.</p>
     <div id="assistantReport"></div>
     <div class="sec"><h2>Спросите о своих финансах</h2></div>
     <div id="chat" class="chat"></div>
@@ -468,7 +468,7 @@ const TOUR=[
 let tourI=0;
 function showWelcome(){
   const d=document.createElement('div');d.id='welcome';d.className='overlay';
-  d.innerHTML='<div class="ov-card"><div style="font-size:34px;margin-bottom:12px">✦</div><h2>Добро пожаловать в SaymoSaldo!</h2><p class="muted">Здесь можно записывать доходы и расходы, планировать бюджет, контролировать регулярные платежи и долги, а также создавать цели накоплений и смотреть финансовую статистику.</p><p class="muted">Все суммы в приложении указываются только в российских рублях. Накопительные цели показывают прогноз процентов.</p><p class="muted">Сначала коротко покажем основные разделы и объясним, как правильно вносить данные. Обучение можно повторно открыть позже в разделе «Ещё → Настройки».</p><div style="display:grid;gap:8px"><button class="primary" data-act="welcome-yes">Начать обучение</button><button class="ghost" data-act="welcome-no">Перейти к приложению</button></div></div>';
+  d.innerHTML='<div class="ov-card"><div style="font-size:34px;margin-bottom:12px">✦</div><h2>Добро пожаловать в MUNORA!</h2><p class="muted">Здесь можно записывать доходы и расходы, планировать бюджет, контролировать регулярные платежи и долги, а также создавать цели накоплений и смотреть финансовую статистику.</p><p class="muted">Все суммы в приложении указываются только в российских рублях. Накопительные цели показывают прогноз процентов.</p><p class="muted">Сначала коротко покажем основные разделы и объясним, как правильно вносить данные. Обучение можно повторно открыть позже в разделе «Ещё → Настройки».</p><div style="display:grid;gap:8px"><button class="primary" data-act="welcome-yes">Начать обучение</button><button class="ghost" data-act="welcome-no">Перейти к приложению</button></div></div>';
   document.body.appendChild(d);
 }
 function closeWelcome(){document.getElementById('welcome')?.remove()}
