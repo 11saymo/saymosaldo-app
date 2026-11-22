@@ -766,10 +766,14 @@ $('#txForm').addEventListener('submit',e=>{
 function payRecurring(id){
   const r=S.recurring.find(x=>x.id===id);if(!r)return;
   const key=scopedKey('paid_'+nowMk()+'_'+id);
-  if(localStorage.getItem(key))return toast('Этот платёж уже отмечен в этом месяце');
+  try{if(localStorage.getItem(key))return toast('Этот платёж уже отмечен в этом месяце')}catch(e){}
   const dt=new Date(),last=new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate();
   const date=nowMk()+'-'+String(Math.min(r.day,last)).padStart(2,'0');
-  S.tx.push({id:uid(),created:Date.now(),type:'expense',amount:r.amount,category:r.category,date,comment:r.name});
+  if(S.tx.some(x=>x.recurringId===id&&x.date===date)){
+    try{localStorage.setItem(key,'1')}catch(e){}
+    return toast('Этот платёж уже есть в истории за месяц');
+  }
+  S.tx.push({id:uid(),created:Date.now(),type:'expense',amount:r.amount,category:r.category,date,comment:r.name,recurringId:id});
   if(!save())return;
   try{localStorage.setItem(key,'1')}catch(e){}
   toast('Расход добавлен в историю');render();
@@ -865,8 +869,8 @@ function askAssistant(q){
   q=(q||'').trim();if(!q)return;
   const list=loadChatItems();
   list.push({role:'user',text:q},{role:'assistant',text:finance(q)});
-  localStorage.setItem(chatKey(),JSON.stringify(list.slice(-60)));
-  
+  try{localStorage.setItem(chatKey(),JSON.stringify(list.slice(-60)))}
+  catch(e){return toast('Не удалось сохранить историю помощника. Освободите место в браузере и попробуйте снова.')}
   renderChat();
 }
 
