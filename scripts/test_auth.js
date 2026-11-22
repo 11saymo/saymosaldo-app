@@ -118,3 +118,6 @@ assert.ok(edgeSource.includes('"https://11saymo.github.io"'), "The production si
   console.error(error);
   process.exitCode = 1;
 });
+
+assert.ok(!appHtml.includes("Регистрация не требуется. Данные хранятся в браузере этого устройства."), "Public app copy must not describe the account-based app as guest-only");
+assert.ok(appHtml.includes("Данные аккаунта синхронизируются между вашими устройствами."), "Account settings must disclose cloud synchronization");
