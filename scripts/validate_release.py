@@ -115,7 +115,7 @@ else:
     not_found_html = not_found_path.read_text(encoding="utf-8")
     if not re.search(r'<meta[^>]+http-equiv=["\\']Content-Security-Policy["\\']', not_found_html, flags=re.I):
         errors.append("Missing Content-Security-Policy in 404.html")
-    if re.search(r"<script\\b", not_found_html, flags=re.I):
+    if re.search(r"<script\b", not_found_html, flags=re.I):
         errors.append("404.html must not contain scripts")
     if 'href="./"' not in not_found_html:
         errors.append("404.html must provide a link back to the app")
