@@ -171,7 +171,7 @@ input,select{border-radius:12px}
 .ov-card p{line-height:1.6}
 @media(min-width:760px){
   .view[data-view=home]:not([hidden]){display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:18px;align-items:start}
-  .view[data-view=home]>:nth-child(1),.view[data-view=home]>:nth-child(13){grid-column:1/-1}
+  .view[data-view=home]>:nth-child(1),.view[data-view=home]>:nth-child(13),.view[data-view=home]>:nth-child(16){grid-column:1/-1}
   .view[data-view=home]>:nth-child(2),.view[data-view=home]>:nth-child(5),.view[data-view=home]>:nth-child(6){grid-column:1/8}
   .view[data-view=home]>:nth-child(3),.view[data-view=home]>:nth-child(4),.view[data-view=home]>:nth-child(7),.view[data-view=home]>:nth-child(8){grid-column:8/13}
   .view[data-view=home]>:nth-child(9),.view[data-view=home]>:nth-child(10){grid-column:1/7}
@@ -466,7 +466,6 @@ button,input,select{letter-spacing:0;line-height:1.4}
       </div>
       <p class="status" id="status"></p>
       <div id="moneyInsight"></div>
-      <div class="card" id="homeCurrencyCard"><div class="row"><h2>Курс валют к рублю</h2><button class="link" data-go="more" data-tab-target="settings">Все курсы</button></div><div id="homeCurrencyRates" class="list"><small class="muted">Загружаем актуальные курсы…</small></div><small id="homeCurrencyUpdated" class="muted"></small></div>
       <div class="quick">
         <button class="qbtn" data-go="add"><span>＋</span>Операция</button>
         <button class="qbtn" data-go="stats"><span>◎</span>Бюджет</button>
@@ -482,6 +481,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
       <div id="homeDebts" class="list"></div>
       <div class="sec"><h2>Последние операции</h2><button class="link" data-go="ops">Все</button></div>
       <div id="recent" class="list"></div>
+      <div class="card" id="homeCurrencyCard"><div class="row"><h2>Курс валют к рублю</h2><button class="link" data-go="more" data-tab-target="settings">Все курсы</button></div><div id="homeCurrencyRates" class="list"><small class="muted">Загружаем актуальные курсы…</small></div><small id="homeCurrencyUpdated" class="muted"></small></div>
       
     </section>
 
@@ -668,7 +668,20 @@ const items=(list,del)=>list.map(x=>{const saving=x.type==='saving',income=x.typ
 const bar=(l,v,max)=>`<div class="bl"><div class="row"><span>${esc(l)}</span><b>${money(v)}</b></div><div class="bar"><i style="width:${Math.max(2,v/max*100)}%"></i></div></div>`;
 const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0,projection=goalProjection(g);return `<div class="card goal-card"><div class="goal-head"><b class="goal-title">${esc(g.name)}</b><span class="goal-percent">${Math.round(p)}%</span></div><div class="goal-meta"><span>Накоплено</span><b>${money(g.saved)} <span>из ${money(g.target)}</span></b>${g.date?`<small>Срок: ${fmtDate(g.date)}</small>`:''}${g.kind==='deposit'?`<small>Накопительная · ${Number(g.rate)||0}% годовых</small>`:''}${g.date?`<small>Нужно откладывать: ${money(projection.monthly)} в месяц</small>`:''}${g.kind==='deposit'?(g.date?`<small>Прогноз процентов за период: ${money(projection.interest)}</small>`:`<small>Доход за месяц при текущем остатке: ${money((Number(g.saved)||0)*(Number(g.rate)||0)/1200)}</small>`):''}</div><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost" data-act="goal-edit" data-id="${esc(g.id)}">Редактировать</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
 
+function migrateGoalSavingsToOperations(){
+  let changed=false;
+  for(const goal of S.goals){
+    const saved=Math.max(0,Number(goal.saved)||0);
+    if(!saved)continue;
+    const logged=S.tx.filter(tx=>tx.type==='saving'&&String(tx.goalId)===String(goal.id)).reduce((sum,tx)=>sum+Math.max(0,Number(tx.amount)||0),0);
+    const missing=Math.round((saved-logged)*100)/100;
+    if(missing>0.009){S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:missing,category:'Накопления',date:today(),comment:'Учтённый остаток цели: '+goal.name,goalId:goal.id,currency:'RUB',originalAmount:missing,exchangeRate:1});changed=true;}
+  }
+  if(changed)save();
+}
+
 function render(){
+  migrateGoalSavingsToOperations();
   const k=nowMk(), m=monthTx(k), monthInc=sumType(m,'income'), monthOut=sumType(m,'expense');
   const inc=sumType(S.tx,'income'), out=sumType(S.tx,'expense');
   const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(x=>x.amount));
