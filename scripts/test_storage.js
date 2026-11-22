@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
 
-const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+const html = fs.readFileSync(path.join(__dirname, "..", "app.js"), "utf8");
 const start = html.indexOf("function persistEntries(entries){");
 const end = html.indexOf("const CATS=", start);
 assert(start >= 0 && end > start, "storage helper block must exist");
