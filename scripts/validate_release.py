@@ -97,6 +97,29 @@ for filename in ("index.html", "sw.js", "manifest.json"):
     if re.search(r"\bservice_role\b|\bsb_secret_[A-Za-z0-9_]+", content, flags=re.I):
         errors.append(f"Possible privileged Supabase key found in {filename}")
 
+
+# Public launch assets must exist and the GitHub Pages 404 route must be useful.
+try:
+    manifest = json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
+    for icon in manifest.get("icons", []):
+        icon_path = icon.get("src", "")
+        if icon_path and not (ROOT / icon_path.removeprefix("./")).is_file():
+            errors.append(f"Missing PWA icon referenced by manifest.json: {icon_path}")
+except Exception:
+    pass
+
+not_found_path = ROOT / "404.html"
+if not not_found_path.is_file():
+    errors.append("Missing 404.html for GitHub Pages")
+else:
+    not_found_html = not_found_path.read_text(encoding="utf-8")
+    if not re.search(r'<meta[^>]+http-equiv=["\\']Content-Security-Policy["\\']', not_found_html, flags=re.I):
+        errors.append("Missing Content-Security-Policy in 404.html")
+    if re.search(r"<script\\b", not_found_html, flags=re.I):
+        errors.append("404.html must not contain scripts")
+    if 'href="./"' not in not_found_html:
+        errors.append("404.html must provide a link back to the app")
+
 if errors:
     print("Release validation failed:")
     for error in errors:
