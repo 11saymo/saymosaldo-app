@@ -999,6 +999,48 @@ dialog{background:var(--card);border-color:var(--line)}
  .card:hover,.item:hover{box-shadow:0 9px 26px rgba(48,91,132,.075)}
 }
 
+
+/* SaymoSaldo Banking UI — soft blue, original brand */
+:root{--bg:#f3f7fb;--card:#fff;--fg:#24364b;--mut:#71849a;--line:#e3ebf3;--acc:#5799c9;--warn:#b98543;--bad:#c86e7a;--r:20px;--shadow:0 5px 18px rgba(42,77,111,.055);color-scheme:light}
+:root[data-theme=light]{--bg:#f3f7fb;--card:#fff;--fg:#24364b;--mut:#71849a;--line:#e3ebf3;--acc:#5799c9;--warn:#b98543;--bad:#c86e7a;color-scheme:light}
+body{background:var(--bg);font-family:"TT Travels","Avenir Next",Avenir,Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body::before,body::after{display:none}
+.app{max-width:1180px;padding:calc(env(safe-area-inset-top) + 26px) 28px calc(env(safe-area-inset-bottom) + 120px)}
+.top{margin-bottom:18px}h1{font-size:clamp(25px,3vw,32px);font-weight:680;letter-spacing:-.035em;color:var(--fg)}
+.greet{font-size:15px;color:var(--mut);margin:0 0 12px}
+.card,.item{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.hero{position:relative;overflow:hidden;padding:26px 28px;background:linear-gradient(112deg,#dceefa 0%,#c9e2f4 52%,#b8d8ee 100%);color:#27435d;border:1px solid rgba(255,255,255,.78);box-shadow:0 12px 30px rgba(91,145,187,.13)}
+.hero:after{content:"";position:absolute;width:250px;height:250px;right:-90px;top:-135px;border:1px solid rgba(255,255,255,.55);border-radius:50%;box-shadow:0 0 0 24px rgba(255,255,255,.12),0 0 0 52px rgba(255,255,255,.09);pointer-events:none}
+.hero .label,.hero small{color:#58748e}.hero .big{font-size:clamp(36px,5vw,48px);font-weight:720;letter-spacing:-.045em;color:#203c57;margin:8px 0 20px}
+.hero .split{max-width:560px;gap:14px}.hero .split>div{padding:11px 14px;border-radius:13px;background:rgba(255,255,255,.46);border:1px solid rgba(255,255,255,.48)}.hero .split b{font-size:17px;color:#27435d}
+.status{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 15px;color:var(--mut)}
+.quick{gap:12px;margin:16px 0 8px}.qbtn{min-height:82px;padding:14px 10px;background:#fff;border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow);color:var(--fg);font-weight:600}
+.qbtn span{width:34px;height:34px;border-radius:12px;background:#eaf4fb;color:#4389bd;font-size:21px}
+.sec{margin:22px 0 10px}.sec h2{font-size:16px;font-weight:680;color:var(--fg)}
+.primary{background:#5799c9!important;border-color:#5799c9!important;color:#fff!important;border-radius:12px;font-weight:650}
+button{border-radius:12px}button:focus-visible,input:focus,select:focus{outline-color:#5799c9}
+input,select{background:#f8fbfe;border-color:#e0eaf3;border-radius:12px}
+.tabs{gap:8px;padding:3px 0 10px}.tabs button{border:1px solid var(--line);background:#fff;color:var(--mut);border-radius:12px;box-shadow:none}
+.tabs button[aria-selected=true]{background:#e8f3fb;color:#397eaf;border-color:#c8e0f1}
+.chip{background:#fff;border:1px solid var(--line);color:var(--fg);box-shadow:none}.bl{background:#fff;border:1px solid var(--line);box-shadow:none}
+.nav{max-width:1120px;left:50%;transform:translateX(-50%);width:calc(100% - 40px);bottom:12px;padding:9px 16px calc(env(safe-area-inset-bottom) + 9px);border:1px solid #e1eaf2;border-radius:18px;background:rgba(255,255,255,.96);box-shadow:0 8px 28px rgba(43,77,109,.10);backdrop-filter:blur(14px)}
+.nav button{color:#8495a8;font-weight:550}.nav button[aria-current=page]{color:#4389bd}.nav .fab{background:#e8f3fb!important;color:#4389bd!important;border:1px solid #d4e8f6!important;border-radius:13px}
+.operation-item,.item{transition:box-shadow .18s ease,border-color .18s ease,transform .18s ease}
+@media(hover:hover){.item:hover,.card:hover{box-shadow:0 9px 24px rgba(42,77,111,.085)}}
+@media(min-width:760px){.view[data-view=home]:not([hidden]){column-gap:20px;row-gap:14px}.view[data-view=home]>.hero,.view[data-view=home]>.quick{grid-column:1/8}.view[data-view=home]>#status,.view[data-view=home]>#moneyInsight{grid-column:8/13}}
+@media(max-width:759px){.app{max-width:560px;padding-left:16px;padding-right:16px}.hero{padding:21px 19px}.hero .big{font-size:36px}.nav{width:100%;left:0;transform:none;bottom:0;border-radius:18px 18px 0 0;border-left:0;border-right:0;border-bottom:0}}
+@media(prefers-reduced-motion:no-preference){.qbtn:active,button:not(:disabled):active{transform:translateY(1px)}}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#111d2a;--card:#1b2a3a;--fg:#edf4fb;--mut:#a7b8c9;--line:#2a3d51;--acc:#86bce0;color-scheme:dark}:root:not([data-theme=light]) .hero{background:linear-gradient(112deg,#294763,#203b55 58%,#1b344c);color:#edf6fd;border-color:#3c5c78}:root:not([data-theme=light]) .hero .label,:root:not([data-theme=light]) .hero small{color:#b9d0e3}:root:not([data-theme=light]) .hero .big,:root:not([data-theme=light]) .hero .split b{color:#f1f7fc}:root:not([data-theme=light]) .hero .split>div{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.10)}:root:not([data-theme=light]) .status,:root:not([data-theme=light]) .qbtn,:root:not([data-theme=light]) .tabs button,:root:not([data-theme=light]) .chip,:root:not([data-theme=light]) .bl{background:var(--card);border-color:var(--line);color:var(--fg)}:root:not([data-theme=light]) .tabs button[aria-selected=true]{background:#294763;color:#c4e2fa;border-color:#3d6283}:root:not([data-theme=light]) .nav{background:rgba(25,40,58,.96);border-color:#2a3d51}:root:not([data-theme=light]) .nav button[aria-current=page]{color:#a9d6f3}}
+:root[data-theme=dark]{--bg:#111d2a;--card:#1b2a3a;--fg:#edf4fb;--mut:#a7b8c9;--line:#2a3d51;--acc:#86bce0;color-scheme:dark}
+:root[data-theme=dark] .hero{background:linear-gradient(112deg,#294763,#203b55 58%,#1b344c);color:#edf6fd;border-color:#3c5c78}
+:root[data-theme=dark] .hero .label,:root[data-theme=dark] .hero small{color:#b9d0e3}
+:root[data-theme=dark] .hero .big,:root[data-theme=dark] .hero .split b{color:#f1f7fc}
+:root[data-theme=dark] .hero .split>div{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.10)}
+:root[data-theme=dark] .status,:root[data-theme=dark] .qbtn,:root[data-theme=dark] .tabs button,:root[data-theme=dark] .chip,:root[data-theme=dark] .bl{background:var(--card);border-color:var(--line);color:var(--fg)}
+:root[data-theme=dark] .tabs button[aria-selected=true]{background:#294763;color:#c4e2fa;border-color:#3d6283}
+:root[data-theme=dark] .nav{background:rgba(25,40,58,.96);border-color:#2a3d51}
+:root[data-theme=dark] .nav button[aria-current=page]{color:#a9d6f3}
+
 </style>
 </head>
 <body>
