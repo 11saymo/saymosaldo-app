@@ -154,7 +154,7 @@ function render(){
   $('#balance').textContent=money(periodInc-periodOut);
   $('#income').textContent=money(periodInc);
   $('#expense').textContent=money(periodOut);
-  $('.hero-period [data-hero-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.heroPeriod===heroPeriod)));
+  $$('.hero-period [data-hero-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.heroPeriod===heroPeriod)));
   const currencyCodes=['RUB','USD','EUR','CNY'];
   const currencyStats=Object.fromEntries(currencyCodes.map(code=>[code,{income:0,expense:0}]));
   periodRows.filter(x=>x.type==='income'||x.type==='expense').forEach(x=>{const code=currencyCodes.includes(x.currency||'RUB')?(x.currency||'RUB'):'RUB';currencyStats[code][x.type]+=txNativeAmount(x)});
