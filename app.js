@@ -496,7 +496,7 @@ function endTour(state){
 function setTheme(v){try{localStorage.setItem('saymosaldo_theme',v)}catch(e){}if(v==='light'||v==='dark')document.documentElement.dataset.theme=v;else delete document.documentElement.dataset.theme}
 document.addEventListener('click',e=>{
   
-  const t=e.target.closest('[data-go],[data-tab],[data-mode],[data-q],[data-act],[data-theme-set]');
+  const t=e.target.closest('[data-go],[data-tab],[data-mode],[data-q],[data-act],[data-theme-set],[data-hero-period]');
   if(!t)return;
   if(t.dataset.heroPeriod){heroPeriod=t.dataset.heroPeriod==='month'?'month':'all';return render()}
   if(t.dataset.themeSet){setTheme(t.dataset.themeSet);return renderPanel()}
