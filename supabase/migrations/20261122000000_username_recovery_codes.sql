@@ -5,7 +5,7 @@ create table if not exists public.username_recovery_codes (
 );
 
 alter table public.username_recovery_codes enable row level security;
-revoke all on table public.username_recovery_codes from anon, authenticated;
+revoke all on table public.username_recovery_codes from public, anon, authenticated;
 grant all on table public.username_recovery_codes to service_role;
 
 comment on table public.username_recovery_codes is
