@@ -87,7 +87,7 @@ else:
     privacy_parser.feed(privacy_html)
     if not privacy_parser.csp:
         errors.append("Missing Content-Security-Policy in privacy.html")
-    if re.search(r"<script\\b", privacy_html, flags=re.I):
+    if re.search(r"<script\b", privacy_html, flags=re.I):
         errors.append("privacy.html must not contain scripts")
     if privacy_parser.external_scripts or privacy_parser.external_styles:
         errors.append("privacy.html must not load external scripts or stylesheets")
