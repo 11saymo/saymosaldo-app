@@ -149,7 +149,7 @@
     if (/recovery_invalid/i.test(value)) return 'Логин или код восстановления не подошли. Проверьте их и попробуйте ещё раз.';
     if (/rate_limited/i.test(value) || status === 429) return 'Слишком много попыток. Подождите 10 минут и попробуйте снова.';
     if (/temporarily_unavailable/i.test(value)) return 'Сервис временно недоступен. Попробуйте ещё раз чуть позже.';
-    if (/origin_not_allowed/i.test(value)) return 'Запрос отклонён настройками безопасности. Откройте официальный сайт SaymoSaldo.';
+    if (/origin_not_allowed/i.test(value)) return 'Запрос отклонён настройками безопасности. Откройте официальный сайт MUNORA.';
     if (/invalid login credentials|invalid_grant|invalid_credentials/i.test(value)) return 'Неверный логин или пароль.';
     if (/email not confirmed/i.test(value)) return 'Аккаунт не активирован. Обратитесь в поддержку.';
     return status === 0 ? 'Нет соединения. Проверьте интернет и повторите попытку.' :
@@ -311,7 +311,7 @@
     }
     $('recoveryPanel').hidden = true;
     $('recoveryCode').textContent = '';
-    $('authTitle').textContent = view === 'login' ? 'Войти в SaymoSaldo' :
+    $('authTitle').textContent = view === 'login' ? 'Войти в MUNORA' :
       view === 'register' ? 'Создать аккаунт' : 'Восстановить пароль';
     setNotice('');
   }
