@@ -18,7 +18,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SaymoSaldo — личный финансовый помощник">
 <meta name="twitter:description" content="Учёт доходов и расходов, бюджет, платежи и накопления.">
-<meta name="theme-color" content="#f4f7fb">
+<meta name="theme-color" content="#eef5fc">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="SaymoSaldo">
 <link rel="manifest" href="manifest.json">
@@ -861,6 +861,144 @@ dialog .primary{width:100%}
 
 /* Refined ruble glyph: a quiet, distinct typographic treatment */
 .ruble-symbol{font-family:"Avenir Next",Avenir,"Segoe UI",sans-serif;font-size:.94em;font-weight:500;font-style:normal;letter-spacing:-.065em;white-space:nowrap;display:inline-block;margin-left:.015em;}
+
+/* SAYMOSALDO SOFT BLUE BANKING — clean, confident, approachable */
+:root{
+ --bg:#f3f7fc;
+ --card:#ffffff;
+ --fg:#20344b;
+ --mut:#71849a;
+ --line:#e2eaf3;
+ --acc:#6ba7dc;
+ --ice:#dceeff;
+ --ice-strong:#4f91cb;
+ --warn:#bd8b4e;
+ --bad:#c87580;
+ --shadow:0 5px 20px rgba(38,76,112,.055);
+ color-scheme:light;
+}
+:root[data-theme=light]{
+ --bg:#f3f7fc;--card:#fff;--fg:#20344b;--mut:#71849a;--line:#e2eaf3;
+ --acc:#6ba7dc;--ice:#dceeff;--ice-strong:#4f91cb;--warn:#bd8b4e;--bad:#c87580;
+ --shadow:0 5px 20px rgba(38,76,112,.055);color-scheme:light;
+}
+:root[data-theme=dark]{
+ --bg:#101b29;--card:#19283a;--fg:#edf4fb;--mut:#a3b4c7;--line:#2a3d52;
+ --acc:#8bbce6;--ice:#29445f;--ice-strong:#a7d0f2;--warn:#dfba86;--bad:#e29aa3;
+ --shadow:0 10px 30px rgba(0,0,0,.20);color-scheme:dark;
+}
+@media(prefers-color-scheme:dark){
+ :root:not([data-theme=light]){
+  --bg:#101b29;--card:#19283a;--fg:#edf4fb;--mut:#a3b4c7;--line:#2a3d52;
+  --acc:#8bbce6;--ice:#29445f;--ice-strong:#a7d0f2;--warn:#dfba86;--bad:#e29aa3;
+  --shadow:0 10px 30px rgba(0,0,0,.20);color-scheme:dark;
+ }
+}
+html{background:var(--bg)}
+body{
+ background:
+  radial-gradient(ellipse 760px 480px at 4% -10%,rgba(192,220,246,.42),transparent 68%),
+  radial-gradient(ellipse 620px 480px at 100% 12%,rgba(222,236,249,.56),transparent 72%),
+  var(--bg);
+}
+body::before{
+ opacity:.38;
+ background-image:linear-gradient(rgba(100,151,198,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(100,151,198,.035) 1px,transparent 1px);
+ background-size:48px 48px;
+}
+body::after{border-color:rgba(110,166,215,.14);box-shadow:0 0 0 34px rgba(110,166,215,.025),0 0 0 72px rgba(110,166,215,.018),0 0 0 112px rgba(110,166,215,.012)}
+.top{border-bottom-color:var(--line)}
+.card,.item,.tabs,.toolbar select,.auth-card,.recovery-panel,.nav,.bl{
+ background:var(--card);
+ border-color:var(--line);
+ backdrop-filter:none;-webkit-backdrop-filter:none;
+ box-shadow:var(--shadow);
+}
+.card{border-radius:20px}
+.item{border-radius:16px}
+.hero{
+ color:#24415f!important;
+ background:linear-gradient(125deg,#e4f1fd 0%,#d6e9fa 55%,#c9e1f5 100%)!important;
+ border:1px solid rgba(164,199,229,.62);
+ box-shadow:0 12px 30px rgba(85,139,188,.12),inset 0 1px rgba(255,255,255,.9);
+}
+.hero::before{border-color:rgba(255,255,255,.68);box-shadow:0 0 0 24px rgba(255,255,255,.20),0 0 0 55px rgba(255,255,255,.13),0 0 0 90px rgba(255,255,255,.08)}
+.hero::after{background:radial-gradient(circle,rgba(255,255,255,.55),transparent 68%)}
+.hero .label,.hero small{color:#6483a2}
+.hero .big{color:#203c59}
+.hero .split>div{background:rgba(255,255,255,.48);border-color:rgba(255,255,255,.78)}
+.hero .split b{color:#294866}
+.hero .bar{background:rgba(85,132,174,.16)}
+.hero .bar i{background:#6ba7dc!important}
+.qbtn{background:#fff;border-color:var(--line);box-shadow:0 5px 16px rgba(48,91,132,.055);color:var(--fg)}
+.qbtn span{background:#e7f2fc;color:#4f91cb;box-shadow:none}
+.ico{background:#eaf3fb;color:#578bb9}
+.bar i{background:linear-gradient(90deg,#a9d0ef,#6ba7dc)!important}
+.primary{
+ background:#5f9ed3!important;color:#fff!important;border:1px solid #5f9ed3!important;
+ box-shadow:0 5px 14px rgba(75,139,195,.18);
+}
+.primary:hover{background:#4d8fc8!important;box-shadow:0 7px 18px rgba(75,139,195,.23)}
+.link{color:var(--ice-strong)}
+input,select,textarea{background:#fff!important;border-color:var(--line)!important}
+:root[data-theme=dark] input,:root[data-theme=dark] select,:root[data-theme=dark] textarea{background:#122033!important}
+@media(prefers-color-scheme:dark){
+ :root:not([data-theme=light]) input,:root:not([data-theme=light]) select,:root:not([data-theme=light]) textarea{background:#122033!important}
+}
+.seg input:checked+span{background:#dceeff;color:#376f9e;box-shadow:none}
+.tabs{background:#fff;border:1px solid var(--line)}
+.tabs button{background:#f7fafe;color:var(--mut);border-color:var(--line)}
+.tabs button[aria-selected=true]{background:#e4f1fc;color:#397caf;border-color:#c9e1f5;box-shadow:none}
+.goal-percent,.forecast-tag{background:#e8f3fc;color:#477fae}
+.nav{
+ background:rgba(255,255,255,.96);
+ border:1px solid var(--line);
+ box-shadow:0 8px 28px rgba(41,76,110,.12);
+ backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.nav button[aria-current=page]{color:#397caf;background:#eaf4fc}
+.nav .fab{background:#e2f0fc!important;color:#397caf!important;border:1px solid #d3e7f7;box-shadow:none}
+.auth-screen{
+ background:radial-gradient(ellipse 520px 420px at 12% 8%,rgba(145,195,235,.22),transparent 70%),
+ radial-gradient(ellipse 520px 440px at 90% 88%,rgba(202,225,245,.22),transparent 70%),var(--bg);
+}
+.auth-card{background:rgba(255,255,255,.96);border:1px solid rgba(218,231,243,.9);box-shadow:0 18px 56px rgba(41,76,110,.10)}
+.auth-mark{background:#e3f1fc!important;color:#4a88ba!important;box-shadow:none}
+dialog{background:var(--card);border-color:var(--line)}
+.toast{background:#203c59;color:#fff;border-color:rgba(255,255,255,.18)}
+@media(max-width:759px){
+ .hero{border-radius:22px}
+ .nav{background:rgba(255,255,255,.97)}
+}
+:root[data-theme=dark] .hero{color:#eaf4fd!important;background:linear-gradient(125deg,#28435e 0%,#203a55 58%,#1b3149 100%)!important;border-color:#3a5875}
+:root[data-theme=dark] .hero .label,:root[data-theme=dark] .hero small{color:#b5cce0}
+:root[data-theme=dark] .hero .big,:root[data-theme=dark] .hero .split b{color:#f1f7fc}
+:root[data-theme=dark] .hero .split>div{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.10)}
+:root[data-theme=dark] .qbtn,:root[data-theme=dark] .tabs{background:var(--card)}
+:root[data-theme=dark] .tabs button{background:#1d3045}
+:root[data-theme=dark] .tabs button[aria-selected=true]{background:#294763;color:#c4e2fa;border-color:#3d6283}
+:root[data-theme=dark] .nav{background:rgba(25,40,58,.96)}
+:root[data-theme=dark] .nav .fab{background:#294763!important;color:#c4e2fa!important;border-color:#3d6283}
+:root[data-theme=dark] .auth-card{background:#19283a;border-color:var(--line)}
+
+@media(prefers-color-scheme:dark){
+ :root:not([data-theme=light]) .hero{color:#eaf4fd!important;background:linear-gradient(125deg,#28435e 0%,#203a55 58%,#1b3149 100%)!important;border-color:#3a5875}
+ :root:not([data-theme=light]) .hero .label,:root:not([data-theme=light]) .hero small{color:#b5cce0}
+ :root:not([data-theme=light]) .hero .big,:root:not([data-theme=light]) .hero .split b{color:#f1f7fc}
+ :root:not([data-theme=light]) .hero .split>div{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.10)}
+ :root:not([data-theme=light]) .qbtn,:root:not([data-theme=light]) .tabs{background:var(--card)}
+ :root:not([data-theme=light]) .tabs button{background:#1d3045}
+ :root:not([data-theme=light]) .tabs button[aria-selected=true]{background:#294763;color:#c4e2fa;border-color:#3d6283}
+ :root:not([data-theme=light]) .nav{background:rgba(25,40,58,.96)}
+ :root:not([data-theme=light]) .nav .fab{background:#294763!important;color:#c4e2fa!important;border-color:#3d6283}
+ :root:not([data-theme=light]) .auth-card{background:#19283a;border-color:var(--line)}
+}
+
+@media(prefers-reduced-motion:no-preference){
+ .card,.item,.qbtn,button{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
+ .card:hover,.item:hover{box-shadow:0 9px 26px rgba(48,91,132,.075)}
+}
+
 </style>
 </head>
 <body>
