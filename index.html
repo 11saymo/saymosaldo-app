@@ -1235,6 +1235,105 @@ input,select{background:#f8fbfe;border-color:#e0eaf3;border-radius:12px}
  :root:not([data-theme=light]) .dlgf select{background:#122033!important;border-color:#2e4257!important;color:#edf4fb}
 }
 
+
+/* Soft Blue Banking — final authentication and global consistency pass */
+:root{
+  --bank-blue:#5799c9;
+  --bank-blue-deep:#397eaf;
+  --bank-blue-soft:#eaf4fb;
+  --bank-ink:#24364b;
+  --bank-muted:#71849a;
+  --bank-line:#e3ebf3;
+}
+body{font-family:"TT Travels","Avenir Next",Avenir,"Manrope","Segoe UI",sans-serif}
+#authRoot.auth-screen{
+  background:
+    radial-gradient(ellipse 620px 420px at 0% 0%,rgba(177,215,245,.38),transparent 68%),
+    radial-gradient(ellipse 540px 400px at 100% 100%,rgba(214,232,247,.52),transparent 70%),
+    var(--bg);
+  padding:clamp(16px,4vw,36px);
+}
+#authRoot .auth-card{
+  width:min(100%,460px);
+  padding:clamp(24px,6vw,36px);
+  border:1px solid #dce8f3;
+  border-radius:26px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 22px 64px rgba(54,93,128,.12);
+}
+#authRoot .auth-mark{
+  width:52px;height:52px;
+  border:1px solid #d3e7f7;
+  border-radius:17px;
+  background:linear-gradient(135deg,#eaf5fd,#d5eafa);
+  color:#4389bd;
+  box-shadow:0 5px 16px rgba(84,145,190,.10);
+}
+#authRoot .auth-card h1{color:#243b53;font-size:clamp(25px,5vw,29px);font-weight:700;letter-spacing:-.035em}
+#authRoot .auth-lead{color:#71849a;line-height:1.55}
+#authRoot .field>span{color:#405a73;font-weight:650}
+#authRoot input{
+  min-height:48px;
+  border:1px solid #dce7f1;
+  border-radius:13px;
+  background:#f7fafe;
+  color:#24364b;
+}
+#authRoot input:focus{outline:2px solid #75add7;outline-offset:2px;border-color:#75add7}
+#authRoot .primary{
+  min-height:48px;
+  border:1px solid #5799c9!important;
+  border-radius:13px;
+  background:linear-gradient(135deg,#69a9d8,#4e91c3)!important;
+  color:#fff!important;
+  box-shadow:0 7px 17px rgba(71,139,190,.20);
+  font-weight:700;
+}
+#authRoot .primary:active{filter:brightness(.97)}
+#authRoot .auth-links .link{color:#4c89b8;text-decoration:none;font-weight:600}
+#authRoot .auth-notice{border-color:#dce8f3;background:#f7fafe}
+#authRoot .auth-notice.success{color:#397eaf}
+#authRoot .recovery-code{border-color:#8db9dc;background:#f5faff;color:#294762}
+#authRoot .auth-foot{color:#8a9bad}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme=light]) #authRoot.auth-screen{
+    background:radial-gradient(ellipse at 0% 0%,rgba(74,123,164,.22),transparent 65%),#101b29;
+  }
+  :root:not([data-theme=light]) #authRoot .auth-card{
+    background:#19283a;border-color:#2d435a;box-shadow:0 22px 64px rgba(0,0,0,.24);
+  }
+  :root:not([data-theme=light]) #authRoot .auth-card h1{color:#edf4fb}
+  :root:not([data-theme=light]) #authRoot .auth-lead,
+  :root:not([data-theme=light]) #authRoot .auth-foot{color:#a3b4c7}
+  :root:not([data-theme=light]) #authRoot .field>span{color:#d5e3f0}
+  :root:not([data-theme=light]) #authRoot input{
+    background:#122033;border-color:#30475e;color:#edf4fb;
+  }
+  :root:not([data-theme=light]) #authRoot .auth-notice,
+  :root:not([data-theme=light]) #authRoot .recovery-code{
+    background:#142438;border-color:#30475e;color:#d9e8f5;
+  }
+  :root:not([data-theme=light]) #authRoot .auth-links .link{color:#a9d6f3}
+}
+:root[data-theme=dark] #authRoot.auth-screen{
+  background:radial-gradient(ellipse at 0% 0%,rgba(74,123,164,.22),transparent 65%),#101b29;
+}
+:root[data-theme=dark] #authRoot .auth-card{
+  background:#19283a;border-color:#2d435a;box-shadow:0 22px 64px rgba(0,0,0,.24);
+}
+:root[data-theme=dark] #authRoot .auth-card h1{color:#edf4fb}
+:root[data-theme=dark] #authRoot .auth-lead,
+:root[data-theme=dark] #authRoot .auth-foot{color:#a3b4c7}
+:root[data-theme=dark] #authRoot .field>span{color:#d5e3f0}
+:root[data-theme=dark] #authRoot input{background:#122033;border-color:#30475e;color:#edf4fb}
+:root[data-theme=dark] #authRoot .auth-notice,
+:root[data-theme=dark] #authRoot .recovery-code{background:#142438;border-color:#30475e;color:#d9e8f5}
+:root[data-theme=dark] #authRoot .auth-links .link{color:#a9d6f3}
+@media(max-width:480px){
+  #authRoot.auth-screen{place-items:center;padding:16px}
+  #authRoot .auth-card{border-radius:22px;padding:23px 19px}
+}
+
 </style>
 </head>
 <body>

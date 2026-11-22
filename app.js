@@ -524,4 +524,4 @@ window.SaymoSaldoApp={
  setSyncStatus(message){const el=$('#syncStatus');if(el)el.textContent=message||''},
  reset(){cloudSaveHandler=null;KEY='saymosaldo_';S.tx=[];S.goals=[];S.budgets=[];S.recurring=[];S.debts=[];$('#appShell').hidden=true}
 };
-if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});

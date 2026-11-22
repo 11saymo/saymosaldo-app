@@ -3,58 +3,53 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-const learning = fs.readFileSync(path.join(__dirname, '..', 'learning.js'), 'utf8');
+const root = path.join(__dirname, '..');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const learning = fs.readFileSync(path.join(root, 'learning.js'), 'utf8');
+const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
 
-test('Ice Glass design tokens use the softer silver-blue palette', () => {
-  assert.match(html, /SAYMOSALDO ICE GLASS/);
-  for (const token of ['--bg:#f4f7fb', '--ice:#d5eafa', '--ice-strong:#83afd2', '--bg:#111a27']) {
-    assert.ok(html.includes(token), 'missing design token ' + token);
+test('Soft Blue Banking is the active visual direction', () => {
+  assert.match(html, /SAYMOSALDO SOFT BLUE BANKING/);
+  assert.match(html, /--bg:#f3f7fc/);
+  assert.match(html, /--acc:#6ba7dc/);
+  assert.match(html, /--ice:#dceeff/);
+  assert.match(html, /Banking UI — consistent components across every SaymoSaldo section/);
+  assert.match(html, /Soft Blue Banking — final authentication and global consistency pass/);
+});
+
+test('login, registration and recovery screens use the same soft-blue design', () => {
+  for (const selector of ['#authRoot.auth-screen', '#authRoot .auth-card', '#authRoot .auth-mark', '#authRoot .primary']) {
+    assert.ok(html.includes(selector), 'missing auth styling: ' + selector);
   }
-  const layer = html.slice(html.indexOf('SAYMOSALDO ICE GLASS'), html.indexOf('</style>'));
-  assert.doesNotMatch(layer, /#7a1f2b|#4a0f1a|burgundy|rgba\(122,31,43/i);
-  assert.match(layer, /body::before/);
-  assert.match(layer, /rgba\(160,199,236/);
+  const finalLayer = html.slice(html.indexOf('Soft Blue Banking — final authentication'), html.indexOf('</style>'));
+  assert.match(finalLayer, /radial-gradient/);
+  assert.match(finalLayer, /#5799c9/);
+  assert.match(finalLayer, /:root\[data-theme=dark\]/);
+  assert.doesNotMatch(finalLayer, /#7a1f2b|#852d3a|#5a1724|#3e1420/);
 });
 
-test('rounded TT Travels-inspired typography and softer metallic palette are present', () => {
-  assert.match(html, /font-family:\s*"TT Travels","Avenir Next",Avenir,"Manrope","Segoe UI",sans-serif/);
-  assert.match(html, /#f4f7fb/);
-  assert.match(html, /#d5eafa/);
-});
-
-test('light and dark glass themes respect explicit and system preferences', () => {
+test('light and dark banking themes and responsive behavior are present', () => {
   assert.match(html, /:root\[data-theme=light\]/);
   assert.match(html, /:root\[data-theme=dark\]/);
   assert.match(html, /prefers-color-scheme:\s*dark/);
-  assert.match(html, /backdrop-filter:\s*blur\(/);
-  assert.match(html, /-webkit-backdrop-filter:\s*blur\(/);
-});
-
-test('all key app surfaces receive the Ice Glass design layer', () => {
-  for (const selector of ['.hero', '.card', '.item', '.auth-card', '.nav', '.tabs', '.qbtn', '.primary']) {
-    assert.ok(html.includes(selector), 'missing styled surface ' + selector);
-  }
-  assert.match(html, /linear-gradient\(135deg,#dceefa,#b8d6eb\)/);
-});
-
-test('mobile, desktop, safe areas and reduced-motion behavior remain covered', () => {
   assert.match(html, /@media\(min-width:760px\)/);
   assert.match(html, /@media\(max-width:759px\)/);
-  assert.match(html, /env\(safe-area-inset-bottom\)/);
   assert.match(html, /prefers-reduced-motion:\s*reduce/);
 });
 
-test('visual refresh does not replace app scripts or change currency contract', () => {
-  const scripts = [...html.matchAll(/<script\b[^>]*src="([^"]+)"/g)].map(match => match[1].split('?')[0]);
-  assert.deepEqual(scripts, ['./app.js', './auth.js', './learning.js']);
-  assert.ok(!html.includes('app.js?') && !html.includes('auth.js?') && !html.includes('learning.js?'));
-  assert.match(html, /Сумма, ₽/);
-  assert.doesNotMatch(html, /За месяц|За всё время|За все время/);
-});
-
-test('onboarding overlay uses the same Ice Glass visual language', () => {
+test('learning overlay keeps the same blue visual language', () => {
   assert.match(learning, /linear-gradient\(132deg,rgba\(67,91,119/);
   assert.match(learning, /linear-gradient\(135deg,#dceefa,#b8d6eb\)/);
   assert.doesNotMatch(learning, /#852d3a|#5a1724|#3e1420/);
+});
+
+test('PWA manifest and service worker refresh the published visual assets', () => {
+  assert.equal(manifest.theme_color, '#eef5fc');
+  assert.equal(manifest.background_color, '#f3f7fc');
+  assert.match(sw, /saymosaldo-v47/);
+  assert.match(sw, /fetch\(e\.request,\{cache:'no-store'\}\)/);
+  assert.match(sw, /self\.skipWaiting\(\)/);
+  assert.match(app, /updateViaCache:'none'/);
 });

@@ -1,5 +1,5 @@
 // Network-first: при онлайне всегда свежая версия, при офлайне — из кеша.
-const CACHE='saymosaldo-v46';
+const CACHE='saymosaldo-v47';
 const ASSETS=['./','./index.html','./manifest.json','./icon.svg','./icon-180.png','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./privacy.html','./404.html','./app.js','./auth.js','./learning.js',];
 
 self.addEventListener('install',e=>{
@@ -18,7 +18,7 @@ self.addEventListener('fetch',e=>{
   const url=new URL(e.request.url);
   if(e.request.method!=='GET'||url.origin!==location.origin)return;
   e.respondWith(
-    fetch(e.request)
+    fetch(e.request,{cache:'no-store'})
       .then(async res=>{
         if(res.ok){
           try{const cache=await caches.open(CACHE);await cache.put(e.request,res.clone())}catch(err){}
