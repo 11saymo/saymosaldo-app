@@ -67,6 +67,7 @@
     url.searchParams.set('redirect_to', redirectTo);
     url.searchParams.set('code_challenge', challenge);
     url.searchParams.set('code_challenge_method', 's256');
+    url.searchParams.set('scopes', 'openid email profile');
     return url.toString();
   }
 
@@ -216,8 +217,12 @@
       throw new Error('Сервер не вернул полноценную сессию. Попробуйте войти ещё раз.');
     }
     session = {
-      ...value,
-      expires_at: Number(value.expires_at) || Math.floor(Date.now() / 1000) + Number(value.expires_in || 3600)
+      access_token: value.access_token,
+      refresh_token: value.refresh_token,
+      token_type: value.token_type || 'bearer',
+      expires_in: Number(value.expires_in) || 3600,
+      expires_at: Number(value.expires_at) || Math.floor(Date.now() / 1000) + Number(value.expires_in || 3600),
+      user: value.user
     };
     try {
       localStorage.setItem(SESSION_KEY, JSON.stringify(session));
