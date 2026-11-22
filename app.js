@@ -59,7 +59,9 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const fmtDate=s=>new Date(s+'T12:00').toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
 const monthName=k=>new Date(k+'-15T12:00').toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
 const total=a=>a.reduce((v,x)=>v+(+x||0),0);
-const sumType=(a,t)=>total(a.filter(x=>x.type===t).map(x=>x.amount));
+const txNativeAmount=x=>Number(x?.originalAmount??x?.amount)||0;
+const txBaseAmount=x=>Object.prototype.hasOwnProperty.call(x||{},'baseAmount')?(Number(x.baseAmount)||0):(Number(x?.amount)||0);
+const sumType=(a,t)=>total(a.filter(x=>x.type===t).map(txBaseAmount));
 const monthTx=k=>S.tx.filter(x=>String(x.date).slice(0,7)===k);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const empty=t=>`<div class="empty">${t}</div>`;
@@ -122,7 +124,7 @@ function ask(title,fields,cb){
 }
 
 const ICON={'Продукты':'🛒','Кафе и рестораны':'☕','Транспорт':'🚌','Покупки':'🛍️','Дом':'🏠','Здоровье':'💊','Развлечения':'🎬','Подписки':'📺','Кредиты и долги':'🏦','Зарплата':'💼','Подработка':'🛠️','Подарок':'🎁'};
-const items=(list,del)=>list.map(x=>{const saving=x.type==='saving',income=x.type==='income',currency=x.currency||'RUB',original=Number(x.originalAmount??x.amount),foreign=currency!=='RUB'?`<small>≈ ${money(x.amount)} в рублях</small>`:'';return `<div class="item"><div style="display:flex;align-items:center;min-width:0"><span class="ico">${saving?'🎯':ICON[x.category]||'📦'}</span><div style="min-width:0"><b>${esc(x.comment||x.category)}</b><small>${x.comment?esc(x.category)+' · ':''}${fmtDate(x.date)}</small>${foreign}</div></div><div class="amt ${income||saving?'pos':''}">${saving?'↗':income?'+':'−'}${currencyMoney(original,currency)}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`}).join('');
+const items=(list,del)=>list.map(x=>{const saving=x.type==='saving',income=x.type==='income',currency=x.currency||'RUB',original=txNativeAmount(x),foreign=currency!=='RUB'?`<small>≈ ${money(txBaseAmount(x))} в рублях</small>`:'';return `<div class="item"><div style="display:flex;align-items:center;min-width:0"><span class="ico">${saving?'🎯':ICON[x.category]||'📦'}</span><div style="min-width:0"><b>${esc(x.comment||x.category)}</b><small>${x.comment?esc(x.category)+' · ':''}${fmtDate(x.date)}</small>${foreign}</div></div><div class="amt ${income||saving?'pos':''}">${saving?'↗':income?'+':'−'}${currencyMoney(original,currency)}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`}).join('');
 const bar=(l,v,max)=>`<div class="bl"><div class="row"><span>${esc(l)}</span><b>${money(v)}</b></div><div class="bar"><i style="width:${Math.max(2,v/max*100)}%"></i></div></div>`;
 const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0,projection=goalProjection(g),c=g.currency||'RUB';return `<div class="card goal-card"><div class="goal-head"><b class="goal-title">${esc(g.name)}</b><span class="goal-percent">${Math.round(p)}%</span></div><div class="goal-meta"><span>Накоплено</span><b>${currencyMoney(g.saved,c)} <span>из ${currencyMoney(g.target,c)}</span></b>${g.date?`<small>Срок: ${fmtDate(g.date)}</small>`:''}${g.kind==='deposit'?`<small>Накопительная · ${Number(g.rate)||0}% годовых</small>`:''}${g.date?`<small>Нужно откладывать: ${currencyMoney(projection.monthly,c)} в месяц</small>`:''}${g.kind==='deposit'?(g.date?`<small>Прогноз процентов за период: ${currencyMoney(projection.interest,c)}</small>`:`<small>Доход за месяц при текущем остатке: ${currencyMoney((Number(g.saved)||0)*(Number(g.rate)||0)/1200,c)}</small>`):''}</div><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost" data-act="goal-edit" data-id="${esc(g.id)}">Редактировать</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
 
@@ -131,9 +133,9 @@ function migrateGoalSavingsToOperations(){
   for(const goal of S.goals){
     const saved=Math.max(0,Number(goal.saved)||0);
     if(!saved)continue;
-    const goalCurrency=goal.currency||'RUB';const logged=S.tx.filter(tx=>tx.type==='saving'&&String(tx.goalId)===String(goal.id)&&(tx.currency||'RUB')===goalCurrency).reduce((sum,tx)=>sum+Math.max(0,Number(tx.originalAmount??tx.amount)||0),0);
+    const goalCurrency=goal.currency||'RUB';const logged=S.tx.filter(tx=>tx.type==='saving'&&String(tx.goalId)===String(goal.id)&&(tx.currency||'RUB')===goalCurrency).reduce((sum,tx)=>sum+Math.max(0,txNativeAmount(tx)),0);
     const missing=Math.round((saved-logged)*100)/100;
-    if(missing>0.009){S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:missing,category:'Накопления',date:today(),comment:'Учтённый остаток цели: '+goal.name,goalId:goal.id,currency:'RUB',originalAmount:missing,exchangeRate:1});changed=true;}
+    if(missing>0.009){const fx=goalCurrency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(goalCurrency);S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:missing,baseAmount:Number.isFinite(fx)?Math.round(missing*fx*100)/100:null,category:'Накопления',date:today(),comment:'Учтённый остаток цели: '+goal.name,goalId:goal.id,currency:goalCurrency,originalAmount:missing,exchangeRate:Number.isFinite(fx)?fx:null});changed=true;}
   }
   if(changed)save();
 }
@@ -142,7 +144,7 @@ function render(){
   migrateGoalSavingsToOperations();
   const k=nowMk(), m=monthTx(k), monthInc=sumType(m,'income'), monthOut=sumType(m,'expense');
   const inc=sumType(S.tx,'income'), out=sumType(S.tx,'expense');
-  const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(x=>x.amount));
+  const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(txBaseAmount));
   const overN=S.budgets.filter(b=>spent(b.category)>b.limit).length;
   const h=new Date().getHours();
   $('#greet').textContent=(h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+', рады видеть вас в SaymoSaldo!';
@@ -150,12 +152,14 @@ function render(){
   $('#balance').textContent=money(inc-out);
   $('#income').textContent=money(inc);
   $('#expense').textContent=money(out);
+  const balances={};S.tx.filter(x=>x.type==='income'||x.type==='expense').forEach(x=>{const code=x.currency||'RUB';balances[code]=(balances[code]||0)+(x.type==='income'?1:-1)*txNativeAmount(x)});
+  const balanceEl=$('#currencyBalances');if(balanceEl){const rows=Object.entries(balances).filter(([,v])=>Math.abs(v)>0.0001).sort((a,b)=>a[0]==='RUB'?-1:b[0]==='RUB'?1:a[0].localeCompare(b[0]));balanceEl.innerHTML=rows.length?rows.map(([code,value])=>`<div class="item"><b>${esc(code)}</b><b>${currencyMoney(value,code)}</b></div>`).join(''):'<small class="muted">Добавьте доходы и расходы — остатки по валютам появятся здесь.</small>';}
   $('#status').textContent=!S.tx.length?'Добавьте первую операцию, и общая картина появится здесь.':overN?`Превышено лимитов: ${overN}. Проверьте категории ниже.`:'Всё под контролем.';
    const insightEl=$('#moneyInsight');
    const todayDate=new Date(),dayOfMonth=todayDate.getDate(),daysInMonth=new Date(todayDate.getFullYear(),todayDate.getMonth()+1,0).getDate();
    const expenseRows=m.filter(x=>x.type==='expense'&&Number(x.amount)>0);
    const categoryTotals={};
-   expenseRows.forEach(x=>{const c=String(x.category||'Другое');categoryTotals[c]=(categoryTotals[c]||0)+Number(x.amount||0)});
+   expenseRows.forEach(x=>{const c=String(x.category||'Другое');categoryTotals[c]=(categoryTotals[c]||0)+txBaseAmount(x)});
    const canForecast=dayOfMonth>=5&&expenseRows.length>=3;
    const projectedOut=canForecast?monthOut/dayOfMonth*daysInMonth:null;
    const projectedIn=canForecast?monthInc/dayOfMonth*daysInMonth:null;
@@ -173,7 +177,7 @@ function render(){
    }
    insightEl.innerHTML=`<div class="card forecast-card"><div class="forecast-head"><b>Финансовый прогноз</b><span class="forecast-tag">${canForecast?'По текущему темпу':'Набираем данные'}</span></div>${canForecast?`<div class="forecast-grid"><div class="forecast-metric"><span>Расходы к концу месяца</span><b>${money(projectedOut)}</b></div><div class="forecast-metric"><span>Доходы к концу месяца</span><b>${money(projectedIn)}</b></div><div class="forecast-metric"><span>Прогноз разницы</span><b class="${projectedNet>=0?'pos':''}">${money(projectedNet)}</b></div><div class="forecast-metric"><span>Дней прошло</span><b>${dayOfMonth} из ${daysInMonth}</b></div></div><small class="forecast-note">Оценка по среднему дневному темпу записей этого месяца. Это не банковский баланс; будущие платежи, незаписанные операции и изменения дохода не учитываются.</small>`:`<p class="muted">Для прогноза нужно немного больше записей. После нескольких дней и операций покажем ориентир до конца месяца.</p>`}<div class="insight-line"><b>Подсказка</b><br>${insight}</div></div>`;
   const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(ymd(d))}
-  const dv=days.map(dd=>S.tx.filter(x=>x.type==='expense'&&x.date===dd).reduce((v,x)=>v+(+x.amount||0),0));
+  const dv=days.map(dd=>S.tx.filter(x=>x.type==='expense'&&x.date===dd).reduce((v,x)=>v+txBaseAmount(x),0));
   const wmax=Math.max(...dv,1);
   $('#week').innerHTML=days.map((dd,i)=>`<div class="wd"><div class="wb"><i style="height:${Math.max(4,dv[i]/wmax*100)}%"></i></div><small>${new Date(dd+'T12:00').toLocaleDateString('ru-RU',{weekday:'short'}).slice(0,2)}</small></div>`).join('');
   const sorted=[...S.tx].sort((a,b)=>String(b.date).localeCompare(String(a.date))||(b.created||0)-(a.created||0));
@@ -183,12 +187,12 @@ function render(){
   $('#allItems').innerHTML=items(list,true)||empty('Нет операций по выбранному фильтру.');
   renderHomeCurrencyRates();
   const ring=p=>`<svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" class="rt"/><circle cx="18" cy="18" r="15.9" class="rv" stroke-dasharray="${Math.min(100,p)} 100"/></svg>`;
-  $('#homeGoals').innerHTML=S.goals.slice(0,3).map(g=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="item home-goal-item"><div class="ringbox">${ring(p)}<span>${Math.round(p)}%</span></div><div class="home-goal-copy"><b>${esc(g.name)}</b><small><span>Накоплено</span> ${money(g.saved)} <span>из</span> ${money(g.target)}</small></div></div>`}).join('')||empty('Цели пока не добавлены.');
+  $('#homeGoals').innerHTML=S.goals.slice(0,3).map(g=>{const p=g.target?Math.min(100,g.saved/g.target*100):0,c=g.currency||'RUB';return `<div class="item home-goal-item"><div class="ringbox">${ring(p)}<span>${Math.round(p)}%</span></div><div class="home-goal-copy"><b>${esc(g.name)}</b><small><span>Накоплено</span> ${currencyMoney(g.saved,c)} <span>из</span> ${currencyMoney(g.target,c)}</small></div></div>`}).join('')||empty('Цели пока не добавлены.');
   const debtTotal=total(S.debts.map(d=>d.remaining));
   $('#homeDebts').innerHTML=S.debts.length?`<div class="card home-debt-total"><span class="label">Общая задолженность</span><div class="big">${money(debtTotal)}</div>${S.debts.slice(0,3).map(d=>{const original=Math.max(+d.original||0,+d.remaining||0),paid=Math.max(0,original-(+d.remaining||0)),p=original?paid/original*100:0;return `<div class="home-debt-row"><div class="row"><b>${esc(d.name)}</b><b>${money(d.remaining)}</b></div><small>${esc(d.kind)} · платёж ${money(d.monthly)} в месяц</small><div class="bar"><i style="width:${p}%"></i></div></div>`}).join('')}${S.debts.length>3?`<small>И ещё ${S.debts.length-3} обязательств</small>`:''}<button class="ghost" data-go="more" data-tab-target="debts">Открыть задолженность</button></div>`:empty('Задолженностей пока нет. Добавьте кредит или другое обязательство в разделе «Ещё».');
   $('#homeLimits').innerHTML=S.budgets.slice(0,3).map(b=>{const sp=spent(b.category),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><small>${money(sp)} из ${money(b.limit)}</small></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div><small>${p>100?`Превышение на ${money(sp-b.limit)}`:`Осталось ${money(Math.max(0,b.limit-sp))}`}</small></div>`}).join('')||empty('Лимиты не установлены. Их можно задать в разделе «Бюджет».');
   const by={};
-  m.filter(x=>x.type==='expense').forEach(x=>by[x.category]=(by[x.category]||0)+(+x.amount||0));
+  m.filter(x=>x.type==='expense').forEach(x=>by[x.category]=(by[x.category]||0)+txBaseAmount(x));
   const ents=Object.entries(by).sort((a,b)=>b[1]-a[1]), max=ents[0]?.[1]||1;
   $('#catStats').innerHTML=ents.map(([c,v])=>bar(c,v,max)).join('')||empty('Добавьте расходы — здесь появится разбивка по категориям.');
   const ks=[];for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);ks.push(ymd(d).slice(0,7))}
@@ -205,7 +209,7 @@ const PANELS={
 
   budgets:()=>{
     const m=monthTx(nowMk()).filter(x=>x.type==='expense');
-    return `${S.budgets.map(b=>{const sp=total(m.filter(x=>x.category===b.category).map(x=>x.amount)),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><button class="link danger" data-act="budget-del" data-cat="${esc(b.category)}">Удалить</button></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div><small>${money(sp)} из ${money(b.limit)} · ${Math.round(p)}%</small><small>${p>100?`Превышение на ${money(sp-b.limit)}`:`Осталось ${money(Math.max(0,b.limit-sp))}`}</small></div>`}).join('')||empty('Лимиты не установлены.')}
+    return `${S.budgets.map(b=>{const sp=total(m.filter(x=>x.category===b.category).map(txBaseAmount)),p=b.limit?sp/b.limit*100:0,cl=p>=100?'over':p>=80?'warn':'';return `<div class="card"><div class="row"><b>${esc(b.category)}</b><button class="link danger" data-act="budget-del" data-cat="${esc(b.category)}">Удалить</button></div><div class="bar"><i class="${cl}" style="width:${Math.min(100,p)}%"></i></div><small>${money(sp)} из ${money(b.limit)} · ${Math.round(p)}%</small><small>${p>100?`Превышение на ${money(sp-b.limit)}`:`Осталось ${money(Math.max(0,b.limit-sp))}`}</small></div>`}).join('')||empty('Лимиты не установлены.')}
     <div class="sec"><h2>Новый лимит на месяц</h2></div>
     <form class="card" data-form="budget"><label class="field"><span>Категория</span><select name="category">${catOpts('expense')}</select><small class="field-help">Выберите категорию, для которой хотите ограничить расходы в текущем месяце.</small></label>${field('limit','Лимит, ₽','number','required min="1"')}<button class="primary">Сохранить лимит</button></form>`;
   },
@@ -247,7 +251,7 @@ function renderPanel(){
 }
 
 const FORMS={
-  goal(d){const name=d.name.trim(),target=Math.round(Number(d.target)*100)/100,saved=Math.round(Number(d.saved||0)*100)/100,rate=d.rate===''?0:Number(d.rate),currency=d.currency||'RUB';if(!name||!Number.isFinite(target)||!(target>0))return'Укажите название и корректную сумму цели.';if(!Number.isFinite(saved)||saved<0)return'Сумма не может быть отрицательной.';if(!Number.isFinite(rate)||rate<0||rate>100)return'Ставка должна быть от 0 до 100% годовых.';const fx=currency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(currency);if(!Number.isFinite(fx)||fx<=0)return'Курс выбранной валюты пока недоступен. Попробуйте позже.';const goal={id:uid(),name,target,saved,currency,date:d.date||'',kind:d.kind==='deposit'?'deposit':'standard',rate:d.kind==='deposit'?rate:0};S.goals.push(goal);if(saved>0)S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:Math.round(saved*fx*100)/100,category:'Накопления',date:today(),comment:'Начальный остаток цели: '+name,goalId:goal.id,currency,originalAmount:saved,exchangeRate:fx});toast('Цель создана')},
+  goal(d){const name=d.name.trim(),target=Math.round(Number(d.target)*100)/100,saved=Math.round(Number(d.saved||0)*100)/100,rate=d.rate===''?0:Number(d.rate),currency=d.currency||'RUB';if(!name||!Number.isFinite(target)||!(target>0))return'Укажите название и корректную сумму цели.';if(!Number.isFinite(saved)||saved<0)return'Сумма не может быть отрицательной.';if(!Number.isFinite(rate)||rate<0||rate>100)return'Ставка должна быть от 0 до 100% годовых.';const fx=currency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(currency);const goal={id:uid(),name,target,saved,currency,date:d.date||'',kind:d.kind==='deposit'?'deposit':'standard',rate:d.kind==='deposit'?rate:0};S.goals.push(goal);if(saved>0)S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:saved,baseAmount:Number.isFinite(fx)?Math.round(saved*fx*100)/100:null,category:'Накопления',date:today(),comment:'Начальный остаток цели: '+name,goalId:goal.id,currency,originalAmount:saved,exchangeRate:Number.isFinite(fx)?fx:null});toast('Цель создана')},
   budget(d){const limit=Math.round(Number(d.limit));if(!Number.isFinite(limit)||!(limit>0))return'Укажите корректный лимит больше нуля.';const b=S.budgets.find(x=>x.category===d.category);if(b)b.limit=limit;else S.budgets.push({category:d.category,limit});toast('Лимит сохранён')},
   rec(d){const name=d.name.trim(),amount=Math.round(Number(d.amount)),day=Math.round(Number(d.day));if(!name||!Number.isFinite(amount)||!(amount>0))return'Укажите название и корректную сумму.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';S.recurring.push({id:uid(),name,amount,category:d.category,day});toast('Платёж добавлен')},
   debt(d){const name=d.name.trim(),original=Math.round(Number(d.original)),remaining=Math.round(Number(d.remaining)),monthly=Math.round(Number(d.monthly)),day=Math.round(Number(d.day)),rate=d.rate===''?null:Number(d.rate);if(!name)return'Укажите название.';if(!Number.isFinite(original)||!(original>0))return'Первоначальная сумма должна быть больше нуля.';if(!Number.isFinite(remaining)||!(remaining>=0&&remaining<=original))return'Остаток должен быть от 0 до первоначальной суммы.';if(!Number.isFinite(monthly)||!(monthly>0))return'Укажите корректный ежемесячный платёж.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';if(rate!==null&&!(rate>=0&&rate<=100))return'Ставка — от 0 до 100.';S.debts.push({id:uid(),kind:d.kind,name,original,remaining,monthly,day,rate,history:[]});toast('Обязательство добавлено')},
@@ -267,7 +271,7 @@ document.addEventListener('submit',e=>{
 });
 
 function fillTx(){$('#txCat').innerHTML=catOpts(document.querySelector('#txForm [name=type]:checked').value);const sel=$('#txCurrency');if(sel&&window.SaymoSaldoCurrency)sel.innerHTML=window.SaymoSaldoCurrency.options().map(x=>`<option value="${x.code}">${esc(x.label)}</option>`).join('');updateCurrencyPreview()}
-function updateCurrencyPreview(){const f=$('#txForm'),out=$('#txCurrencyPreview');if(!f||!out)return;const c=f.elements.currency?.value||'RUB',v=Number(f.elements.amount?.value||0),rate=window.SaymoSaldoCurrency?.rubPerUnit(c);out.textContent=!v?'':c==='RUB'?`${money(v)} — основная валюта`:Number.isFinite(rate)?`Примерно ${money(v*rate)} по текущему курсу`:'Курс загружается. Пока можно выбрать рубли.'}
+function updateCurrencyPreview(){const f=$('#txForm'),out=$('#txCurrencyPreview');if(!f||!out)return;const c=f.elements.currency?.value||'RUB',v=Number(f.elements.amount?.value||0),rate=window.SaymoSaldoCurrency?.rubPerUnit(c);out.textContent=!v?'':c==='RUB'?`${currencyMoney(v,c)} — сумма сохранится в рублях`:Number.isFinite(rate)?`${currencyMoney(v,c)} сохранится без пересчёта. Эквивалент: ${money(v*rate)}.`:`${currencyMoney(v,c)} сохранится без пересчёта. Рублёвый эквивалент появится после загрузки курса.`}
 $('#txForm').addEventListener('input',e=>{if(e.target.name==='amount'||e.target.name==='currency')updateCurrencyPreview()});
 $('#txForm').addEventListener('change',e=>{if(e.target.name==='type')fillTx();if(e.target.name==='currency')updateCurrencyPreview()});
 window.addEventListener('saymo-rates-updated',()=>{const sel=$('#txCurrency'),current=sel?.value;if(sel){sel.innerHTML=window.SaymoSaldoCurrency.options().map(x=>`<option value="${x.code}">${esc(x.label)}</option>`).join('');sel.value=current||'RUB';}updateCurrencyPreview();renderCurrencyRates();renderHomeCurrencyRates()});
@@ -277,10 +281,9 @@ $('#txForm').addEventListener('submit',e=>{
   const f=e.target,d=Object.fromEntries(new FormData(f));
   const originalAmount=Number(d.amount),currency=d.currency||'RUB',exchangeRate=currency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(currency);
   if(!Number.isFinite(originalAmount)||!(originalAmount>0))return toast('Укажите корректную сумму больше нуля.');
-  if(!Number.isFinite(exchangeRate)||!(exchangeRate>0))return toast('Курс этой валюты пока недоступен. Обновите курсы или выберите рубли.');
   if(!d.date)return toast('Укажите дату.');
-  const amount=Math.round(originalAmount*exchangeRate*100)/100;
-  S.tx.push({id:uid(),created:Date.now(),type:d.type,amount,originalAmount,currency,exchangeRate,category:d.category,date:d.date,comment:(d.comment||'').trim().slice(0,80)});
+  const baseAmount=Number.isFinite(exchangeRate)&&exchangeRate>0?Math.round(originalAmount*exchangeRate*100)/100:null;
+  S.tx.push({id:uid(),created:Date.now(),type:d.type,amount:originalAmount,originalAmount,baseAmount,currency,exchangeRate:Number.isFinite(exchangeRate)&&exchangeRate>0?exchangeRate:null,category:d.category,date:d.date,comment:(d.comment||'').trim().slice(0,80)});
   if(!save())return;
   f.reset();
   fillTx();
@@ -412,14 +415,14 @@ function askAssistant(q){
 
 function financeReportData(){
   const key=nowMk(), current=monthTx(key), expenses=current.filter(x=>x.type==='expense'&&Number(x.amount)>0), incomes=current.filter(x=>x.type==='income'&&Number(x.amount)>0);
-  const by={};expenses.forEach(x=>{const c=String(x.category||'Другое');by[c]=(by[c]||0)+Number(x.amount||0)});
-  const top=Object.entries(by).sort((a,b)=>b[1]-a[1]), spent=total(expenses.map(x=>x.amount)), earned=total(incomes.map(x=>x.amount));
+  const by={};expenses.forEach(x=>{const c=String(x.category||'Другое');by[c]=(by[c]||0)+txBaseAmount(x)});
+  const top=Object.entries(by).sort((a,b)=>b[1]-a[1]), spent=total(expenses.map(txBaseAmount)), earned=total(incomes.map(txBaseAmount));
   const now=new Date(),day=now.getDate(),days=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
   const prevDate=new Date(now.getFullYear(),now.getMonth()-1,1),prevKey=ymd(prevDate).slice(0,7),prevDay=Math.min(day,new Date(prevDate.getFullYear(),prevDate.getMonth()+1,0).getDate());
   const prevRows=monthTx(prevKey).filter(x=>Number(String(x.date).slice(8,10))<=prevDay),prevSpent=sumType(prevRows,'expense');
   const budgets=S.budgets.map(b=>({category:b.category,limit:Number(b.limit)||0,spent:by[b.category]||0})).filter(b=>b.limit>0).sort((a,b)=>b.spent/b.limit-a.spent/a.limit);
   const recurring=total(S.recurring.map(x=>x.amount))+total(S.debts.filter(x=>Number(x.remaining)>0).map(x=>x.monthly));
-  const goals=S.goals.map(g=>({name:g.name,target:Number(g.target)||0,saved:Number(g.saved)||0,date:g.date||''}));
+  const goals=S.goals.map(g=>({name:g.name,target:Number(g.target)||0,saved:Number(g.saved)||0,date:g.date||'',currency:g.currency||'RUB'}));
   return {key,current,expenses,incomes,by,top,spent,earned,day,days,prevKey,prevDay,prevSpent,budgets,recurring,goals,forecast:spent/day*days};
 }
 function renderFinanceReport(){
@@ -499,12 +502,11 @@ document.addEventListener('click',e=>{
   switch(act){
     case'tx-del':return confirmDo('Удалить операцию?',()=>{const tx=S.tx.find(x=>String(x.id)===id);if(tx?.type==='saving'&&tx.goalId){const goal=S.goals.find(g=>String(g.id)===String(tx.goalId));if(goal&&(tx.currency||'RUB')===(goal.currency||'RUB'))goal.saved=Math.max(0,(Number(goal.saved)||0)-(Number(tx.originalAmount??tx.amount)||0));}S.tx=S.tx.filter(x=>String(x.id)!==id)});
     case'goal-edit':return editGoal(id);
-    case'goal-fund':return ask('Пополнить цель',[{n:'amount',l:'Сумма, ₽'}],f=>{
-      const v=Math.round(+f.amount),g=S.goals.find(x=>x.id===id);
-      if(!g)return'Цель не найдена.';
-      if(!Number.isSafeInteger(v)||!(v>0))return'Введите корректную сумму больше нуля.';
-      g.saved+=v;S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:v,category:'Накопления',date:today(),comment:'Пополнение цели: '+g.name,goalId:g.id,currency:'RUB',originalAmount:v,exchangeRate:1});if(!save())return;render();toast('Пополнение записано в операции');
-    });
+    case'goal-fund':{const g=S.goals.find(x=>x.id===id);if(!g)return toast('Цель не найдена.');const currency=g.currency||'RUB';return ask('Пополнить цель',[{n:'amount',l:'Сумма, '+currency}],f=>{
+      const v=Math.round(Number(f.amount)*100)/100,fx=currency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(currency);
+      if(!Number.isFinite(v)||!(v>0))return'Введите корректную сумму больше нуля.';
+      g.saved=Math.round((g.saved+v)*100)/100;S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:v,baseAmount:Number.isFinite(fx)?Math.round(v*fx*100)/100:null,category:'Накопления',date:today(),comment:'Пополнение цели: '+g.name,goalId:g.id,currency,originalAmount:v,exchangeRate:Number.isFinite(fx)?fx:null});if(!save())return;render();toast('Пополнение записано в операции');
+    });}
     case'goal-del':return confirmDo('Удалить цель?',()=>{S.goals=S.goals.filter(x=>x.id!==id)});
     case'budget-del':return confirmDo('Удалить лимит?',()=>{S.budgets=S.budgets.filter(x=>x.category!==t.dataset.cat)});
     case'rec-pay':return payRecurring(id);
