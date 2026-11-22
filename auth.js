@@ -95,7 +95,6 @@
     const url = new URL(window.location.href);
     const providerError = url.searchParams.get('error');
     if (providerError) {
-      const description = url.searchParams.get('error_description') || '';
       try { sessionStorage.removeItem(GOOGLE_PKCE_KEY); } catch (error) {}
       cleanOAuthUrl();
       setNotice(/access_denied/i.test(providerError)
