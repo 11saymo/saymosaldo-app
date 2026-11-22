@@ -68,7 +68,7 @@ const empty=t=>`<div class="empty">${t}</div>`;
 const catOpts=t=>CATS[t].map(c=>`<option>${esc(c)}</option>`).join('');
 const FIELD_HELP={name:'Дайте понятное название, чтобы потом легко узнать запись.',target:'Укажите полную сумму, которую хотите накопить.',saved:'Укажите, сколько уже отложено на эту цель. Если пока ничего — оставьте пустым или введите 0.',date:'При желании укажите дату, к которой хотите достичь цели.',limit:'Максимальная сумма расходов по выбранной категории за месяц.',amount:'Введите сумму одного регулярного платежа в рублях.',day:'Введите число месяца от 1 до 31, когда обычно наступает платёж.',original:'Полная сумма обязательства на момент оформления, а не текущий остаток.',remaining:'Сколько осталось выплатить на сегодняшний день. Значение не должно превышать первоначальную сумму.',monthly:'Сколько обычно платите каждый месяц.',rate:'Укажите годовую процентную ставку из договора. Если не знаете — оставьте поле пустым.'};
 const field=(n,l,t='number',x='')=>`<label class="field"><span>${l}</span><input name="${n}" type="${t}" ${t==='number'?'inputmode="decimal" step="any"':''} ${x}>${FIELD_HELP[n]?`<small class="field-help">${FIELD_HELP[n]}</small>`:''}</label>`;
-let mode='finance', tab='recurring', cur='home';
+let mode='finance', tab='recurring', cur='home', heroPeriod='all';
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2400)}
 
@@ -143,17 +143,23 @@ function migrateGoalSavingsToOperations(){
 function render(){
   migrateGoalSavingsToOperations();
   const k=nowMk(), m=monthTx(k), monthInc=sumType(m,'income'), monthOut=sumType(m,'expense');
+  const periodRows=heroPeriod==='month'?m:S.tx;
+  const periodInc=sumType(periodRows,'income'),periodOut=sumType(periodRows,'expense');
   const inc=sumType(S.tx,'income'), out=sumType(S.tx,'expense');
   const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(txBaseAmount));
   const overN=S.budgets.filter(b=>spent(b.category)>b.limit).length;
   const h=new Date().getHours();
   $('#greet').textContent=(h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+', рады видеть вас в SaymoSaldo!';
-  $('#monthLabel').textContent='За всё время';
-  $('#balance').textContent=money(inc-out);
-  $('#income').textContent=money(inc);
-  $('#expense').textContent=money(out);
-  const balances={};S.tx.filter(x=>x.type==='income'||x.type==='expense').forEach(x=>{const code=x.currency||'RUB';balances[code]=(balances[code]||0)+(x.type==='income'?1:-1)*txNativeAmount(x)});
-  const balanceEl=$('#currencyBalances');if(balanceEl){const rows=Object.entries(balances).filter(([,v])=>Math.abs(v)>0.0001).sort((a,b)=>a[0]==='RUB'?-1:b[0]==='RUB'?1:a[0].localeCompare(b[0]));balanceEl.innerHTML=rows.length?rows.map(([code,value])=>`<div class="item"><b>${esc(code)}</b><b>${currencyMoney(value,code)}</b></div>`).join(''):'<small class="muted">Добавьте доходы и расходы — остатки по валютам появятся здесь.</small>';}
+  $('#monthLabel').textContent=(heroPeriod==='month'?monthName(k):'За всё время')+' · общий эквивалент';
+  $('#balance').textContent=money(periodInc-periodOut);
+  $('#income').textContent=money(periodInc);
+  $('#expense').textContent=money(periodOut);
+  $('.hero-period [data-hero-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.heroPeriod===heroPeriod)));
+  const currencyCodes=['RUB','USD','EUR','CNY'];
+  const currencyStats=Object.fromEntries(currencyCodes.map(code=>[code,{income:0,expense:0}]));
+  periodRows.filter(x=>x.type==='income'||x.type==='expense').forEach(x=>{const code=currencyCodes.includes(x.currency||'RUB')?(x.currency||'RUB'):'RUB';currencyStats[code][x.type]+=txNativeAmount(x)});
+  const balanceEl=$('#currencyBalances');
+  if(balanceEl)balanceEl.innerHTML=currencyCodes.map(code=>{const v=currencyStats[code],net=v.income-v.expense;return `<div class="hero-currency-row"><div class="hc-code">${code}</div><div><small>Доходы</small><b>${currencyMoney(v.income,code)}</b></div><div><small>Расходы</small><b>${currencyMoney(v.expense,code)}</b></div><div><small>Остаток</small><b>${currencyMoney(net,code)}</b></div></div>`}).join('');
   $('#status').textContent=!S.tx.length?'Добавьте первую операцию, и общая картина появится здесь.':overN?`Превышено лимитов: ${overN}. Проверьте категории ниже.`:'Всё под контролем.';
    const insightEl=$('#moneyInsight');
    const todayDate=new Date(),dayOfMonth=todayDate.getDate(),daysInMonth=new Date(todayDate.getFullYear(),todayDate.getMonth()+1,0).getDate();
@@ -492,6 +498,7 @@ document.addEventListener('click',e=>{
   
   const t=e.target.closest('[data-go],[data-tab],[data-mode],[data-q],[data-act],[data-theme-set]');
   if(!t)return;
+  if(t.dataset.heroPeriod){heroPeriod=t.dataset.heroPeriod==='month'?'month':'all';return render()}
   if(t.dataset.themeSet){setTheme(t.dataset.themeSet);return renderPanel()}
   if(t.dataset.go){if(t.dataset.tabTarget)tab=t.dataset.tabTarget;return go(t.dataset.go)}
   if(t.dataset.tab){tab=t.dataset.tab;return renderPanel()}
