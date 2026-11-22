@@ -20,7 +20,7 @@ async function testCurrencyClient() {
         json: async () => ({
           result: "success",
           base_code: "RUB",
-          rates: { RUB: 1, USD: 0.0125, EUR: 0.0115, KZT: 5.1 },
+          rates: { RUB: 1, USD: 0.0125, EUR: 0.0115, CNY: 0.14, GBP: 0.01, KZT: 5.1 },
           time_last_update_unix: now,
           time_next_update_unix: now + 86400
         })
@@ -44,7 +44,9 @@ async function testCurrencyClient() {
   assert.equal(api.rubPerUnit("RUB"), 1);
   assert.equal(api.rubPerUnit("USD"), 80);
   assert.ok(Math.abs(api.rubPerUnit("EUR") - 1 / 0.0115) < 1e-9);
-  assert.ok(api.options().some(x => x.code === "KZT"));
+  assert.deepEqual(api.options().map(x => x.code).sort(), ["CNY", "EUR", "RUB", "USD"]);
+  assert.ok(!api.options().some(x => x.code === "GBP" || x.code === "KZT"));
+  assert.ok(Math.abs(api.rubPerUnit("CNY") - 1 / 0.14) < 1e-9);
   assert.ok(store.has("saymosaldo_fx_rub_v1"), "rates should be cached locally");
   assert.ok(events.includes("saymo-rates-updated"));
 }
