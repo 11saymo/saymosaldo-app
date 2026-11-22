@@ -39,6 +39,6 @@ test('responsive visual system covers phone, desktop, theme, and reduced motion'
 test('the app loads only approved first-party scripts and no external stylesheet', () => {
   const scripts = [...html.matchAll(/<script\b[^>]*src="([^"]+)"/g)].map(match => match[1].split('?')[0]);
   assert.deepEqual(scripts, ['./app.js', './auth.js', './learning.js']);
-  assert.doesNotMatch(html, /(?:app|auth|learning)\\.js\\?/);
+  assert.ok(!html.includes('app.js?') && !html.includes('auth.js?') && !html.includes('learning.js?'));
   assert.doesNotMatch(html, /<link\b[^>]*rel="stylesheet"[^>]*href="https?:/i);
 });
