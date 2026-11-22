@@ -1,5 +1,5 @@
 // Network-first: при онлайне всегда свежая версия, при офлайне — из кеша.
-const CACHE='saymosaldo-v48';
+const CACHE='saymosaldo-v49';
 const ASSETS=['./','./index.html','./manifest.json','./icon.svg','./icon-180.png','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./privacy.html','./404.html','./app.js','./auth.js','./learning.js',];
 
 self.addEventListener('install',e=>{
