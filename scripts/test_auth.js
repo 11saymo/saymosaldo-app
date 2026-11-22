@@ -113,11 +113,12 @@ assert.ok(source.includes("credentials: 'omit'"), "Auth requests must not send a
 assert.ok(source.indexOf("raw = await response.text()") < source.indexOf("clearTimeout(timeout)"), "The request deadline must cover response-body reading");
 assert.ok(edgeSource.includes('"https://11saymo.github.io"'), "The production site must be allowed by Edge Function CORS");
 
+
+assert.ok(!appHtml.includes("Регистрация не требуется. Данные хранятся в браузере этого устройства."), "Public app copy must not describe the account-based app as guest-only");
+assert.ok(appHtml.includes("Данные аккаунта синхронизируются между вашими устройствами."), "Account settings must disclose cloud synchronization");
+
   console.log("Auth client and account-isolation contract tests passed.");
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;
 });
-
-assert.ok(!appHtml.includes("Регистрация не требуется. Данные хранятся в браузере этого устройства."), "Public app copy must not describe the account-based app as guest-only");
-assert.ok(appHtml.includes("Данные аккаунта синхронизируются между вашими устройствами."), "Account settings must disclose cloud synchronization");
