@@ -170,12 +170,13 @@ input,select{border-radius:12px}
 .ov-card h2{font-size:23px;letter-spacing:-.025em}
 .ov-card p{line-height:1.6}
 @media(min-width:760px){
-  .view[data-view=home]:not([hidden]){display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:18px;align-items:start}
-  .view[data-view=home]>:nth-child(1),.view[data-view=home]>:nth-child(13),.view[data-view=home]>:nth-child(16){grid-column:1/-1}
-  .view[data-view=home]>:nth-child(2),.view[data-view=home]>:nth-child(5),.view[data-view=home]>:nth-child(6){grid-column:1/8}
-  .view[data-view=home]>:nth-child(3),.view[data-view=home]>:nth-child(4),.view[data-view=home]>:nth-child(7),.view[data-view=home]>:nth-child(8){grid-column:8/13}
-  .view[data-view=home]>:nth-child(9),.view[data-view=home]>:nth-child(10){grid-column:1/7}
-  .view[data-view=home]>:nth-child(11),.view[data-view=home]>:nth-child(12){grid-column:7/13}
+  .view[data-view=home]:not([hidden]){display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:18px;row-gap:12px;align-items:start}
+  .view[data-view=home]>#greet,.view[data-view=home]>#homeCurrencyCard{grid-column:1/-1}
+  .view[data-view=home]>.hero,.view[data-view=home]>.quick{grid-column:1/8}
+  .view[data-view=home]>#status,.view[data-view=home]>#moneyInsight{grid-column:8/13}
+  .view[data-view=home]>.home-sec-week,.view[data-view=home]>#homeWeekCard{grid-column:8/13}
+  .view[data-view=home]>.home-sec-limits,.view[data-view=home]>#homeLimits,.view[data-view=home]>.home-sec-debts,.view[data-view=home]>#homeDebts{grid-column:1/7}
+  .view[data-view=home]>.home-sec-goals,.view[data-view=home]>#homeGoals,.view[data-view=home]>.home-sec-recent,.view[data-view=home]>#recent{grid-column:7/13}
   .view[data-view=home]>.sec{align-self:end}
 }
 @media(max-width:759px){
@@ -639,7 +640,6 @@ button,input,select{letter-spacing:0;line-height:1.4}
         <div class="hero-currency-title">Разбивка по валютам</div>
         <div id="currencyBalances" class="hero-currency-list" aria-live="polite"></div>
       </div>
-      <div class="card"><h2 style="margin-bottom:10px">Остатки по валютам</h2><div id="currencyBalances" class="list"><small class="muted">Остатки появятся после добавления операций.</small></div></div>
       <p class="status" id="status"></p>
       <div id="moneyInsight"></div>
       <div class="quick">
@@ -647,15 +647,15 @@ button,input,select{letter-spacing:0;line-height:1.4}
         <button class="qbtn" data-go="stats"><span>◎</span>Бюджет</button>
         <button class="qbtn" data-go="more"><span>↻</span>Платежи</button>
       </div>
-      <div class="sec"><h2>Последние 7 дней</h2></div>
-      <div class="card"><div class="week" id="week"></div></div>
-      <div class="sec"><h2>Лимиты</h2><button class="link" data-go="stats">Управлять</button></div>
+      <div class="sec home-sec-week"><h2>Последние 7 дней</h2></div>
+      <div class="card" id="homeWeekCard"><div class="week" id="week"></div></div>
+      <div class="sec home-sec-limits"><h2>Лимиты</h2><button class="link" data-go="stats">Управлять</button></div>
       <div id="homeLimits" class="list"></div>
-      <div class="sec"><h2>Цели</h2><button class="link" data-go="stats">Управлять</button></div>
+      <div class="sec home-sec-goals"><h2>Цели</h2><button class="link" data-go="stats">Управлять</button></div>
       <div id="homeGoals" class="list"></div>
-      <div class="sec"><h2>Задолженность</h2><button class="link" data-go="more" data-tab-target="debts">Подробнее</button></div>
+      <div class="sec home-sec-debts"><h2>Задолженность</h2><button class="link" data-go="more" data-tab-target="debts">Подробнее</button></div>
       <div id="homeDebts" class="list"></div>
-      <div class="sec"><h2>Последние операции</h2><button class="link" data-go="ops">Все</button></div>
+      <div class="sec home-sec-recent"><h2>Последние операции</h2><button class="link" data-go="ops">Все</button></div>
       <div id="recent" class="list"></div>
       <div class="card" id="homeCurrencyCard"><div class="row"><h2>Курс валют к рублю</h2><button class="link" data-go="more" data-tab-target="settings">Все курсы</button></div><div id="homeCurrencyRates" class="list"><small class="muted">Загружаем актуальные курсы…</small></div><small id="homeCurrencyUpdated" class="muted"></small></div>
       
