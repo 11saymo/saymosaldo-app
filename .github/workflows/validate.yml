@@ -27,3 +27,4 @@ jobs:
           for file in /tmp/saymosaldo-inline-*.js; do
             node --check "$file"
           done
+          node --check sw.js
