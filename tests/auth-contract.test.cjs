@@ -71,8 +71,8 @@ test('Google sign-in uses a pinned provider, PKCE challenge, and the supplied ap
 
 test('persistent app sessions never retain Google provider access tokens', () => {
   const source = fs.readFileSync(require('node:path').join(__dirname, '..', 'auth.js'), 'utf8');
-  const match = source.match(/function storeSession\\(value\\) \\{([\\s\\S]*?)\\n  \\}/);
+  const match = source.match(/function storeSession\(value\) \{([\s\S]*?)\n  \}/);
   assert.ok(match, 'storeSession implementation is present');
   assert.doesNotMatch(match[1], /provider_(?:refresh_)?token/);
-  assert.match(match[1], /access_token: value\\.access_token/);
+  assert.match(match[1], /access_token: value\.access_token/);
 });
