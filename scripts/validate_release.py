@@ -46,7 +46,7 @@ else:
         "object-src": ["'none'"],
         "base-uri": ["'self'"],
         "form-action": ["'self'"],
-        "connect-src": ["'self'"],
+        "connect-src": ["'self'", "https://pmrrslmkrulhuapxtltm.supabase.co"],
     }
     for name, values in required.items():
         if directives.get(name) != values:
@@ -55,7 +55,7 @@ else:
     if "'unsafe-inline'" in script_policy or "'unsafe-eval'" in script_policy:
         errors.append("CSP script-src must not allow unsafe-inline or unsafe-eval")
 
-    inline_sources = re.findall(r"<script\b[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
+    inline_sources = re.findall(r"<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
     expected_hashes = {
         "'sha256-" + base64.b64encode(hashlib.sha256(source.encode("utf-8")).digest()).decode("ascii") + "'"
         for source in inline_sources
@@ -64,12 +64,12 @@ else:
     if expected_hashes != declared_hashes:
         errors.append("CSP script hashes do not exactly match the inline JavaScript")
 
-if parser.external_scripts:
-    errors.append("External script sources are not allowed: " + ", ".join(parser.external_scripts))
+if parser.external_scripts != ["./auth.js"]:
+    errors.append("Only the first-party auth.js script may be loaded externally: " + ", ".join(parser.external_scripts))
 if parser.external_styles:
     errors.append("External stylesheets are not allowed: " + ", ".join(parser.external_styles))
 
-inline_source = "\n".join(re.findall(r"<script\b[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S))
+inline_source = "\n".join(re.findall(r"<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S))
 if re.search(r"\b(?:fetch|XMLHttpRequest|WebSocket|sendBeacon)\b", inline_source):
     errors.append("The app must not send financial data through browser network APIs")
 
@@ -88,7 +88,7 @@ else:
 if "function persistEntries(entries)" not in html:
     errors.append("Missing safe storage write helper")
 
-scripts = re.findall(r"<script\b[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
+scripts = re.findall(r"<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
 if not scripts:
     errors.append("No inline JavaScript found")
 else:
@@ -122,7 +122,7 @@ else:
     if privacy_parser.external_scripts or privacy_parser.external_styles:
         errors.append("privacy.html must not load external scripts or stylesheets")
 
-for filename in ("index.html", "sw.js", "manifest.json"):
+for filename in ("index.html", "sw.js", "manifest.json", "auth.js"):
     content = (ROOT / filename).read_text(encoding="utf-8")
     if re.search(r"\bservice_role\b|\bsb_secret_[A-Za-z0-9_]+", content, flags=re.I):
         errors.append(f"Possible privileged Supabase key found in {filename}")
@@ -131,12 +131,23 @@ for filename in ("index.html", "sw.js", "manifest.json"):
 sw_content = (ROOT / "sw.js").read_text(encoding="utf-8")
 if "e.request.method!=='GET'||url.origin!==location.origin" not in sw_content:
     errors.append("Service worker must only intercept same-origin GET requests")
-if "./privacy.html" not in sw_content or "./404.html" not in sw_content:
+if "./privacy.html" not in sw_content or "./404.html" not in sw_content or "./auth.js" not in sw_content:
     errors.append("Service worker must include the privacy and not-found pages in its app shell cache")
 
+auth_path = ROOT / "auth.js"
+if not auth_path.is_file():
+    errors.append("Missing auth.js")
+else:
+    auth_content = auth_path.read_text(encoding="utf-8")
+    for required_text in ("username-auth", "auth/v1/token?grant_type=password", "reset_password", "rest/v1/user_data", "sb_publishable_"):
+        if required_text not in auth_content:
+            errors.append(f"auth.js is missing required account flow element: {required_text}")
+    if "service_role" in auth_content or "sb_secret_" in auth_content:
+        errors.append("Privileged Supabase credentials must never appear in auth.js")
+
 privacy_content = (ROOT / "privacy.html").read_text(encoding="utf-8") if (ROOT / "privacy.html").is_file() else ""
-if "не шифрует записи отдельным паролем" not in privacy_content:
-    errors.append("Privacy policy must disclose that app data is not separately encrypted")
+if "не зашифрованы отдельным паролем" not in privacy_content:
+    errors.append("Privacy policy must disclose that local app data is not separately encrypted")
 
 # Public launch assets must exist and the GitHub Pages 404 route must be useful.
 try:

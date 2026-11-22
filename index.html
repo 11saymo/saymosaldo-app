@@ -6,7 +6,7 @@
 <meta name="description" content="SaymoSaldo — удобный финансовый помощник: учёт доходов и расходов, планирование бюджета, контроль платежей и накоплений.">
 <meta name="robots" content="index, follow">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'sha256-aLzjOTA8E/psXfP/8CYC//Rl4CMAPA3QlUw5lRwciJs=' ; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'sha256-uhroy+MiCIG8Cb9BTqPyKMN29JV7KtWwWNsikvClCwY='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://pmrrslmkrulhuapxtltm.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="google-site-verification" content="5JxssF-pElOr3sZdiBvC2ko0LklpC0O8AirzG-uq7cI">
 <link rel="canonical" href="https://11saymo.github.io/saymosaldo-app/">
 <meta property="og:type" content="website">
@@ -397,11 +397,60 @@ button,input,select{letter-spacing:0;line-height:1.4}
 .seo-intro strong{color:var(--fg);font-weight:650}
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+.auth-screen[hidden]{display:none!important}.auth-screen{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 12% 0%,rgba(122,31,43,.12),transparent 42%),var(--bg)}
+.auth-card{width:min(100%,430px);background:var(--card);border:1px solid var(--line);border-radius:24px;padding:clamp(22px,6vw,34px);box-shadow:var(--shadow)}
+.auth-mark{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:rgba(122,31,43,.1);color:var(--acc);font-size:27px;margin-bottom:18px}
+.auth-card h1{font-size:27px;margin:0 0 6px}.auth-lead{color:var(--mut);font-size:14px;margin-bottom:22px}
+.auth-notice{display:none;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-size:13px;margin:0 0 14px}
+.auth-notice.on{display:block}.auth-notice.error{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 35%,var(--line))}.auth-notice.success{color:var(--acc)}
+.auth-form{display:grid;gap:2px}.auth-form[hidden],.recovery-panel[hidden]{display:none}
+.auth-links{display:flex;justify-content:space-between;gap:12px;margin-top:10px;flex-wrap:wrap}
+.auth-hint{color:var(--mut);font-size:13px;line-height:1.55;margin:5px 0 14px}
+.auth-foot{color:var(--mut);font-size:12px;text-align:center;margin-top:24px}
+.recovery-panel{display:grid;gap:10px}.recovery-panel h2{font-size:19px}
+.recovery-code{display:block;white-space:normal;overflow-wrap:anywhere;padding:16px;border:1px dashed var(--acc);border-radius:13px;background:var(--bg);font-size:14px;line-height:1.7;user-select:all}
+.sync-status{font-size:12px;color:var(--mut);min-height:18px;margin:-16px 0 14px}
+@media(prefers-reduced-motion:reduce){.auth-card,*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
 </style>
 </head>
 <body>
-<div class="app">
+<div id="authRoot" class="auth-screen" aria-live="polite">
+<section class="auth-card">
+<div class="auth-mark">✦</div><h1 id="authTitle">Войти в SaymoSaldo</h1>
+<p class="auth-lead">Ваши финансы — в вашем личном аккаунте.</p>
+<p id="authNotice" class="auth-notice" role="status" aria-live="polite"></p>
+<form id="authLoginForm" class="auth-form" novalidate>
+<label class="field"><span>Логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Например, saymo_user"></label>
+<label class="field"><span>Пароль</span><input name="password" type="password" maxlength="72" autocomplete="current-password" required placeholder="Введите пароль"></label>
+<button class="primary" type="submit">Войти</button>
+<div class="auth-links"><button type="button" class="link" data-auth-view="register">Создать аккаунт</button><button type="button" class="link" data-auth-view="reset">Забыли пароль?</button></div>
+</form>
+<form id="authRegisterForm" class="auth-form" hidden novalidate>
+<label class="field"><span>Придумайте логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,23}" required placeholder="3–24 символа: латиница, цифры . _ -"></label>
+<label class="field"><span>Пароль</span><input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required placeholder="Не менее 12 символов"></label>
+<label class="field"><span>Повторите пароль</span><input name="passwordConfirm" type="password" minlength="12" maxlength="72" autocomplete="new-password" required placeholder="Повторите пароль"></label>
+<p class="auth-hint">Электронная почта не нужна. После регистрации вы получите код восстановления — сохраните его отдельно.</p>
+<button class="primary" type="submit">Создать аккаунт</button>
+<div class="auth-links"><button type="button" class="link" data-auth-view="login">У меня уже есть аккаунт</button></div>
+</form>
+<form id="authResetForm" class="auth-form" hidden novalidate>
+<label class="field"><span>Логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+<label class="field"><span>Код восстановления</span><input name="recoveryCode" type="text" minlength="48" maxlength="48" autocapitalize="none" spellcheck="false" autocomplete="off" required placeholder="48 символов"></label>
+<label class="field"><span>Новый пароль</span><input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></label>
+<label class="field"><span>Повторите новый пароль</span><input name="passwordConfirm" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></label>
+<p class="auth-hint">Код восстановления выдаётся один раз при регистрации. Без него восстановить забытый пароль невозможно.</p>
+<button class="primary" type="submit">Обновить пароль</button>
+<div class="auth-links"><button type="button" class="link" data-auth-view="login">Вернуться ко входу</button></div>
+</form>
+<section id="recoveryPanel" class="recovery-panel" hidden><h2>Сохраните код восстановления</h2><p id="recoveryMessage" class="auth-hint"></p><code id="recoveryCode" class="recovery-code"></code><button id="copyRecovery" type="button" class="ghost">Скопировать код</button><button id="recoveryContinue" type="button" class="primary">Код сохранён — продолжить</button></section>
+<p class="auth-foot">SaymoSaldo · Личный финансовый помощник</p>
+</section>
+</div>
+<div class="app" id="appShell" hidden>
   <header class="top"><h1 id="title">Главная</h1></header>
+<p id="syncStatus" class="sync-status" role="status" aria-live="polite"></p>
 
   <main>
     <section class="view" data-view="home">
@@ -431,7 +480,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
       <div id="homeDebts" class="list"></div>
       <div class="sec"><h2>Последние операции</h2><button class="link" data-go="ops">Все</button></div>
       <div id="recent" class="list"></div>
-      <p class="note">Данные хранятся в браузере этого устройства. Сохраняйте резервную копию в разделе «Ещё», чтобы не потерять записи.</p>
+      <p class="note">Данные сохраняются в вашем аккаунте и синхронизируются между устройствами. Периодически скачивайте резервную копию в разделе «Ещё → Данные».</p>
     </section>
 
     <section class="view" data-view="ops" hidden>
@@ -509,7 +558,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
 
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const KEY='saymosaldo_';
+let KEY='saymosaldo_';
 const KEYS=['tx','goals','budgets','recurring','debts'];
 const scopedKey=k=>KEY+k;
 const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(KEY+k));return Array.isArray(v)?v:d}catch{return d}};
@@ -545,13 +594,18 @@ const save=()=>{
     toast('Не удалось прочитать сохранённые данные. Не закрывайте страницу и попробуйте скачать резервную копию.');
     return false;
   }
+  const modifiedAt=new Date().toISOString();
   const entries=Object.fromEntries(KEYS.map(k=>[scopedKey(k),JSON.stringify(S[k])]));
+  entries[scopedKey('local_modified_at')]=modifiedAt;
+  entries[scopedKey('pending_sync')]='1';
   if(!persistEntries(entries)){
     for(const k of KEYS)S[k]=previous[k];
     return false;
   }
+  if(cloudSaveHandler)cloudSaveHandler();
   return true;
 };
+let cloudSaveHandler=null;
 const CATS={expense:['Продукты','Кафе и рестораны','Транспорт','Покупки','Дом','Здоровье','Развлечения','Подписки','Кредиты и долги','Другое'],income:['Зарплата','Подработка','Подарок','Другое']};
 const DEBT_KINDS=['Ипотека','Кредит','Кредитная карта','Рассрочка','Частный долг'];
 const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -717,8 +771,8 @@ const PANELS={
     <form class="chatform" data-form="chat"><input name="q" autocomplete="off" placeholder="Например, сколько я могу отложить?"><button class="primary">Отправить</button></form>
     <div class="actions"><button class="link" data-act="chat-clear">Очистить историю этого режима</button></div>`,
 
-  settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `<div class="card"><h2>Данные на этом устройстве</h2><p class="muted">SaymoSaldo работает без регистрации и облачной синхронизации. Записи хранятся в браузере этого устройства и не защищены отдельным паролем приложения. Если браузером пользуются несколько человек, они увидят общие записи. Защитите телефон блокировкой экрана и не используйте сервис на чужих устройствах.</p></div><div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
-  data:()=>`<div class="card"><h2>Резервная копия</h2><p>Сохраняйте копию вручную, особенно после важных изменений. В ней находятся операции, цели, лимиты, регулярные платежи, долги и история финансового помощника.</p><div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div><div class="card"><h2>Установить на телефон</h2><p class="muted" style="margin:8px 0">Android: откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».</p><p class="muted" style="margin:8px 0">iPhone: откройте сайт в Safari, нажмите «Поделиться», затем «На экран Домой».</p><small>После установки приложение будет открываться отдельным окном. Доступность пункта зависит от браузера.</small></div><p class="note">Данные хранятся только в браузере этого устройства. Очистка данных сайта или потеря устройства может привести к их потере. Файл резервной копии содержит личную финансовую информацию — храните его в безопасном месте и не передавайте посторонним.</p>`
+  settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как <b>${esc(window.SaymoSaldoAuth?.username||'')}</b>. Данные аккаунта синхронизируются между вашими устройствами.</p><button class="ghost danger" data-auth-action="logout">Выйти</button></div><div class="card"><h2>Данные на этом устройстве</h2><p class="muted">Финансовые записи сохраняются в вашем аккаунте и в локальном хранилище браузера для быстрой работы. Доступ к облачным записям ограничен вашим аккаунтом. Локальная копия в браузере не шифруется отдельным паролем — защищайте устройство блокировкой экрана.</p></div><div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
+  data:()=>`<div class="card"><h2>Резервная копия</h2><p>Сохраняйте копию вручную, особенно после важных изменений. В ней находятся операции, цели, лимиты, регулярные платежи, долги и история финансового помощника.</p><div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div><div class="card"><h2>Установить на телефон</h2><p class="muted" style="margin:8px 0">Android: откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».</p><p class="muted" style="margin:8px 0">iPhone: откройте сайт в Safari, нажмите «Поделиться», затем «На экран Домой».</p><small>После установки приложение будет открываться отдельным окном. Доступность пункта зависит от браузера.</small></div><p class="note">Финансовые записи синхронизируются с аккаунтом и дополнительно сохраняются в локальном хранилище браузера. При работе без сети новые изменения останутся на этом устройстве до восстановления соединения. Регулярно скачивайте резервную копию. Файл резервной копии содержит личную финансовую информацию — храните его в безопасном месте и не передавайте посторонним.</p>`
 };
 
 function renderPanel(){
@@ -851,7 +905,10 @@ function importData(e){
     Object.assign(S,nextState);
     const entries=Object.fromEntries(KEYS.map(k=>[scopedKey(k),JSON.stringify(S[k])]));
     if(Array.isArray(d.chatFinance))entries[chatKey()]=JSON.stringify(d.chatFinance);
+    entries[scopedKey('local_modified_at')]=new Date().toISOString();
+    entries[scopedKey('pending_sync')]='1';
     if(!persistEntries(entries)){Object.assign(S,previousState);return}
+    if(cloudSaveHandler)cloudSaveHandler();
     render();renderPanel();toast('Данные восстановлены.');
   };
   r.onerror=()=>toast('Не удалось прочитать файл резервной копии');
@@ -871,8 +928,9 @@ function askAssistant(q){
   q=(q||'').trim();if(!q)return;
   const list=loadChatItems();
   list.push({role:'user',text:q},{role:'assistant',text:finance(q)});
-  try{localStorage.setItem(chatKey(),JSON.stringify(list.slice(-60)))}
-  catch(e){return toast('Не удалось сохранить историю помощника. Освободите место в браузере и попробуйте снова.')}
+  const chatEntries={[chatKey()]:JSON.stringify(list.slice(-60)),[scopedKey('local_modified_at')]:new Date().toISOString(),[scopedKey('pending_sync')]:'1'};
+  if(!persistEntries(chatEntries))return toast('Не удалось сохранить историю помощника. Освободите место в браузере и попробуйте снова.')
+  if(cloudSaveHandler)cloudSaveHandler();
   renderChat();
 }
 
@@ -977,7 +1035,7 @@ document.addEventListener('click',e=>{
     case'rec-del':return confirmDo('Удалить регулярный платёж?',()=>{S.recurring=S.recurring.filter(x=>x.id!==id)});
     case'debt-pay':return payDebt(id);
     case'debt-del':return confirmDo('Удалить обязательство? История расходов останется.',()=>{S.debts=S.debts.filter(x=>x.id!==id)});
-    case'chat-clear':if(confirm('Очистить историю этого режима на этом устройстве?')){localStorage.removeItem(chatKey());renderChat()}return;
+    case'chat-clear':if(confirm('Очистить историю этого режима на этом устройстве?')){const entries={[chatKey()]:JSON.stringify([]),[scopedKey('local_modified_at')]:new Date().toISOString(),[scopedKey('pending_sync')]:'1'};if(!persistEntries(entries))return toast('Не удалось очистить историю. Попробуйте ещё раз.');if(cloudSaveHandler)cloudSaveHandler();renderChat()}return;
     case'welcome-yes':return startTour();
     case'welcome-no':try{localStorage.setItem(KEY+'onboarding','skipped')}catch(e){}closeWelcome();return;
     case'tour-start':return startTour();
@@ -993,11 +1051,21 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{if(e.target.id==='importFile')importData(e)});
 $('#filter').addEventListener('change',render);
 
-fillTx();
-go('home');
-renderPanel();
-if(!localStorage.getItem(KEY+'onboarding'))showWelcome();
+function readStoredArray(key){try{const value=JSON.parse(localStorage.getItem(key));return Array.isArray(value)?value:[]}catch(e){return[]}}
+window.SaymoSaldoApp={
+ getGuestData(){if(localStorage.getItem('saymosaldo_guest_migration_handled')==='1')return {tx:[],goals:[],budgets:[],recurring:[],debts:[],chat_finance:[]};return {tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts,chat_finance:readStoredArray('saymosaldo_chat_finance')}},
+ getLocalUserData(userId){const prefix='saymosaldo_user_'+userId+'_';let found=false;const data={};for(const key of KEYS){const raw=localStorage.getItem(prefix+key);if(raw!==null)found=true;try{const value=JSON.parse(raw);data[key]=Array.isArray(value)?value:[]}catch(e){data[key]=[]}}const chatRaw=localStorage.getItem(prefix+'chat_finance');if(chatRaw!==null)found=true;try{const value=JSON.parse(chatRaw);data.chat_finance=Array.isArray(value)?value:[]}catch(e){data.chat_finance=[]}if(!found)return null;return {data,updated_at:localStorage.getItem(prefix+'local_modified_at')||'1970-01-01T00:00:00.000Z',pending_sync:localStorage.getItem(prefix+'pending_sync')==='1'}},
+ getData(){return {tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts,chat_finance:readStoredArray(chatKey())}},
+ activate(userId,data,updatedAt,pendingSync){const oldKey=KEY,previous={tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts};KEY='saymosaldo_user_'+userId+'_';S.tx=Array.isArray(data.tx)?data.tx:[];S.goals=Array.isArray(data.goals)?data.goals:[];S.budgets=Array.isArray(data.budgets)?data.budgets:[];S.recurring=Array.isArray(data.recurring)?data.recurring:[];S.debts=Array.isArray(data.debts)?data.debts:[];const entries=Object.fromEntries(KEYS.map(key=>[scopedKey(key),JSON.stringify(S[key])]));entries[chatKey()]=JSON.stringify(Array.isArray(data.chat_finance)?data.chat_finance:Array.isArray(data.chatFinance)?data.chatFinance:[]);entries[scopedKey('local_modified_at')]=updatedAt||new Date().toISOString();entries[scopedKey('pending_sync')]=pendingSync?'1':'0';if(!persistEntries(entries)){KEY=oldKey;Object.assign(S,previous);return false}try{localStorage.setItem('saymosaldo_guest_migration_handled','1')}catch(e){}fillTx();go('home');renderPanel();$('#appShell').hidden=false;if(!localStorage.getItem(KEY+'onboarding'))showWelcome();return true},
+ setCloudSaveHandler(handler){cloudSaveHandler=typeof handler==='function'?handler:null},
+ markSynced(){try{localStorage.setItem(scopedKey('pending_sync'),'0')}catch(e){}},
+ hasPendingSync(){try{return localStorage.getItem(scopedKey('pending_sync'))==='1'}catch(e){return false}},
+ getLocalModifiedAt(){try{return localStorage.getItem(scopedKey('local_modified_at'))||''}catch(e){return''}},
+ setSyncStatus(message){const el=$('#syncStatus');if(el)el.textContent=message||''},
+ reset(){cloudSaveHandler=null;KEY='saymosaldo_';S.tx=[];S.goals=[];S.budgets=[];S.recurring=[];S.debts=[];$('#appShell').hidden=true}
+};
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
+<script src="./auth.js"></script>
 </body>
 </html>
