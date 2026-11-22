@@ -53,7 +53,8 @@ const CATS={expense:['Продукты','Кафе и рестораны','Тра
 const DEBT_KINDS=['Ипотека','Кредит','Кредитная карта','Рассрочка','Частный долг'];
 const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const today=()=>ymd(new Date()), nowMk=()=>today().slice(0,7);
-const money=n=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(+n||0)+' ₽';
+const moneyText=n=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(+n||0)+' ₽';
+const money=n=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(+n||0)+' <span class="ruble-symbol" aria-label="рублей">₽</span>';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate=s=>new Date(s+'T12:00').toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
 const monthName=k=>new Date(k+'-15T12:00').toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
@@ -139,9 +140,9 @@ function render(){
   const h=new Date().getHours();
   $('#greet').textContent=(h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+', рады видеть вас в SaymoSaldo!';
   $('#monthLabel').textContent='Общий баланс';
-  $('#balance').textContent=money(inc-out);
-  $('#income').textContent=money(inc);
-  $('#expense').textContent=money(out);
+  $('#balance').innerHTML=money(inc-out);
+  $('#income').innerHTML=money(inc);
+  $('#expense').innerHTML=money(out);
 
   $('#status').textContent=!S.tx.length?'Добавьте первую операцию, и общая картина появится здесь.':overN?`Превышено лимитов: ${overN}. Проверьте категории ниже.`:'Всё под контролем.';
    const insightEl=$('#moneyInsight');
@@ -424,13 +425,13 @@ function renderFinanceReport(){
 function finance(q){
   const d=financeReportData(),s=String(q||'').toLowerCase();
   if(!S.tx.length)return'Пока нет операций. Добавьте доходы и расходы — тогда я смогу показать аналитику.';
-  if(/цель|накоп/.test(s))return d.goals.length?'Ваши цели: '+d.goals.map(g=>`«${g.name}» — ${money(g.saved)} из ${money(g.target)} (${g.target?Math.round(g.saved/g.target*100):0}%).`).join(' '):'Вы пока не создали накопительные цели. Добавьте цель в разделе «Бюджет».';
-  if(/платеж|подпис|регуляр|долг|кредит/.test(s))return d.recurring?`По вашим записям регулярные платежи и ежемесячные платежи по долгам составляют примерно ${money(d.recurring)} в месяц. Проверьте, все ли записи актуальны.`:'Вы пока не добавили регулярные платежи или долги.';
-  if(/доход|заработ|отлож|сбереж/.test(s))return d.earned?`В этом месяце внесено доходов на ${money(d.earned)} и расходов на ${money(d.spent)}. Разница — ${money(d.earned-d.spent)}. Это сумма по записанным операциям, а не гарантированно свободные деньги.`:'В этом месяце пока нет записанных доходов.';
-  if(/трач|категор|больше/.test(s))return d.top.length?`Больше всего в этом месяце уходит на «${d.top[0][0]}»: ${money(d.top[0][1])} (${Math.round(d.top[0][1]/Math.max(1,d.spent)*100)}% расходов).`:'В этом месяце расходов пока нет.';
-  if(/изменил|сравн|прошл|динамик/.test(s))return d.prevSpent?`За первые ${d.prevDay} дней прошлого месяца расходы были ${money(d.prevSpent)}, за первые ${d.day} дней этого — ${money(d.spent)}. ${d.spent>d.prevSpent?'Сейчас потрачено больше.':'Сейчас потрачено меньше или столько же.'}`:`В этом месяце расходы составили ${money(d.spent)}. Данных за соответствующий период прошлого месяца пока нет.`;
-  if(/лимит|превыш|угроз/.test(s)){const hit=d.budgets.filter(b=>b.spent>=b.limit*.8);return hit.length?'Обратите внимание на лимиты: '+hit.map(b=>`«${b.category}» — ${Math.round(b.spent/b.limit*100)}% (${money(b.spent)} из ${money(b.limit)})`).join('; ')+'.':'Пока ни один лимит не достиг 80%. Продолжайте следить за расходами.'}
-  if(/совет|эконом|сократ/.test(s)){if(d.budgets.some(b=>b.spent>b.limit))return'Сначала стоит остановить рост расходов в категориях, где уже превышен лимит: '+d.budgets.filter(b=>b.spent>b.limit).map(b=>b.category).join(', ')+'. Пересмотрите ближайшие необязательные покупки.';return d.top.length?`Начните с категории «${d.top[0][0]}» — сейчас это ${money(d.top[0][1])}. Посмотрите последние операции и выберите одну небольшую регулярную трату, которую комфортно сократить. Не урезайте необходимые расходы.`:'Добавьте расходы, и я смогу предложить конкретные способы экономии.'}
+  if(/цель|накоп/.test(s))return d.goals.length?'Ваши цели: '+d.goals.map(g=>`«${g.name}» — ${moneyText(g.saved)} из ${moneyText(g.target)} (${g.target?Math.round(g.saved/g.target*100):0}%).`).join(' '):'Вы пока не создали накопительные цели. Добавьте цель в разделе «Бюджет».';
+  if(/платеж|подпис|регуляр|долг|кредит/.test(s))return d.recurring?`По вашим записям регулярные платежи и ежемесячные платежи по долгам составляют примерно ${moneyText(d.recurring)} в месяц. Проверьте, все ли записи актуальны.`:'Вы пока не добавили регулярные платежи или долги.';
+  if(/доход|заработ|отлож|сбереж/.test(s))return d.earned?`В этом месяце внесено доходов на ${moneyText(d.earned)} и расходов на ${moneyText(d.spent)}. Разница — ${moneyText(d.earned-d.spent)}. Это сумма по записанным операциям, а не гарантированно свободные деньги.`:'В этом месяце пока нет записанных доходов.';
+  if(/трач|категор|больше/.test(s))return d.top.length?`Больше всего в этом месяце уходит на «${d.top[0][0]}»: ${moneyText(d.top[0][1])} (${Math.round(d.top[0][1]/Math.max(1,d.spent)*100)}% расходов).`:'В этом месяце расходов пока нет.';
+  if(/изменил|сравн|прошл|динамик/.test(s))return d.prevSpent?`За первые ${d.prevDay} дней прошлого месяца расходы были ${moneyText(d.prevSpent)}, за первые ${d.day} дней этого — ${moneyText(d.spent)}. ${d.spent>d.prevSpent?'Сейчас потрачено больше.':'Сейчас потрачено меньше или столько же.'}`:`В этом месяце расходы составили ${moneyText(d.spent)}. Данных за соответствующий период прошлого месяца пока нет.`;
+  if(/лимит|превыш|угроз/.test(s)){const hit=d.budgets.filter(b=>b.spent>=b.limit*.8);return hit.length?'Обратите внимание на лимиты: '+hit.map(b=>`«${b.category}» — ${Math.round(b.spent/b.limit*100)}% (${moneyText(b.spent)} из ${moneyText(b.limit)})`).join('; ')+'.':'Пока ни один лимит не достиг 80%. Продолжайте следить за расходами.'}
+  if(/совет|эконом|сократ/.test(s)){if(d.budgets.some(b=>b.spent>b.limit))return'Сначала стоит остановить рост расходов в категориях, где уже превышен лимит: '+d.budgets.filter(b=>b.spent>b.limit).map(b=>b.category).join(', ')+'. Пересмотрите ближайшие необязательные покупки.';return d.top.length?`Начните с категории «${d.top[0][0]}» — сейчас это ${moneyText(d.top[0][1])}. Посмотрите последние операции и выберите одну небольшую регулярную трату, которую комфортно сократить. Не урезайте необходимые расходы.`:'Добавьте расходы, и я смогу предложить конкретные способы экономии.'}
   return'Я могу проанализировать расходы по категориям, сравнить месяцы, проверить лимиты, оценить регулярные платежи и показать прогресс накопительных целей. Попробуйте одну из подсказок выше.';
 }
 
