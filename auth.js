@@ -287,6 +287,7 @@
       try {
         await ensureFreshSession();
         const userId = session.user.id;
+        const localVersion = window.SaymoSaldoApp.getLocalModifiedAt();
         const data = normalizeCloudData(window.SaymoSaldoApp.getData());
         const payload = {
           user_id: userId,
@@ -307,6 +308,11 @@
           body: payload
         });
         retryDelay = 2000;
+        if (window.SaymoSaldoApp.getLocalModifiedAt() === localVersion) {
+          window.SaymoSaldoApp.markSynced();
+        } else {
+          syncAgain = true;
+        }
         window.SaymoSaldoApp.setSyncStatus('Синхронизировано');
       } catch (error) {
         window.SaymoSaldoApp.setSyncStatus('Нет синхронизации — записи пока сохранены на этом устройстве');
@@ -354,7 +360,7 @@
     if (remote && remote.data) {
       const localTime = local ? Date.parse(local.updated_at || 0) : 0;
       const remoteTime = Date.parse(remote.updated_at || 0);
-      if (local && localTime > remoteTime) {
+      if (local && (local.pending_sync || localTime > remoteTime)) {
         chosen = normalizeCloudData(local.data);
         updatedAt = local.updated_at;
         needsSync = true;
@@ -377,7 +383,7 @@
       throw new Error('Не удалось загрузить данные аккаунта. Проверьте интернет и попробуйте снова.');
     }
 
-    if (!app.activate(userId, chosen, updatedAt)) {
+    if (!app.activate(userId, chosen, updatedAt, needsSync)) {
       throw new Error('Не удалось сохранить данные аккаунта на устройстве. Проверьте свободное место в браузере.');
     }
     app.setCloudSaveHandler(scheduleCloudSave);
