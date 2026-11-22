@@ -44,7 +44,7 @@ async function testCurrencyClient() {
   assert.equal(api.rubPerUnit("RUB"), 1);
   assert.equal(api.rubPerUnit("USD"), 80);
   assert.ok(Math.abs(api.rubPerUnit("EUR") - 1 / 0.0115) < 1e-9);
-  assert.deepEqual(api.options().map(x => x.code).sort(), ["CNY", "EUR", "RUB", "USD"]);
+  assert.equal(Array.from(api.options(), x => x.code).sort().join(","), "CNY,EUR,RUB,USD");
   assert.ok(!api.options().some(x => x.code === "GBP" || x.code === "KZT"));
   assert.ok(Math.abs(api.rubPerUnit("CNY") - 1 / 0.14) < 1e-9);
   assert.ok(store.has("saymosaldo_fx_rub_v1"), "rates should be cached locally");
