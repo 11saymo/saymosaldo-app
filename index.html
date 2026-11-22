@@ -488,6 +488,45 @@ button,input,select{letter-spacing:0;line-height:1.4}
   .view[data-view="home"]:not([hidden]) { display: block; }
 }
 
+
+/* Complete responsive layout for every app section */
+@media (min-width: 760px) {
+  .app { min-width: 0; }
+  main, .view, #panel, #budgetWrap { min-width: 0; }
+  .view[data-view="ops"]:not([hidden]) { width: min(100%, 1040px); }
+  .view[data-view="add"]:not([hidden]) { width: min(100%, 760px); }
+  .view[data-view="stats"]:not([hidden]) { width: 100%; }
+  .view[data-view="more"]:not([hidden]) { width: min(100%, 1120px); }
+  .view[data-view="more"] .tabs { display:flex; flex-wrap:wrap; overflow:visible; gap:10px; }
+  .view[data-view="more"] .tabs button { flex:0 0 auto; }
+  #panel > * { min-width:0; max-width:100%; }
+  #panel > form.card, #panel > .card:has(.field) { width:min(100%, 820px); }
+  #panel .field, #budgetWrap .field { min-width:0; }
+  #panel input, #panel select, #panel textarea,
+  #budgetWrap input, #budgetWrap select, #budgetWrap textarea { max-width:100%; min-width:0; }
+  #panel .row, #budgetWrap .row { min-width:0; flex-wrap:wrap; }
+  #panel .actions, #budgetWrap .actions { flex-wrap:wrap; }
+  #panel .actions button, #budgetWrap .actions button { min-width:120px; }
+  #panel .chatform { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:stretch; }
+  #panel .chatform input { min-width:0; }
+  #panel .chat { width:100%; max-width:100%; }
+  #allItems, #recent, #homeLimits, #homeGoals, #homeDebts { min-width:0; }
+  .item, .item > div, .amt { min-width:0; }
+  .toolbar { gap:14px; flex-wrap:wrap; }
+  .toolbar select { min-width:180px; }
+}
+@media (min-width: 1001px) {
+  .view[data-view="ops"]:not([hidden]) { width:min(100%, 1120px); }
+  .view[data-view="add"]:not([hidden]) { width:min(100%, 820px); }
+  .view[data-view="more"]:not([hidden]) { width:min(100%, 1160px); }
+  .view[data-view="stats"]:not([hidden]) { column-gap:28px; }
+}
+@media (max-width: 759px) {
+  .view[data-view="more"] .tabs { flex-wrap:nowrap; overflow-x:auto; }
+  #panel .chatform { display:flex; }
+  #panel .chatform input { min-width:0; }
+}
+
 </style>
 </head>
 <body>
