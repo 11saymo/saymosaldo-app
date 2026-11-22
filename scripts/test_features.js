@@ -50,14 +50,14 @@ async function testCurrencyClient() {
 }
 
 function testBackupAcceptsConvertedAmounts() {
-  const html = fs.readFileSync("index.html", "utf8");
+  const html = fs.readFileSync("app.js", "utf8");
   const txValidation = html.slice(html.indexOf("if(d.tx.some"), html.indexOf("if(d.goals.some"));
   assert.match(txValidation, /Number\.isFinite\(Number\(x\.amount\)\)/, "backup validation should accept decimal RUB conversions");
   assert.doesNotMatch(txValidation, /!positive\(x\.amount\)/, "backup validation must not require integer transaction amounts");
 }
 
 function testGoalProjection() {
-  const html = fs.readFileSync("index.html", "utf8");
+  const html = fs.readFileSync("app.js", "utf8");
   const match = html.match(/function goalProjection\(g\)\{[^\n]+\}/);
   assert.ok(match, "goal projection function should exist");
   const context = {};
