@@ -12,7 +12,7 @@
     return Number.isFinite(perRub)&&perRub>0?1/perRub:null;
   }
   function options(){
-    let codes=data?.rates?Object.keys(data.rates):FALLBACK;
+    let codes=data?.rates?Object.keys(data.rates).filter(code=>['RUB','USD','EUR','CNY'].includes(code)):FALLBACK;
     if(!codes.includes('RUB'))codes=['RUB',...codes];
     const names=new Intl.DisplayNames(['ru'],{type:'currency'});
     return codes.sort((a,b)=>a==='RUB'?-1:b==='RUB'?1:a.localeCompare(b)).map(code=>{
