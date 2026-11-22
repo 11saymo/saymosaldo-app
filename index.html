@@ -6,7 +6,7 @@
 <meta name="description" content="SaymoSaldo — удобный финансовый помощник: учёт доходов и расходов, планирование бюджета, контроль платежей и накоплений.">
 <meta name="robots" content="index, follow">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'sha256-U5R4vmXbG+vtA1TeEE4uRSp2Eto/DxUOKmrKBGh41DA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'sha256-w3CpI6r8HQofKsn7CUUUR/Ui1qR+1XRzWfnaztt28lY=' ; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="google-site-verification" content="5JxssF-pElOr3sZdiBvC2ko0LklpC0O8AirzG-uq7cI">
 <link rel="canonical" href="https://11saymo.github.io/saymosaldo-app/">
 <meta property="og:type" content="website">
@@ -512,7 +512,44 @@ const KEYS=['tx','goals','budgets','recurring','debts'];
 const scopedKey=k=>KEY+k;
 const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(KEY+k));return Array.isArray(v)?v:d}catch{return d}};
 const S={tx:load('tx',[]),goals:load('goals',[]),budgets:load('budgets',[]),recurring:load('recurring',[]),debts:load('debts',[])};
-const save=()=>{for(const k of KEYS)localStorage.setItem(scopedKey(k),JSON.stringify(S[k]))};
+function persistEntries(entries){
+  const previous={};
+  try{
+    for(const key of Object.keys(entries))previous[key]=localStorage.getItem(key);
+  }catch(e){
+    toast('Хранилище браузера недоступно. Данные пока не сохранены — скачайте резервную копию, если записи уже есть.');
+    return false;
+  }
+  try{
+    for(const [key,value] of Object.entries(entries))localStorage.setItem(key,value);
+    return true;
+  }catch(e){
+    for(const [key,value] of Object.entries(previous)){
+      try{if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value)}catch(ignore){}
+    }
+    toast('Не удалось сохранить данные: возможно, закончилось место в браузере. Освободите место и создайте резервную копию.');
+    return false;
+  }
+}
+const save=()=>{
+  const previous={};
+  try{
+    for(const k of KEYS){
+      const raw=localStorage.getItem(scopedKey(k));
+      const value=raw===null?[]:JSON.parse(raw);
+      previous[k]=Array.isArray(value)?value:[];
+    }
+  }catch(e){
+    toast('Не удалось прочитать сохранённые данные. Не закрывайте страницу и попробуйте скачать резервную копию.');
+    return false;
+  }
+  const entries=Object.fromEntries(KEYS.map(k=>[scopedKey(k),JSON.stringify(S[k])]));
+  if(!persistEntries(entries)){
+    for(const k of KEYS)S[k]=previous[k];
+    return false;
+  }
+  return true;
+};
 const CATS={expense:['Продукты','Кафе и рестораны','Транспорт','Покупки','Дом','Здоровье','Развлечения','Подписки','Кредиты и долги','Другое'],income:['Зарплата','Подработка','Подарок','Другое']};
 const DEBT_KINDS=['Ипотека','Кредит','Кредитная карта','Рассрочка','Частный долг'];
 const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -562,7 +599,7 @@ function editGoal(id){
     if(!Number.isFinite(target)||target<=0){$('#dlgErr').textContent='Сумма цели должна быть больше нуля.';return}
     if(!Number.isFinite(saved)||saved<0){$('#dlgErr').textContent='Уже отложенная сумма не может быть отрицательной.';return}
     g.name=name;g.target=target;g.saved=saved;g.date=v.date||'';
-    save();render();d.close();toast('Цель обновлена');
+    if(!save())return;render();d.close();toast('Цель обновлена');
   });
   d.showModal();
 }
@@ -678,7 +715,7 @@ const PANELS={
     <form class="chatform" data-form="chat"><input name="q" autocomplete="off" placeholder="Например, сколько я могу отложить?"><button class="primary">Отправить</button></form>
     <div class="actions"><button class="link" data-act="chat-clear">Очистить историю этого режима</button></div>`,
 
-  settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `<div class="card"><h2>Данные на этом устройстве</h2><p class="muted">SaymoSaldo работает без регистрации и облачной синхронизации. Ваши записи хранятся в браузере этого устройства.</p></div><div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
+  settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `<div class="card"><h2>Данные на этом устройстве</h2><p class="muted">SaymoSaldo работает без регистрации и облачной синхронизации. Записи хранятся в браузере этого устройства и не защищены отдельным паролем приложения. Защитите телефон блокировкой экрана и не используйте сервис на чужих устройствах.</p></div><div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
   data:()=>`<div class="card"><h2>Резервная копия</h2><p>Сохраняйте копию вручную, особенно после важных изменений. В ней находятся операции, цели, лимиты, регулярные платежи, долги и история финансового помощника.</p><div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div><div class="card"><h2>Установить на телефон</h2><p class="muted" style="margin:8px 0">Android: откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».</p><p class="muted" style="margin:8px 0">iPhone: откройте сайт в Safari, нажмите «Поделиться», затем «На экран Домой».</p><small>После установки приложение будет открываться отдельным окном. Доступность пункта зависит от браузера.</small></div><p class="note">Данные хранятся только в браузере этого устройства. Очистка данных сайта или потеря устройства может привести к их потере. Файл резервной копии содержит личную финансовую информацию — храните его в безопасном месте и не передавайте посторонним.</p>`
 };
 
@@ -703,8 +740,8 @@ document.addEventListener('submit',e=>{
   e.preventDefault();
   const err=FORMS[f](Object.fromEntries(new FormData(e.target)));
   if(err)return toast(err);
+  if(!save())return;
   e.target.reset();
-  save();
   render();
 });
 
@@ -719,7 +756,7 @@ $('#txForm').addEventListener('submit',e=>{
   if(!Number.isSafeInteger(amount)||!(amount>0))return toast('Укажите корректную сумму больше нуля.');
   if(!d.date)return toast('Укажите дату.');
   S.tx.push({id:uid(),created:Date.now(),type:d.type,amount,category:d.category,date:d.date,comment:(d.comment||'').trim().slice(0,80)});
-  save();
+  if(!save())return;
   f.reset();
   fillTx();
   toast('Операция сохранена');
@@ -729,11 +766,17 @@ $('#txForm').addEventListener('submit',e=>{
 function payRecurring(id){
   const r=S.recurring.find(x=>x.id===id);if(!r)return;
   const key=scopedKey('paid_'+nowMk()+'_'+id);
-  if(localStorage.getItem(key))return toast('Этот платёж уже отмечен в этом месяце');
+  try{if(localStorage.getItem(key))return toast('Этот платёж уже отмечен в этом месяце')}catch(e){}
   const dt=new Date(),last=new Date(dt.getFullYear(),dt.getMonth()+1,0).getDate();
   const date=nowMk()+'-'+String(Math.min(r.day,last)).padStart(2,'0');
-  S.tx.push({id:uid(),created:Date.now(),type:'expense',amount:r.amount,category:r.category,date,comment:r.name});
-  localStorage.setItem(key,'1');save();toast('Расход добавлен в историю');render();
+  if(S.tx.some(x=>x.recurringId===id&&x.date===date)){
+    try{localStorage.setItem(key,'1')}catch(e){}
+    return toast('Этот платёж уже есть в истории за месяц');
+  }
+  S.tx.push({id:uid(),created:Date.now(),type:'expense',amount:r.amount,category:r.category,date,comment:r.name,recurringId:id});
+  if(!save())return;
+  try{localStorage.setItem(key,'1')}catch(e){}
+  toast('Расход добавлен в историю');render();
 }
 
 function payDebt(id){
@@ -757,14 +800,14 @@ function payDebt(id){
     S.tx.push({id:uid(),created:Date.now(),type:'expense',amount:paid,category:'Кредиты и долги',date,comment:'Платёж: '+d.name});
     d.remaining-=principal;
     d.history=[...(d.history||[]),{date,amount:paid,principal}];
-    save();render();dlg.close();
+    if(!save())return;render();dlg.close();
     toast(d.remaining===0?'Обязательство полностью погашено':'Платёж записан. Остаток долга обновлён.');
   });
   dlg.showModal();
 }
 function exportData(){
-  const data={app:'SaymoSaldo',version:5,exportedAt:new Date().toISOString(),...S};
-  try{data.chatFinance=JSON.parse(localStorage.getItem(scopedKey('chat_finance'))||'[]')}catch{data.chatFinance=[]}
+  const data={app:'SaymoSaldo',version:6,exportedAt:new Date().toISOString(),...S};
+  try{data.chatFinance=JSON.parse(localStorage.getItem(chatKey())||'[]')}catch{data.chatFinance=[]}
   const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
   const a=document.createElement('a');a.href=url;a.download=`SaymoSaldo-backup-${today()}.json`;a.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -801,9 +844,13 @@ function importData(e){
     let d;try{d=JSON.parse(r.result)}catch{return toast('Файл повреждён или не является JSON')}
     if(!validBackup(d))return toast('Резервная копия повреждена или содержит некорректные данные. Текущие записи не изменены.');
     if(!confirm('Заменить текущие финансовые данные данными из копии? Перед восстановлением сохраните текущую копию, если хотите иметь возможность отменить замену.'))return;
-    S.tx=d.tx;S.goals=d.goals;S.budgets=d.budgets;S.recurring=d.recurring;S.debts=Array.isArray(d.debts)?d.debts:[];
-    if(Array.isArray(d.chatFinance))localStorage.setItem(scopedKey('chat_finance'),JSON.stringify(d.chatFinance));
-    save();render();renderPanel();toast('Данные восстановлены.');
+    const previousState={tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts};
+    const nextState={tx:d.tx,goals:d.goals,budgets:d.budgets,recurring:d.recurring,debts:Array.isArray(d.debts)?d.debts:[]};
+    Object.assign(S,nextState);
+    const entries=Object.fromEntries(KEYS.map(k=>[scopedKey(k),JSON.stringify(S[k])]));
+    if(Array.isArray(d.chatFinance))entries[chatKey()]=JSON.stringify(d.chatFinance);
+    if(!persistEntries(entries)){Object.assign(S,previousState);return}
+    render();renderPanel();toast('Данные восстановлены.');
   };
   r.onerror=()=>toast('Не удалось прочитать файл резервной копии');
   r.readAsText(f);
@@ -822,8 +869,8 @@ function askAssistant(q){
   q=(q||'').trim();if(!q)return;
   const list=loadChatItems();
   list.push({role:'user',text:q},{role:'assistant',text:finance(q)});
-  localStorage.setItem(chatKey(),JSON.stringify(list.slice(-60)));
-  
+  try{localStorage.setItem(chatKey(),JSON.stringify(list.slice(-60)))}
+  catch(e){return toast('Не удалось сохранить историю помощника. Освободите место в браузере и попробуйте снова.')}
   renderChat();
 }
 
@@ -912,7 +959,7 @@ document.addEventListener('click',e=>{
   if(t.dataset.mode){mode=t.dataset.mode;return renderPanel()}
   if(t.dataset.q)return askAssistant(t.dataset.q);
   const id=t.dataset.id,act=t.dataset.act;
-  const confirmDo=(msg,fn)=>{if(confirm(msg)){fn();save();render()}};
+  const confirmDo=(msg,fn)=>{if(confirm(msg)){fn();if(!save())return;render()}};
   switch(act){
     case'tx-del':return confirmDo('Удалить операцию?',()=>{S.tx=S.tx.filter(x=>String(x.id)!==id)});
     case'goal-edit':return editGoal(id);
@@ -920,7 +967,7 @@ document.addEventListener('click',e=>{
       const v=Math.round(+f.amount),g=S.goals.find(x=>x.id===id);
       if(!g)return'Цель не найдена.';
       if(!Number.isSafeInteger(v)||!(v>0))return'Введите корректную сумму больше нуля.';
-      g.saved+=v;save();render();toast('Цель пополнена');
+      g.saved+=v;if(!save())return;render();toast('Цель пополнена');
     });
     case'goal-del':return confirmDo('Удалить цель?',()=>{S.goals=S.goals.filter(x=>x.id!==id)});
     case'budget-del':return confirmDo('Удалить лимит?',()=>{S.budgets=S.budgets.filter(x=>x.category!==t.dataset.cat)});
