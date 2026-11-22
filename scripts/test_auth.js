@@ -103,11 +103,12 @@ assert.equal(auth.hasData({}), false);
   assert.equal(JSON.parse(calls[0].options.body).action, "register");
 
 const appHtml = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-assert.match(appHtml, /let KEY='saymosaldo_';/, "The active storage key must be mutable for per-account isolation");
-assert.ok(appHtml.includes("KEY='saymosaldo_user_'+userId+'_';"), "Login must switch to the authenticated user's local storage namespace");
+const appSource = fs.readFileSync(path.join(__dirname, "..", "app.js"), "utf8");
+assert.match(appSource, /let KEY='saymosaldo_';/, "The active storage key must be mutable for per-account isolation");
+assert.ok(appSource.includes("KEY='saymosaldo_user_'+userId+'_';"), "Login must switch to the authenticated user's local storage namespace");
 assert.ok(appHtml.includes("KEY='saymosaldo_';"), "Logout/reset must return to the guest namespace");
-assert.ok(appHtml.includes("activate(userId,data,updatedAt,pendingSync){"), "The app must expose a single account activation path");
-assert.ok(appHtml.includes("entries[scopedKey('pending_sync')]"), "Local account data must track pending cloud synchronization");
+assert.ok(appSource.includes("activate(userId,data,updatedAt,pendingSync){"), "The app must expose a single account activation path");
+assert.ok(appSource.includes("entries[scopedKey('pending_sync')]"), "Local account data must track pending cloud synchronization");
 assert.ok(appHtml.includes('id="authLoginForm"') && appHtml.includes('id="authRegisterForm"') && appHtml.includes('id="authResetForm"'), "Login, registration, and recovery forms must all be present");
 assert.ok(source.includes("credentials: 'omit'"), "Auth requests must not send ambient browser credentials");
 assert.ok(source.indexOf("raw = await response.text()") < source.indexOf("clearTimeout(timeout)"), "The request deadline must cover response-body reading");
@@ -115,7 +116,7 @@ assert.ok(edgeSource.includes('"https://11saymo.github.io"'), "The production si
 
 
 assert.ok(!appHtml.includes("Регистрация не требуется. Данные хранятся в браузере этого устройства."), "Public app copy must not describe the account-based app as guest-only");
-assert.ok(appHtml.includes("Данные аккаунта синхронизируются между вашими устройствами."), "Account settings must disclose cloud synchronization");
+assert.ok(appSource.includes("Данные аккаунта синхронизируются между вашими устройствами."), "Account settings must disclose cloud synchronization");
 
   console.log("Auth client and account-isolation contract tests passed.");
 })().catch(error => {
