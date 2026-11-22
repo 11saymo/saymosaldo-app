@@ -55,7 +55,7 @@ else:
     if "'unsafe-inline'" in script_policy or "'unsafe-eval'" in script_policy:
         errors.append("CSP script-src must not allow unsafe-inline or unsafe-eval")
 
-    inline_sources = re.findall(r"<script\b[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
+    inline_sources = re.findall(r"<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
     expected_hashes = {
         "'sha256-" + base64.b64encode(hashlib.sha256(source.encode("utf-8")).digest()).decode("ascii") + "'"
         for source in inline_sources
@@ -69,7 +69,7 @@ if parser.external_scripts != ["./auth.js"]:
 if parser.external_styles:
     errors.append("External stylesheets are not allowed: " + ", ".join(parser.external_styles))
 
-inline_source = "\n".join(re.findall(r"<script\b[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S))
+inline_source = "\n".join(re.findall(r"<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S))
 if re.search(r"\b(?:fetch|XMLHttpRequest|WebSocket|sendBeacon)\b", inline_source):
     errors.append("The app must not send financial data through browser network APIs")
 
@@ -88,7 +88,7 @@ else:
 if "function persistEntries(entries)" not in html:
     errors.append("Missing safe storage write helper")
 
-scripts = re.findall(r"<script\b[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
+scripts = re.findall(r"<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
 if not scripts:
     errors.append("No inline JavaScript found")
 else:
