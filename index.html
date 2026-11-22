@@ -1334,6 +1334,189 @@ body{font-family:"TT Travels","Avenir Next",Avenir,"Manrope","Segoe UI",sans-ser
   #authRoot .auth-card{border-radius:22px;padding:23px 19px}
 }
 
+
+
+/* SaymoSaldo — real banking dashboard redesign (layout, not recolor) */
+:root{
+ --bg:#f3f6fa;--card:#fff;--fg:#182b40;--mut:#75869a;--line:#e5ebf2;
+ --acc:#438fc5;--bank-blue:#438fc5;--bank-blue-deep:#2879b4;
+ --bank-blue-soft:#eaf4fc;--bank-ink:#20364d;--bank-muted:#74869a;
+ --r:18px;--shadow:0 3px 14px rgba(30,62,91,.055);
+}
+body{
+ background:#f3f6fa!important;
+ color:#20364d;
+ font-family:"TT Travels","Avenir Next",Avenir,Manrope,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+ letter-spacing:-.012em;
+}
+body::before{content:none!important;background:none!important}
+.app{
+ width:min(100% - 40px,1120px)!important;max-width:1120px!important;
+ margin:0 auto!important;padding:28px 0 116px!important;
+}
+.top{
+ align-items:center!important;margin:0 0 22px!important;padding:0 0 15px;
+ border-bottom:1px solid #e4eaf1;
+}
+.top h1{
+ margin:0!important;color:#1d334a;font-size:27px!important;
+ line-height:1.2;font-weight:720!important;letter-spacing:-.045em!important;
+}
+.sync-status{font-size:12px!important;color:#8493a4!important;margin:0 0 18px!important}
+.view[data-view=home]{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:0 18px}
+.view[data-view=home]>.greet{grid-column:1/-1;order:0;margin:0 0 12px!important;color:#667b91;font-size:15px!important;font-weight:550}
+.view[data-view=home]>.hero{grid-column:1/-1;order:1}
+.view[data-view=home]>.status{grid-column:1/-1;order:2}
+.view[data-view=home]>#moneyInsight{grid-column:span 7;order:4;min-width:0}
+.view[data-view=home]>.quick{grid-column:span 5;order:3;align-self:start;margin:0 0 16px!important}
+.view[data-view=home]>.home-sec-week{grid-column:span 5;order:5}
+.view[data-view=home]>#homeWeekCard{grid-column:span 5;order:6}
+.view[data-view=home]>.home-sec-limits,
+.view[data-view=home]>#homeLimits{grid-column:span 7}
+.view[data-view=home]>.home-sec-limits{order:7}
+.view[data-view=home]>#homeLimits{order:8}
+.view[data-view=home]>.home-sec-goals,
+.view[data-view=home]>#homeGoals{grid-column:span 7}
+.view[data-view=home]>.home-sec-goals{order:9}
+.view[data-view=home]>#homeGoals{order:10}
+.view[data-view=home]>.home-sec-debts,
+.view[data-view=home]>#homeDebts{grid-column:span 7}
+.view[data-view=home]>.home-sec-debts{order:11}
+.view[data-view=home]>#homeDebts{order:12}
+.view[data-view=home]>.home-sec-recent,
+.view[data-view=home]>#recent{grid-column:span 7}
+.view[data-view=home]>.home-sec-recent{order:13}
+.view[data-view=home]>#recent{order:14}
+.hero{
+ position:relative;isolation:isolate;overflow:hidden;
+ padding:24px 28px!important;margin:0 0 14px!important;
+ color:#203b55!important;border:1px solid #d7e7f5!important;border-radius:22px!important;
+ background:linear-gradient(112deg,#e8f4ff 0%,#dcecfb 58%,#edf6fd 100%)!important;
+ box-shadow:0 8px 24px rgba(57,111,157,.07)!important;
+}
+.hero::before,.hero::after{content:none!important;display:none!important}
+.hero .label,.hero small{color:#6e8499!important;font-size:13px!important}
+.hero .big{
+ margin:5px 0 18px!important;color:#183650!important;
+ font-family:"Avenir Next",Avenir,Manrope,sans-serif!important;
+ font-size:clamp(38px,5vw,48px)!important;font-weight:750!important;
+ letter-spacing:-.055em!important;line-height:1.12;
+}
+.hero .split{display:flex!important;gap:10px!important;max-width:560px}
+.hero .split>div{
+ flex:1;padding:12px 15px;border:1px solid rgba(255,255,255,.9);
+ border-radius:14px;background:rgba(255,255,255,.68);
+}
+.hero .split b{display:block;margin-top:5px;color:#203b55!important;font-size:18px!important;font-weight:700}
+.hero .split .label{margin:0}
+.ruble-symbol{font-family:"Avenir Next",Avenir,Manrope,sans-serif!important;font-weight:600!important;font-size:.78em!important;vertical-align:.04em}
+.status{
+ min-height:0!important;padding:11px 15px!important;margin:0 0 16px!important;
+ border:1px solid #e5ebf2!important;border-radius:13px!important;
+ background:#fff!important;color:#708297!important;font-size:13px!important;
+}
+.quick{gap:9px!important}
+.qbtn{
+ min-height:84px!important;padding:13px 8px!important;
+ display:flex!important;flex-direction:column;align-items:center;justify-content:center;
+ gap:8px!important;border:1px solid #e5ebf2!important;border-radius:16px!important;
+ background:#fff!important;box-shadow:0 3px 12px rgba(30,62,91,.045)!important;
+ color:#49647d!important;font-size:12px!important;font-weight:650!important;
+}
+.qbtn span{
+ width:34px;height:34px;display:grid;place-items:center;
+ border-radius:11px;background:#eaf4fc!important;color:#3987bf!important;
+ font-size:21px!important;font-weight:500;
+}
+.sec{margin:18px 0 9px!important}
+.sec h2{font-size:16px!important;font-weight:720!important;color:#243b52;letter-spacing:-.025em}
+.card,.item,.forecast-card{
+ border:1px solid #e5ebf2!important;border-radius:17px!important;
+ background:#fff!important;box-shadow:0 3px 14px rgba(30,62,91,.045)!important;
+}
+#homeWeekCard{padding:16px!important}
+.forecast-card{padding:18px!important}
+.forecast-head>b{font-size:16px!important;font-weight:730!important;color:#233b53!important}
+.forecast-tag{background:#eaf4fc!important;color:#397fae!important}
+.forecast-metric{background:#f6f9fc!important;border-color:#e9eef4!important;border-radius:13px!important}
+.insight-line{background:#eff6fc!important;border:1px solid #e2eef8;color:#58738b!important}
+.home-goal-item,.home-debt-total{background:#fff!important}
+.nav{
+ max-width:1120px!important;width:calc(100% - 32px)!important;
+ bottom:12px!important;padding:8px 12px!important;
+ border:1px solid #e4eaf1!important;border-radius:20px!important;
+ background:rgba(255,255,255,.96)!important;
+ box-shadow:0 8px 30px rgba(30,62,91,.12)!important;
+ backdrop-filter:blur(18px);
+}
+.nav button{font-size:11px!important;font-weight:600!important;color:#8796a7!important}
+.nav button[aria-current=page]{color:#287db7!important;background:#edf6fd!important}
+.nav .fab{color:#fff!important;background:#438fc5!important;border-radius:13px!important;box-shadow:0 4px 12px rgba(67,143,197,.2)!important}
+.nav .fab svg{stroke:#fff!important}
+.view[data-view=ops] .toolbar,.operation-item,.goal-card,.forecast-card,
+.view[data-view=add] form.card,.view[data-view=stats] .card,#panel>.card,#panel>form.card{
+ border-radius:16px!important
+}
+.view[data-view=more] .tabs button{border-radius:12px!important}
+button,.qbtn,.nav button{transition:background .18s ease,border-color .18s ease,transform .18s ease,box-shadow .18s ease}
+button:active,.qbtn:active{transform:scale(.985)}
+@media(min-width:760px){
+ .app{padding-top:34px!important}
+ .view[data-view=home]>.hero{padding:28px 34px!important}
+ .view[data-view=home]>.quick{padding-top:0}
+ .view[data-view=home]>.home-sec-week{margin-top:18px!important}
+ .nav{left:50%!important;transform:translateX(-50%);bottom:16px!important}
+}
+@media(max-width:759px){
+ .app{width:auto!important;max-width:560px!important;padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 104px)!important}
+ .top{margin-bottom:13px!important;padding-bottom:12px}
+ .top h1{font-size:25px!important}
+ .view[data-view=home]{display:flex!important;flex-direction:column!important;gap:0!important}
+ .view[data-view=home]>.greet{order:0;margin:0 0 11px!important;font-size:14px!important}
+ .view[data-view=home]>.hero{order:1;padding:20px!important;margin-bottom:12px!important;border-radius:19px!important}
+ .view[data-view=home]>.status{order:2;margin-bottom:12px!important}
+ .view[data-view=home]>.quick{order:3;margin:0 0 8px!important;grid-template-columns:repeat(3,minmax(0,1fr))}
+ .view[data-view=home]>#moneyInsight{order:4}
+ .view[data-view=home]>.home-sec-week{order:5}
+ .view[data-view=home]>#homeWeekCard{order:6}
+ .view[data-view=home]>.home-sec-limits{order:7}
+ .view[data-view=home]>#homeLimits{order:8}
+ .view[data-view=home]>.home-sec-goals{order:9}
+ .view[data-view=home]>#homeGoals{order:10}
+ .view[data-view=home]>.home-sec-debts{order:11}
+ .view[data-view=home]>#homeDebts{order:12}
+ .view[data-view=home]>.home-sec-recent{order:13}
+ .view[data-view=home]>#recent{order:14}
+ .hero .big{font-size:39px!important;margin-bottom:15px!important}
+ .hero .split{gap:8px!important}
+ .hero .split>div{padding:10px 11px}
+ .hero .split b{font-size:16px!important}
+ .hero .split .label{font-size:11px!important}
+ .qbtn{min-height:75px!important;padding:10px 5px!important;font-size:11px!important}
+ .qbtn span{width:31px;height:31px}
+ .nav{width:calc(100% - 20px)!important;bottom:8px!important;padding:7px 5px calc(env(safe-area-inset-bottom) + 7px)!important;border-radius:18px!important}
+ .nav button{font-size:10px!important;gap:4px!important}
+ .nav svg{width:21px!important;height:21px!important}
+}
+@media(max-width:380px){
+ .app{padding-left:13px!important;padding-right:13px!important}
+ .hero{padding:17px!important}
+ .hero .split>div{padding:9px 8px}
+ .nav button{font-size:9px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ button,.qbtn,.nav button{transition:none!important}
+}
+:root[data-theme=dark] body{background:#101c2a!important}
+:root[data-theme=dark] .top{border-color:#26394d}
+:root[data-theme=dark] .top h1,:root[data-theme=dark] .sec h2{color:#eaf2fa}
+:root[data-theme=dark] .hero{background:linear-gradient(112deg,#203b55,#294d6b)!important;border-color:#365673!important}
+:root[data-theme=dark] .hero .big,:root[data-theme=dark] .hero .split b{color:#f0f6fb!important}
+:root[data-theme=dark] .hero .split>div{background:rgba(12,30,47,.25);border-color:rgba(255,255,255,.12)}
+:root[data-theme=dark] .status,:root[data-theme=dark] .qbtn,:root[data-theme=dark] .card,:root[data-theme=dark] .item,:root[data-theme=dark] .forecast-card{background:#192a3c!important;border-color:#2d4358!important;color:#e6eff7}
+:root[data-theme=dark] .nav{background:rgba(25,42,60,.96)!important;border-color:#30475e!important}
+:root[data-theme=dark] .nav button[aria-current=page]{background:#243f59!important;color:#a9d6f3!important}
+
 </style>
 </head>
 <body>
