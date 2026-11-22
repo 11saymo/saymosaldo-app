@@ -57,3 +57,14 @@ test('empty-data detection handles legacy chat key and malformed input', () => {
   assert.equal(auth.hasData({ tx: 'invalid' }), false);
   assert.equal(auth.hasData(null), false);
 });
+
+test('Google sign-in uses a pinned provider, PKCE challenge, and the supplied app redirect', () => {
+  const target = new URL(auth.googleAuthorizeUrl('challenge-value', 'https://11saymo.github.io/saymosaldo-app/'));
+  assert.equal(target.origin, 'https://pmrrslmkrulhuapxtltm.supabase.co');
+  assert.equal(target.pathname, '/auth/v1/authorize');
+  assert.equal(target.searchParams.get('provider'), 'google');
+  assert.equal(target.searchParams.get('redirect_to'), 'https://11saymo.github.io/saymosaldo-app/');
+  assert.equal(target.searchParams.get('code_challenge'), 'challenge-value');
+  assert.equal(target.searchParams.get('code_challenge_method'), 's256');
+  assert.equal(target.searchParams.has('scopes'), false);
+});
