@@ -107,7 +107,7 @@
     #ssLearning{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:clamp(10px,3vw,28px);background:rgba(12,13,12,.58);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
     #ssLearning[hidden]{display:none}
     #ssLearning .ss-box{width:min(920px,calc(100vw - 32px));max-height:min(90dvh,900px);min-height:min(560px,82dvh);display:flex;flex-direction:column;overflow:hidden;background:var(--card,#fff);color:var(--fg,#121212);border:1px solid var(--line,#e4e4e0);border-radius:22px;box-shadow:0 24px 80px rgba(0,0,0,.26)}
-    #ssLearning .ss-head{position:relative;padding:22px 24px 18px;background:linear-gradient(125deg,#852d3a 0%,#5a1724 58%,#3e1420 100%);color:#fff}
+    #ssLearning .ss-head{position:relative;padding:22px 24px 18px;background:linear-gradient(132deg,rgba(67,91,119,.97),rgba(50,71,98,.95) 58%,rgba(103,133,164,.92));color:#f4f8fd;border-bottom:1px solid rgba(225,239,251,.28)}
     #ssLearning .ss-headrow{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
     #ssLearning .ss-kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);font-weight:650;margin-bottom:7px}
     #ssLearning .ss-head h2{font-size:clamp(20px,3vw,26px);line-height:1.2;letter-spacing:-.025em;margin:0 0 8px;color:#fff}
@@ -131,7 +131,7 @@
     #ssLearning .ss-progress{font-size:12px;line-height:1.4;color:var(--mut)}
     #ssLearning .ss-actions{display:flex;gap:8px;flex:none}
     #ssLearning .ss-actions button{width:auto;min-width:92px;padding:10px 15px;border-radius:11px;font-size:13px}
-    #ssLearning .ss-actions [data-ss-next]{background:var(--fg);color:var(--bg);border-color:var(--fg);font-weight:650}
+    #ssLearning .ss-actions [data-ss-next]{background:linear-gradient(135deg,#dceefa,#b8d6eb);color:#405c76;border-color:rgba(255,255,255,.85);font-weight:680;box-shadow:0 7px 18px rgba(116,158,194,.15)}
     #ssLearning .ss-actions [data-ss-prev]{background:transparent}
     @media(max-width:600px){
       #ssLearning{padding:0;place-items:stretch}
