@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const learning = fs.readFileSync(path.join(__dirname, '..', 'learning.js'), 'utf8');
 
 test('Ice Glass design tokens use the softer silver-blue palette', () => {
   assert.match(html, /SAYMOSALDO ICE GLASS/);
@@ -47,4 +48,10 @@ test('visual refresh does not replace app scripts or change currency contract', 
   assert.deepEqual(scripts, ['./app.js', './auth.js', './learning.js']);
   assert.match(html, /Сумма, ₽/);
   assert.doesNotMatch(html, /За месяц|За всё время|За все время/);
+});
+
+test('onboarding overlay uses the same Ice Glass visual language', () => {
+  assert.match(learning, /linear-gradient\(132deg,rgba\(67,91,119/);
+  assert.match(learning, /linear-gradient\(135deg,#dceefa,#b8d6eb\)/);
+  assert.doesNotMatch(learning, /#852d3a|#5a1724|#3e1420/);
 });
