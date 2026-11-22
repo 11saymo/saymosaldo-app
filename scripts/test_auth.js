@@ -97,7 +97,19 @@ assert.equal(auth.hasData({}), false);
   assert.equal(calls[0].options.method, "POST");
   assert.ok(calls[0].options.headers.apikey.startsWith("sb_publishable_"));
   assert.equal(JSON.parse(calls[0].options.body).action, "register");
-  console.log("Auth client unit tests passed.");
+
+const appHtml = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+assert.match(appHtml, /let KEY='saymosaldo_';/, "The active storage key must be mutable for per-account isolation");
+assert.ok(appHtml.includes("KEY='saymosaldo_user_'+userId+'_';"), "Login must switch to the authenticated user's local storage namespace");
+assert.ok(appHtml.includes("KEY='saymosaldo_';"), "Logout/reset must return to the guest namespace");
+assert.ok(appHtml.includes("function activate(userId,data,updatedAt,pendingSync)"), "The app must expose a single account activation path");
+assert.ok(appHtml.includes("entries[scopedKey('pending_sync')]"), "Local account data must track pending cloud synchronization");
+assert.ok(appHtml.includes('id="authLoginForm"') && appHtml.includes('id="authRegisterForm"') && appHtml.includes('id="authResetForm"'), "Login, registration, and recovery forms must all be present");
+assert.ok(source.includes("credentials: 'omit'"), "Auth requests must not send ambient browser credentials");
+assert.ok(source.indexOf("raw = await response.text()") < source.indexOf("clearTimeout(timeout)"), "The request deadline must cover response-body reading");
+assert.ok(edgeSource.includes('"https://11saymo.github.io"'), "The production site must be allowed by Edge Function CORS");
+
+  console.log("Auth client and account-isolation contract tests passed.");
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;
