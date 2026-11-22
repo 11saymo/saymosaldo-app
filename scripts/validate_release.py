@@ -71,9 +71,26 @@ except Exception as exc:
     errors.append(f"manifest.json is not valid JSON: {exc}")
 
 try:
-    ET.parse(ROOT / "sitemap.xml")
+    sitemap = ET.parse(ROOT / "sitemap.xml")
+    locations = [node.text for node in sitemap.findall(".//{*}loc")]
+    if "https://11saymo.github.io/saymosaldo-app/privacy.html" not in locations:
+        errors.append("sitemap.xml must include the privacy policy URL")
 except Exception as exc:
     errors.append(f"sitemap.xml is not valid XML: {exc}")
+
+privacy_path = ROOT / "privacy.html"
+if not privacy_path.is_file():
+    errors.append("Missing privacy.html")
+else:
+    privacy_html = privacy_path.read_text(encoding="utf-8")
+    privacy_parser = AppParser()
+    privacy_parser.feed(privacy_html)
+    if not privacy_parser.csp:
+        errors.append("Missing Content-Security-Policy in privacy.html")
+    if re.search(r"<script\\b", privacy_html, flags=re.I):
+        errors.append("privacy.html must not contain scripts")
+    if privacy_parser.external_scripts or privacy_parser.external_styles:
+        errors.append("privacy.html must not load external scripts or stylesheets")
 
 for filename in ("index.html", "sw.js", "manifest.json"):
     content = (ROOT / filename).read_text(encoding="utf-8")
