@@ -816,7 +816,7 @@ window.addEventListener('saymo-rates-updated',()=>{const sel=$('#txCurrency'),cu
 $('#txForm').addEventListener('submit',e=>{
   e.preventDefault();
   
-  const f=e.target,d=Object.fromEntries(new FormData(f)),amount=Math.round(+d.amount);
+  const f=e.target,d=Object.fromEntries(new FormData(f));
   const originalAmount=Number(d.amount),currency=d.currency||'RUB',exchangeRate=currency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(currency);
   if(!Number.isFinite(originalAmount)||!(originalAmount>0))return toast('Укажите корректную сумму больше нуля.');
   if(!Number.isFinite(exchangeRate)||!(exchangeRate>0))return toast('Курс этой валюты пока недоступен. Обновите курсы или выберите рубли.');
