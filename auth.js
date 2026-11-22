@@ -58,7 +58,7 @@
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
     let binary = '';
     for (const value of new Uint8Array(digest)) binary += String.fromCharCode(value);
-    return btoa(binary).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
+    return btoa(binary).split('+').join('-').split('/').join('_').replace(/=+$/, '');
   }
 
   function googleAuthorizeUrl(challenge, redirectTo) {
