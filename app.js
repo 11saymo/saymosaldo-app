@@ -236,7 +236,7 @@ const PANELS={
 };
 
 function renderPanel(){
-  $('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
+  $$('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
   $('#panel').innerHTML=PANELS[tab]();
   if(tab==='assistant'){renderFinanceReport();renderChat();}
   if(tab==='settings')renderCurrencyRates();
