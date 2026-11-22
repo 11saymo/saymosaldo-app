@@ -12,7 +12,9 @@
   let syncTimer = null;
   let refreshTimer = null;
   let syncBusy = false;
+  let syncPromise = null;
   let syncAgain = false;
+  let loggingOut = false;
   let retryDelay = 2000;
   let pendingRegistration = null;
   let recoveryUsername = '';
@@ -59,7 +61,7 @@
     if (/rate_limited/i.test(value) || status === 429) return 'Слишком много попыток. Подождите 10 минут и попробуйте снова.';
     if (/temporarily_unavailable/i.test(value)) return 'Сервис временно недоступен. Попробуйте ещё раз чуть позже.';
     if (/origin_not_allowed/i.test(value)) return 'Запрос отклонён настройками безопасности. Откройте официальный сайт SaymoSaldo.';
-    if (/invalid login credentials|invalid_grant/i.test(value)) return 'Неверный логин или пароль.';
+    if (/invalid login credentials|invalid_grant|invalid_credentials/i.test(value)) return 'Неверный логин или пароль.';
     if (/email not confirmed/i.test(value)) return 'Аккаунт не активирован. Обратитесь в поддержку.';
     return status === 0 ? 'Нет соединения. Проверьте интернет и повторите попытку.' :
       'Не удалось выполнить действие. Попробуйте ещё раз позже.';
@@ -177,6 +179,9 @@
   }
 
   async function expireSession() {
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = null;
+    syncAgain = false;
     clearSession();
     if (window.SaymoSaldoApp) window.SaymoSaldoApp.reset();
     showAuth();
@@ -269,47 +274,55 @@
   }
 
   function scheduleCloudSave() {
-    if (!session || !window.SaymoSaldoApp) return;
+    if (!session || !window.SaymoSaldoApp || loggingOut) return;
     if (syncTimer) clearTimeout(syncTimer);
     syncTimer = setTimeout(() => { syncTimer = null; syncCloudData(); }, 700);
   }
 
   async function syncCloudData() {
     if (!session || !window.SaymoSaldoApp) return;
-    if (syncBusy) { syncAgain = true; return; }
+    if (syncBusy) { syncAgain = true; return syncPromise; }
     syncBusy = true;
+    syncPromise = (async () => {
+      try {
+        await ensureFreshSession();
+        const userId = session.user.id;
+        const data = normalizeCloudData(window.SaymoSaldoApp.getData());
+        const payload = {
+          user_id: userId,
+          data: {
+            tx: data.tx,
+            goals: data.goals,
+            budgets: data.budgets,
+            recurring: data.recurring,
+            debts: data.debts,
+            chat_finance: data.chat_finance
+          },
+          updated_at: new Date().toISOString()
+        };
+        await apiRequest('/rest/v1/user_data?on_conflict=user_id', {
+          method: 'POST',
+          token: session.access_token,
+          headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+          body: payload
+        });
+        retryDelay = 2000;
+        window.SaymoSaldoApp.setSyncStatus('Синхронизировано');
+      } catch (error) {
+        window.SaymoSaldoApp.setSyncStatus('Нет синхронизации — записи пока сохранены на этом устройстве');
+        if (!loggingOut) {
+          if (syncTimer) clearTimeout(syncTimer);
+          syncTimer = setTimeout(() => { syncTimer = null; syncCloudData(); }, retryDelay);
+          retryDelay = Math.min(60000, retryDelay * 2);
+        }
+      }
+    })();
     try {
-      await ensureFreshSession();
-      const userId = session.user.id;
-      const data = normalizeCloudData(window.SaymoSaldoApp.getData());
-      const payload = {
-        user_id: userId,
-        data: {
-          tx: data.tx,
-          goals: data.goals,
-          budgets: data.budgets,
-          recurring: data.recurring,
-          debts: data.debts,
-          chat_finance: data.chat_finance
-        },
-        updated_at: new Date().toISOString()
-      };
-      await apiRequest('/rest/v1/user_data?on_conflict=user_id', {
-        method: 'POST',
-        token: session.access_token,
-        headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-        body: payload
-      });
-      retryDelay = 2000;
-      window.SaymoSaldoApp.setSyncStatus('Синхронизировано');
-    } catch (error) {
-      window.SaymoSaldoApp.setSyncStatus('Нет синхронизации — записи пока сохранены на этом устройстве');
-      if (syncTimer) clearTimeout(syncTimer);
-      syncTimer = setTimeout(() => { syncTimer = null; syncCloudData(); }, retryDelay);
-      retryDelay = Math.min(60000, retryDelay * 2);
+      await syncPromise;
     } finally {
       syncBusy = false;
-      if (syncAgain) { syncAgain = false; scheduleCloudSave(); }
+      syncPromise = null;
+      if (syncAgain && !loggingOut) { syncAgain = false; scheduleCloudSave(); }
     }
   }
 
@@ -482,13 +495,19 @@
   }
 
   async function logout() {
+    loggingOut = true;
     if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
-    try { await syncCloudData(); } catch (error) {}
+    try {
+      if (syncBusy && syncPromise) await syncPromise;
+      if (syncAgain) syncAgain = false;
+      await syncCloudData();
+    } catch (error) {}
     if (session) {
       try { await apiRequest('/auth/v1/logout', { method: 'POST', token: session.access_token }); } catch (error) {}
     }
     clearSession();
     if (window.SaymoSaldoApp) window.SaymoSaldoApp.reset();
+    loggingOut = false;
     showAuth();
     setNotice('Вы вышли из аккаунта.', 'success');
   }
