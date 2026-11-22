@@ -6,7 +6,6 @@ const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const ALLOWED_ORIGINS = new Set([
   "https://11saymo.github.io",
-  "https://saymosaldo-preview.onrender.com",
 ]);
 const USERNAME_DOMAIN = "accounts.saymosaldo.app";
 
