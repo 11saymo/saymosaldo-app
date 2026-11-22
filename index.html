@@ -487,7 +487,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
     <section class="view" data-view="ops" hidden>
       <div class="toolbar">
         <select id="filter" aria-label="Фильтр операций">
-          <option value="all">Все</option><option value="expense">Расходы</option><option value="income">Доходы</option>
+          <option value="all">Все</option><option value="expense">Расходы</option><option value="income">Доходы</option><option value="saving">Пополнения целей</option>
         </select>
         <small id="count"></small>
       </div>
@@ -500,7 +500,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
           <label><input type="radio" name="type" value="expense" checked><span>Расход</span></label>
           <label><input type="radio" name="type" value="income"><span>Доход</span></label>
         </div>
-        <label class="field"><span>Сумма, ₽</span><input name="amount" type="number" inputmode="decimal" min="1" step="1" required placeholder="450"><small class="field-help">Укажите сумму одной операции в рублях. Для дохода — сколько получили, для расхода — сколько потратили.</small></label>
+        <label class="field"><span>Сумма</span><input name="amount" type="number" inputmode="decimal" min="0.01" step="any" required placeholder="450"><small class="field-help">Введите сумму в выбранной валюте. Итог будет автоматически пересчитан в рубли.</small></label><label class="field"><span>Валюта операции</span><select name="currency" id="txCurrency"></select><small class="field-help" id="txCurrencyHelp">Основная валюта приложения — рубль. Для другой валюты используется актуальный курс.</small><small class="field-help" id="txCurrencyPreview" aria-live="polite"></small></label>
         <label class="field"><span>Категория</span><select name="category" id="txCat"></select><small class="field-help">Выберите наиболее подходящую категорию — так статистика будет точнее.</small></label>
         <label class="field"><span>Дата операции</span><input name="date" type="date" required><small class="field-help">Укажите день, когда деньги фактически получили или потратили. Месяц учёта определяется автоматически по этой дате.</small></label>
         <label class="field"><span>Комментарий (необязательно)</span><input name="comment" maxlength="80" placeholder="Например, обед"><small class="field-help">Добавьте уточнение, чтобы позже вспомнить, за что была операция.</small></label>
@@ -610,7 +610,7 @@ const CATS={expense:['Продукты','Кафе и рестораны','Тра
 const DEBT_KINDS=['Ипотека','Кредит','Кредитная карта','Рассрочка','Частный долг'];
 const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const today=()=>ymd(new Date()), nowMk=()=>today().slice(0,7);
-const money=n=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(+n||0)+' ₽';
+const money=n=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(+n||0)+' ₽';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmtDate=s=>new Date(s+'T12:00').toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
 const monthName=k=>new Date(k+'-15T12:00').toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
@@ -645,8 +645,10 @@ function editGoal(id){
     ${field('name','Название','text',`value="${esc(g.name)}" required maxlength="80"`)}
     ${field('target','Сумма цели, ₽','number',`value="${esc(g.target)}" required min="1" step="1"`)}
     ${field('saved','Уже отложено, ₽','number',`value="${esc(g.saved)}" required min="0" step="1"`)}
-    ${field('date','Срок (необязательно)','date',`value="${esc(g.date||'')}"`)}
-    <p class="muted" style="margin:0 0 12px">Накопленная сумма сохранится без изменений, если вы её не поменяете. Прогресс пересчитается автоматически.</p>
+    ${field('date','Срок достижения','date',`value="${esc(g.date||'')}"`)}
+    <label class="field"><span>Тип цели</span><select name="kind"><option value="standard" ${g.kind==='deposit'?'':'selected'}>Обычная цель</option><option value="deposit" ${g.kind==='deposit'?'selected':''}>Накопительная с процентами</option></select></label>
+    ${field('rate','Годовая ставка, %','number',`value="${esc(g.rate||'')}" min="0" max="100" step="0.01"`)}
+    <p class="muted" style="margin:0 0 12px">Накопленная сумма сохранится без изменений, если вы её не поменяете. ${esc(goalPreviewText(g))}</p>
     <p class="err" id="dlgErr"></p><div class="row end"><button type="button" data-act="dlg-cancel">Отмена</button><button class="primary">Сохранить изменения</button></div></form>`;
   d.querySelector('form').addEventListener('submit',e=>{
     e.preventDefault();
@@ -655,7 +657,8 @@ function editGoal(id){
     if(!name){$('#dlgErr').textContent='Укажите название цели.';return}
     if(!Number.isFinite(target)||target<=0){$('#dlgErr').textContent='Сумма цели должна быть больше нуля.';return}
     if(!Number.isFinite(saved)||saved<0){$('#dlgErr').textContent='Уже отложенная сумма не может быть отрицательной.';return}
-    g.name=name;g.target=target;g.saved=saved;g.date=v.date||'';
+    if(v.kind==='deposit'&&(!Number.isFinite(Number(v.rate))||Number(v.rate)<0||Number(v.rate)>100)){$('#dlgErr').textContent='Ставка должна быть от 0 до 100%.';return}
+    g.name=name;g.target=target;g.saved=saved;g.date=v.date||'';g.kind=v.kind==='deposit'?'deposit':'standard';g.rate=g.kind==='deposit'?Number(v.rate)||0:0;
     if(!save())return;render();d.close();toast('Цель обновлена');
   });
   d.showModal();
@@ -674,9 +677,9 @@ function ask(title,fields,cb){
 }
 
 const ICON={'Продукты':'🛒','Кафе и рестораны':'☕','Транспорт':'🚌','Покупки':'🛍️','Дом':'🏠','Здоровье':'💊','Развлечения':'🎬','Подписки':'📺','Кредиты и долги':'🏦','Зарплата':'💼','Подработка':'🛠️','Подарок':'🎁'};
-const items=(list,del)=>list.map(x=>`<div class="item"><div style="display:flex;align-items:center;min-width:0"><span class="ico">${ICON[x.category]||'📦'}</span><div style="min-width:0"><b>${esc(x.comment||x.category)}</b><small>${x.comment?esc(x.category)+' · ':''}${fmtDate(x.date)}</small></div></div><div class="amt ${x.type==='income'?'pos':''}">${x.type==='income'?'+':'−'}${money(x.amount)}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`).join('');
+const items=(list,del)=>list.map(x=>{const saving=x.type==='saving',income=x.type==='income',currency=x.currency||'RUB',original=Number(x.originalAmount??x.amount),foreign=currency!=='RUB'?`<small>${new Intl.NumberFormat('ru-RU',{maximumFractionDigits:2}).format(original)} ${esc(currency)} · ${money(x.amount)}</small>`:'';return `<div class="item"><div style="display:flex;align-items:center;min-width:0"><span class="ico">${saving?'🎯':ICON[x.category]||'📦'}</span><div style="min-width:0"><b>${esc(x.comment||x.category)}</b><small>${x.comment?esc(x.category)+' · ':''}${fmtDate(x.date)}</small>${foreign}</div></div><div class="amt ${income||saving?'pos':''}">${saving?'↗':income?'+':'−'}${money(x.amount)}${del?`<button class="link" data-act="tx-del" data-id="${esc(x.id)}">Удалить</button>`:''}</div></div>`}).join('');
 const bar=(l,v,max)=>`<div class="bl"><div class="row"><span>${esc(l)}</span><b>${money(v)}</b></div><div class="bar"><i style="width:${Math.max(2,v/max*100)}%"></i></div></div>`;
-const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0;return `<div class="card goal-card"><div class="goal-head"><b class="goal-title">${esc(g.name)}</b><span class="goal-percent">${Math.round(p)}%</span></div><div class="goal-meta"><span>Накоплено</span><b>${money(g.saved)} <span>из ${money(g.target)}</span></b>${g.date?`<small>Срок: ${fmtDate(g.date)}</small>`:''}</div><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost" data-act="goal-edit" data-id="${esc(g.id)}">Редактировать</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
+const goalCard=(g,compact)=>{const p=g.target?Math.min(100,g.saved/g.target*100):0,projection=goalProjection(g);return `<div class="card goal-card"><div class="goal-head"><b class="goal-title">${esc(g.name)}</b><span class="goal-percent">${Math.round(p)}%</span></div><div class="goal-meta"><span>Накоплено</span><b>${money(g.saved)} <span>из ${money(g.target)}</span></b>${g.date?`<small>Срок: ${fmtDate(g.date)}</small>`:''}${g.kind==='deposit'?`<small>Накопительная · ${Number(g.rate)||0}% годовых</small>`:''}${g.date?`<small>Нужно откладывать: ${money(projection.monthly)} в месяц</small>`:''}${g.kind==='deposit'?`<small>Прогноз процентов: ${money(projection.interest)}</small>`:''}</div><div class="bar"><i style="width:${p}%"></i></div>${compact?'':`<div class="actions"><button class="ghost" data-act="goal-fund" data-id="${esc(g.id)}">Пополнить</button><button class="ghost" data-act="goal-edit" data-id="${esc(g.id)}">Редактировать</button><button class="ghost danger" data-act="goal-del" data-id="${esc(g.id)}">Удалить</button></div>`}</div>`};
 
 function render(){
   const k=nowMk(), m=monthTx(k), monthInc=sumType(m,'income'), monthOut=sumType(m,'expense');
@@ -717,7 +720,7 @@ function render(){
   $('#week').innerHTML=days.map((dd,i)=>`<div class="wd"><div class="wb"><i style="height:${Math.max(4,dv[i]/wmax*100)}%"></i></div><small>${new Date(dd+'T12:00').toLocaleDateString('ru-RU',{weekday:'short'}).slice(0,2)}</small></div>`).join('');
   const sorted=[...S.tx].sort((a,b)=>String(b.date).localeCompare(String(a.date))||(b.created||0)-(a.created||0));
   $('#recent').innerHTML=items(sorted.slice(0,3),false)||empty('Операций пока нет. Добавьте первую — это займёт минуту.');
-  const f=$('#filter').value, list=sorted.filter(x=>f==='all'||x.type===f);
+  const f=$('#filter').value, list=sorted.filter(x=>f==='all'||(f==='saving'?x.type==='saving':x.type===f));
   $('#count').textContent=list.length+' шт.';
   $('#allItems').innerHTML=items(list,true)||empty('Нет операций по выбранному фильтру.');
   const ring=p=>`<svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9" class="rt"/><circle cx="18" cy="18" r="15.9" class="rv" stroke-dasharray="${Math.min(100,p)} 100"/></svg>`;
@@ -739,7 +742,7 @@ function render(){
 const PANELS={
   goals:()=>`${S.goals.map(g=>goalCard(g)).join('')||empty('Цели пока не добавлены. Например, накопления на отпуск.')}
     <div class="sec"><h2>Новая цель</h2></div>
-    <form class="card" data-form="goal">${field('name','Название','text','required placeholder="Отпуск"')}${field('target','Сумма цели, ₽','number','required min="1"')}${field('saved','Уже отложено, ₽','number','min="0"')}${field('date','Срок (необязательно)','date')}<button class="primary">Создать цель</button></form>`,
+    <form class="card" data-form="goal"><label class="field"><span>Название</span><input name="name" type="text" required maxlength="80" placeholder="Отпуск"></label>${field('target','Сумма цели, ₽','number','required min="1"')}${field('saved','Уже отложено, ₽','number','min="0"')}<label class="field"><span>Тип цели</span><select name="kind"><option value="standard">Обычная цель</option><option value="deposit">Накопительная с процентами</option></select></label>${field('rate','Годовая ставка, %','number','min="0" max="100" step="0.01" placeholder="Например, 12"')}<small class="field-help">Для обычной цели оставьте ставку 0. Для накопительной укажите ставку из условий вклада или накопительного счёта.</small>${field('date','Срок достижения','date')}<p class="field-help" id="goalPreview" aria-live="polite"></p><button class="primary">Создать цель</button></form>`,
 
   budgets:()=>{
     const m=monthTx(nowMk()).filter(x=>x.type==='expense');
@@ -772,18 +775,20 @@ const PANELS={
     <form class="chatform" data-form="chat"><input name="q" autocomplete="off" placeholder="Например, сколько я могу отложить?"><button class="primary">Отправить</button></form>
     <div class="actions"><button class="link" data-act="chat-clear">Очистить историю этого режима</button></div>`,
 
-  settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как <b>${esc(window.SaymoSaldoAuth?.username||'')}</b>. Данные аккаунта синхронизируются между вашими устройствами.</p><button class="ghost danger" data-auth-action="logout">Выйти</button></div><div class="card"><h2>Данные на этом устройстве</h2><p class="muted">Финансовые записи сохраняются в вашем аккаунте и в локальном хранилище браузера для быстрой работы. Доступ к облачным записям ограничен вашим аккаунтом. Локальная копия в браузере не шифруется отдельным паролем — защищайте устройство блокировкой экрана.</p></div><div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
-  data:()=>`<div class="card"><h2>Резервная копия</h2><p>Сохраняйте копию вручную, особенно после важных изменений. В ней находятся операции, цели, лимиты, регулярные платежи, долги и история финансового помощника.</p><div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div><div class="card"><h2>Установить на телефон</h2><p class="muted" style="margin:8px 0">Android: откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».</p><p class="muted" style="margin:8px 0">iPhone: откройте сайт в Safari, нажмите «Поделиться», затем «На экран Домой».</p><small>После установки приложение будет открываться отдельным окном. Доступность пункта зависит от браузера.</small></div><p class="note">Финансовые записи синхронизируются с аккаунтом и дополнительно сохраняются в локальном хранилище браузера. При работе без сети новые изменения останутся на этом устройстве до восстановления соединения. Регулярно скачивайте резервную копию. Файл резервной копии содержит личную финансовую информацию — храните его в безопасном месте и не передавайте посторонним.</p>`
+  settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `<div class="card"><h2>Курсы валют</h2><p class="muted">Ориентировочные курсы к рублю. Источник — открытый сервис обменных курсов; перед обменом проверьте курс банка.</p><div id="currencyRates" class="list"><small>Загружаем курсы…</small></div><div class="actions"><button class="ghost" data-act="currency-refresh">Обновить курсы</button></div></div><div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как <b>${esc(window.SaymoSaldoAuth?.username||'')}</b>. Данные аккаунта синхронизируются между вашими устройствами.</p><button class="ghost danger" data-auth-action="logout">Выйти</button></div><div class="card"><h2>Данные на этом устройстве</h2><p class="muted">Финансовые записи сохраняются в вашем аккаунте и в локальном хранилище браузера для быстрой работы. Доступ к облачным записям ограничен вашим аккаунтом. Локальная копия в браузере не шифруется отдельным паролем — защищайте устройство блокировкой экрана.</p></div><div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div>`},
+  data:()=>`<div class="card"><h2>О приложении и доступе</h2><p>SaymoSaldo помогает учитывать доходы и расходы, планировать бюджет, отслеживать цели, регулярные платежи и задолженности.</p><p class="muted" style="margin-top:8px">Финансовые записи синхронизируются через аккаунт и сохраняются локально для быстрой работы и временного доступа без сети. Доступ к облачным записям ограничен вашим аккаунтом. Локальная копия браузера не зашифрована отдельным паролем — защищайте устройство блокировкой экрана.</p><p style="margin-top:8px"><a href="./privacy.html">Политика конфиденциальности</a></p></div><div class="card"><h2>Резервная копия</h2><p>Сохраняйте копию вручную, особенно после важных изменений. В ней находятся операции, цели, лимиты, регулярные платежи, долги и история финансового помощника.</p><div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div><div class="card"><h2>Установить на телефон</h2><p class="muted" style="margin:8px 0">Android: откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».</p><p class="muted" style="margin:8px 0">iPhone: откройте сайт в Safari, нажмите «Поделиться», затем «На экран Домой».</p><small>После установки приложение будет открываться отдельным окном. Доступность пункта зависит от браузера.</small></div><p class="note">Финансовые записи синхронизируются с аккаунтом и дополнительно сохраняются в локальном хранилище браузера. При работе без сети новые изменения останутся на этом устройстве до восстановления соединения. Регулярно скачивайте резервную копию. Файл резервной копии содержит личную финансовую информацию — храните его в безопасном месте и не передавайте посторонним.</p>`
 };
 
 function renderPanel(){
-  $$('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
+  $('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
   $('#panel').innerHTML=PANELS[tab]();
   if(tab==='assistant'){renderFinanceReport();renderChat();}
+  if(tab==='settings')renderCurrencyRates();
+  if(tab==='goals')updateGoalPreview();
 }
 
 const FORMS={
-  goal(d){const name=d.name.trim(),target=Math.round(Number(d.target)),saved=Math.round(Number(d.saved)||0);if(!name||!Number.isFinite(target)||!(target>0))return'Укажите название и корректную сумму цели.';if(!Number.isFinite(saved)||saved<0)return'Сумма не может быть отрицательной.';S.goals.push({id:uid(),name,target,saved,date:d.date||''});toast('Цель создана')},
+  goal(d){const name=d.name.trim(),target=Math.round(Number(d.target)),saved=Math.round(Number(d.saved)||0),rate=d.rate===''?0:Number(d.rate);if(!name||!Number.isFinite(target)||!(target>0))return'Укажите название и корректную сумму цели.';if(!Number.isFinite(saved)||saved<0)return'Сумма не может быть отрицательной.';if(!Number.isFinite(rate)||rate<0||rate>100)return'Ставка должна быть от 0 до 100% годовых.';S.goals.push({id:uid(),name,target,saved,date:d.date||'',kind:d.kind==='deposit'?'deposit':'standard',rate:d.kind==='deposit'?rate:0});toast('Цель создана')},
   budget(d){const limit=Math.round(Number(d.limit));if(!Number.isFinite(limit)||!(limit>0))return'Укажите корректный лимит больше нуля.';const b=S.budgets.find(x=>x.category===d.category);if(b)b.limit=limit;else S.budgets.push({category:d.category,limit});toast('Лимит сохранён')},
   rec(d){const name=d.name.trim(),amount=Math.round(Number(d.amount)),day=Math.round(Number(d.day));if(!name||!Number.isFinite(amount)||!(amount>0))return'Укажите название и корректную сумму.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';S.recurring.push({id:uid(),name,amount,category:d.category,day});toast('Платёж добавлен')},
   debt(d){const name=d.name.trim(),original=Math.round(Number(d.original)),remaining=Math.round(Number(d.remaining)),monthly=Math.round(Number(d.monthly)),day=Math.round(Number(d.day)),rate=d.rate===''?null:Number(d.rate);if(!name)return'Укажите название.';if(!Number.isFinite(original)||!(original>0))return'Первоначальная сумма должна быть больше нуля.';if(!Number.isFinite(remaining)||!(remaining>=0&&remaining<=original))return'Остаток должен быть от 0 до первоначальной суммы.';if(!Number.isFinite(monthly)||!(monthly>0))return'Укажите корректный ежемесячный платёж.';if(!(day>=1&&day<=31))return'День — от 1 до 31.';if(rate!==null&&!(rate>=0&&rate<=100))return'Ставка — от 0 до 100.';S.debts.push({id:uid(),kind:d.kind,name,original,remaining,monthly,day,rate,history:[]});toast('Обязательство добавлено')},
@@ -802,15 +807,20 @@ document.addEventListener('submit',e=>{
   render();
 });
 
-function fillTx(){$('#txCat').innerHTML=catOpts(document.querySelector('#txForm [name=type]:checked').value)}
-$('#txForm').addEventListener('change',e=>{if(e.target.name==='type')fillTx()});
+function fillTx(){$('#txCat').innerHTML=catOpts(document.querySelector('#txForm [name=type]:checked').value);const sel=$('#txCurrency');if(sel&&window.SaymoSaldoCurrency)sel.innerHTML=window.SaymoSaldoCurrency.options().map(x=>`<option value="${x.code}">${esc(x.label)}</option>`).join('');updateCurrencyPreview()}
+function updateCurrencyPreview(){const f=$('#txForm'),out=$('#txCurrencyPreview');if(!f||!out)return;const c=f.elements.currency?.value||'RUB',v=Number(f.elements.amount?.value||0),rate=window.SaymoSaldoCurrency?.rubPerUnit(c);out.textContent=!v?'':c==='RUB'?`${money(v)} — основная валюта`:Number.isFinite(rate)?`Примерно ${money(v*rate)} по текущему курсу`:'Курс загружается. Пока можно выбрать рубли.'}
+$('#txForm').addEventListener('input',e=>{if(e.target.name==='amount'||e.target.name==='currency')updateCurrencyPreview()});
+$('#txForm').addEventListener('change',e=>{if(e.target.name==='type')fillTx();if(e.target.name==='currency')updateCurrencyPreview()});
 $('#txForm').addEventListener('submit',e=>{
   e.preventDefault();
   
   const f=e.target,d=Object.fromEntries(new FormData(f)),amount=Math.round(+d.amount);
-  if(!Number.isSafeInteger(amount)||!(amount>0))return toast('Укажите корректную сумму больше нуля.');
+  const originalAmount=Number(d.amount),currency=d.currency||'RUB',exchangeRate=currency==='RUB'?1:window.SaymoSaldoCurrency?.rubPerUnit(currency);
+  if(!Number.isFinite(originalAmount)||!(originalAmount>0))return toast('Укажите корректную сумму больше нуля.');
+  if(!Number.isFinite(exchangeRate)||!(exchangeRate>0))return toast('Курс этой валюты пока недоступен. Обновите курсы или выберите рубли.');
   if(!d.date)return toast('Укажите дату.');
-  S.tx.push({id:uid(),created:Date.now(),type:d.type,amount,category:d.category,date:d.date,comment:(d.comment||'').trim().slice(0,80)});
+  const amount=Math.round(originalAmount*exchangeRate*100)/100;
+  S.tx.push({id:uid(),created:Date.now(),type:d.type,amount,originalAmount,currency,exchangeRate,category:d.category,date:d.date,comment:(d.comment||'').trim().slice(0,80)});
   if(!save())return;
   f.reset();
   fillTx();
@@ -818,6 +828,12 @@ $('#txForm').addEventListener('submit',e=>{
   go('home');
 });
 
+function goalProjection(g){const target=Number(g.target)||0,saved=Number(g.saved)||0,rate=(g.kind==='deposit'?Number(g.rate)||0:0)/1200;let months=0;if(g.date){const now=new Date(),due=new Date(g.date+'T12:00:00');months=Math.max(0,(due.getFullYear()-now.getFullYear())*12+due.getMonth()-now.getMonth());}if(!months)return {months:0,monthly:0,interest:0,future:saved*(1+rate)};const factor=rate>0?(Math.pow(1+rate,months)-1)/rate:months;const futureSaved=saved*Math.pow(1+rate,months);const monthly=Math.max(0,(target-futureSaved)/Math.max(factor,1));const interest=Math.max(0,futureSaved-saved+monthly*months-target);return {months,monthly,interest,future:futureSaved+monthly*factor};}
+function goalPreviewText(g){const p=goalProjection(g);if(!g.date)return g.kind==='deposit'&&g.rate?`Ориентировочный доход за месяц: ${money((Number(g.saved)||0)*Number(g.rate)/1200)} при текущем остатке.`:'Укажите срок — приложение рассчитает необходимое ежемесячное пополнение.';if(!p.months)return Number(g.saved)>=Number(g.target)?'Цель уже достигнута.':'До выбранной даты меньше месяца — укажите более поздний срок.';return `До срока: ${p.months} мес. Нужно откладывать примерно ${money(p.monthly)} в месяц.${g.kind==='deposit'?` Прогноз процентов за период — ${money(p.interest)} при ставке ${Number(g.rate)||0}% годовых и ежемесячной капитализации.`:''}`;}
+function updateGoalPreview(){const f=document.querySelector('form[data-form="goal"]'),el=$('#goalPreview');if(!f||!el)return;const d=Object.fromEntries(new FormData(f));el.textContent=goalPreviewText({target:Number(d.target)||0,saved:Number(d.saved)||0,date:d.date||'',kind:d.kind==='deposit'?'deposit':'standard',rate:Number(d.rate)||0});}
+document.addEventListener('input',e=>{if(e.target.closest('form[data-form="goal"]'))updateGoalPreview()});
+document.addEventListener('change',e=>{if(e.target.closest('form[data-form="goal"]'))updateGoalPreview()});
+function renderCurrencyRates(){const el=$('#currencyRates');if(!el||!window.SaymoSaldoCurrency)return;const snap=window.SaymoSaldoCurrency.snapshot();if(!snap){el.innerHTML='<small>Курсы пока не загружены. Проверьте соединение и нажмите «Обновить курсы».</small>';return;}const codes=['USD','EUR','GBP','CNY','CHF','JPY','TRY','KZT','BYN','AED'];el.innerHTML=codes.map(code=>{const rate=window.SaymoSaldoCurrency.rubPerUnit(code);return Number.isFinite(rate)?`<div class="item"><b>1 ${code}</b><b>${money(rate)}</b></div>`:''}).join('')||'<small>Курсы недоступны.</small>';const stamp=new Date(snap.updatedAt);el.insertAdjacentHTML('beforeend',`<small>Обновлено: ${stamp.toLocaleString('ru-RU')} · источник: open.er-api.com</small>`);}
 function payRecurring(id){
   const r=S.recurring.find(x=>x.id===id);if(!r)return;
   const key=scopedKey('paid_'+nowMk()+'_'+id);
@@ -883,8 +899,8 @@ function validBackup(d){
   const ident=v=>(typeof v==='string'&&v.length>0&&v.length<=100)||(Number.isSafeInteger(v)&&v>0);
   const positive=v=>Number.isSafeInteger(Number(v))&&Number(v)>0;
   const nonnegative=v=>Number.isSafeInteger(Number(v))&&Number(v)>=0;
-  if(d.tx.some(x=>!x||typeof x!=='object'||!ident(x.id)||!['income','expense'].includes(x.type)||!positive(x.amount)||!str(x.category,80)||!validBackupDate(x.date)||('comment'in x&&typeof x.comment!=='string')||('comment'in x&&x.comment.length>200)))return false;
-  if(d.goals.some(x=>!x||typeof x!=='object'||!ident(x.id)||!str(x.name,1000)||!positive(x.target)||!nonnegative(x.saved)||('date'in x&&x.date!==''&&!validBackupDate(x.date))))return false;
+  if(d.tx.some(x=>!x||typeof x!=='object'||!ident(x.id)||!['income','expense','saving'].includes(x.type)||!positive(x.amount)||!str(x.category,80)||!validBackupDate(x.date)||('comment'in x&&typeof x.comment!=='string')||('comment'in x&&x.comment.length>200)||('currency'in x&&(!/^[A-Z]{3}$/.test(x.currency)||!Number.isFinite(Number(x.originalAmount))||Number(x.originalAmount)<=0||!Number.isFinite(Number(x.exchangeRate))||Number(x.exchangeRate)<=0))))return false;
+  if(d.goals.some(x=>!x||typeof x!=='object'||!ident(x.id)||!str(x.name,1000)||!positive(x.target)||!nonnegative(x.saved)||('date'in x&&x.date!==''&&!validBackupDate(x.date))||('kind'in x&&!['standard','deposit'].includes(x.kind))||('rate'in x&&(!Number.isFinite(Number(x.rate))||Number(x.rate)<0||Number(x.rate)>100))))return false;
   if(d.budgets.some(x=>!x||typeof x!=='object'||!str(x.category,80)||!positive(x.limit)))return false;
   if(d.recurring.some(x=>!x||typeof x!=='object'||!ident(x.id)||!str(x.name,1000)||!positive(x.amount)||!str(x.category,80)||!Number.isInteger(Number(x.day))||Number(x.day)<1||Number(x.day)>31))return false;
   if((d.debts||[]).some(x=>!x||typeof x!=='object'||!ident(x.id)||!str(x.name,1000)||!str(x.kind,60)||!positive(x.original)||!nonnegative(x.remaining)||Number(x.remaining)>Number(x.original)||!positive(x.monthly)||!Number.isInteger(Number(x.day))||Number(x.day)<1||Number(x.day)>31||('rate'in x&&x.rate!==null&&(!Number.isFinite(Number(x.rate))||Number(x.rate)<0||Number(x.rate)>100))||('history'in x&&(!Array.isArray(x.history)||x.history.length>20000||x.history.some(p=>!p||!validBackupDate(p.date)||!positive(p.amount)||!nonnegative(p.principal)||Number(p.principal)>Number(p.amount))))))return false;
@@ -986,7 +1002,7 @@ const TOUR=[
 let tourI=0;
 function showWelcome(){
   const d=document.createElement('div');d.id='welcome';d.className='overlay';
-  d.innerHTML='<div class="ov-card"><div style="font-size:34px;margin-bottom:12px">✦</div><h2>Добро пожаловать в SaymoSaldo!</h2><p class="muted">Ваш спокойный и понятный помощник для управления личными финансами. Записывайте расходы, планируйте бюджет, следите за целями и платежами — всё в одном месте.</p><p class="muted">Хотите пройти короткое знакомство? Покажем основные разделы примерно за минуту. Его можно открыть позже в настройках.</p><div style="display:grid;gap:8px"><button class="primary" data-act="welcome-yes">Показать, как всё устроено</button><button class="ghost" data-act="welcome-no">Перейти к приложению</button></div></div>';
+  d.innerHTML='<div class="ov-card"><div style="font-size:34px;margin-bottom:12px">✦</div><h2>Добро пожаловать в SaymoSaldo!</h2><p class="muted">Здесь можно записывать доходы и расходы, планировать бюджет, контролировать регулярные платежи и долги, а также создавать цели накоплений и смотреть финансовую статистику.</p><p class="muted">Основная валюта — рубль; операции в других валютах автоматически пересчитываются по курсу. Накопительные цели показывают прогноз процентов.</p><p class="muted">Сначала коротко покажем основные разделы и объясним, как правильно вносить данные. Обучение можно повторно открыть позже в разделе «Ещё → Настройки».</p><div style="display:grid;gap:8px"><button class="primary" data-act="welcome-yes">Начать обучение</button><button class="ghost" data-act="welcome-no">Перейти к приложению</button></div></div>';
   document.body.appendChild(d);
 }
 function closeWelcome(){document.getElementById('welcome')?.remove()}
@@ -1026,7 +1042,7 @@ document.addEventListener('click',e=>{
       const v=Math.round(+f.amount),g=S.goals.find(x=>x.id===id);
       if(!g)return'Цель не найдена.';
       if(!Number.isSafeInteger(v)||!(v>0))return'Введите корректную сумму больше нуля.';
-      g.saved+=v;if(!save())return;render();toast('Цель пополнена');
+      g.saved+=v;S.tx.push({id:uid(),created:Date.now(),type:'saving',amount:v,category:'Накопления',date:today(),comment:'Пополнение цели: '+g.name,goalId:g.id,currency:'RUB',originalAmount:v,exchangeRate:1});if(!save())return;render();toast('Пополнение записано в операции');
     });
     case'goal-del':return confirmDo('Удалить цель?',()=>{S.goals=S.goals.filter(x=>x.id!==id)});
     case'budget-del':return confirmDo('Удалить лимит?',()=>{S.budgets=S.budgets.filter(x=>x.category!==t.dataset.cat)});
@@ -1041,6 +1057,7 @@ document.addEventListener('click',e=>{
     case'tour-next':if(tourI<TOUR.length-1){tourI++;return showTourStep()}return endTour('done');
     case'tour-back':tourI--;return showTourStep();
     case'tour-skip':return endTour('skipped');
+    case'currency-refresh':return window.SaymoSaldoCurrency?.refresh().then(()=>{renderCurrencyRates();updateCurrencyPreview();toast('Курсы обновлены')}).catch(()=>toast('Не удалось обновить курсы. Попробуйте позже.'));
     case'export':return exportData();
     case'import':return $('#importFile').click();
     case'dlg-cancel':return $('#dlg').close();
