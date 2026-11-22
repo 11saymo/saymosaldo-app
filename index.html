@@ -501,7 +501,6 @@ button,input,select{letter-spacing:0;line-height:1.4}
         </div>
         <label class="field"><span>Сумма, ₽</span><input name="amount" type="number" inputmode="decimal" min="1" step="1" required placeholder="450"></label>
         <label class="field"><span>Категория</span><select name="category" id="txCat"></select></label>
-        <label class="field"><span>Месяц операции</span><input id="txMonth" type="month" required></label>
         <label class="field"><span>Дата операции</span><input name="date" type="date" required></label>
         <label class="field"><span>Комментарий (необязательно)</span><input name="comment" maxlength="80" placeholder="Например, обед"></label>
         <button class="primary">Сохранить</button>
@@ -631,7 +630,7 @@ function go(p){
   $$('.view').forEach(v=>v.hidden=v.dataset.view!==p);
   $$('.nav [data-go]').forEach(b=>b.setAttribute('aria-current',b.dataset.go===p?'page':'false'));
   $('#title').textContent=TITLES[p];
-  if(p==='add'){$('#txMonth').value=nowMk();$('#txForm [name=date]').value=today();fillTx()}
+  if(p==='add'){$('#txForm [name=date]').value=today();fillTx()}
   window.scrollTo(0,0);
   render();
 }
@@ -803,8 +802,6 @@ document.addEventListener('submit',e=>{
 
 function fillTx(){$('#txCat').innerHTML=catOpts(document.querySelector('#txForm [name=type]:checked').value)}
 $('#txForm').addEventListener('change',e=>{if(e.target.name==='type')fillTx()});
-$('#txMonth').addEventListener('change',e=>{const m=e.target.value;if(m&&m.length===7)$('#txForm [name=date]').value=m+'-01'});
-$('#txForm [name=date]').addEventListener('change',e=>{if(e.target.value)$('#txMonth').value=e.target.value.slice(0,7)});
 $('#txForm').addEventListener('submit',e=>{
   e.preventDefault();
   
