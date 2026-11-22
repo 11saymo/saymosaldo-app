@@ -601,6 +601,99 @@ input,select{min-height:48px;font-size:16px}
 .operation-item .amt .link{display:block;margin-left:auto;min-height:36px}
 .operation-item .ico{width:42px;height:42px;flex:0 0 42px;margin:0}
 @media(max-width:420px){.operation-item{gap:8px;padding:12px}.operation-item>.operation-main{gap:9px}.operation-item .amt{max-width:40%;font-size:13px}.operation-item .ico{width:38px;height:38px;flex-basis:38px}}
+
+/* SaymoSaldo visual system v1 — restrained, warm, consistent */
+:root{
+ --bg:#f7f5f3;--card:#fff;--fg:#282021;--mut:#7b7070;--line:#eae3e1;
+ --acc:#762735;--warn:#a96b22;--bad:#b33a3a;--r:18px;
+ --shadow:0 5px 22px rgba(54,31,34,.055);
+ color-scheme:light;
+}
+:root[data-theme=dark]{
+ --bg:#141213;--card:#201b1d;--fg:#f4eeee;--mut:#b0a3a5;--line:#382e31;
+ --acc:#d7838e;--warn:#e4b36b;--bad:#f08b86;--shadow:0 8px 28px rgba(0,0,0,.22);
+ color-scheme:dark;
+}
+@media(prefers-color-scheme:dark){
+ :root:not([data-theme=light]){
+  --bg:#141213;--card:#201b1d;--fg:#f4eeee;--mut:#b0a3a5;--line:#382e31;
+  --acc:#d7838e;--warn:#e4b36b;--bad:#f08b86;--shadow:0 8px 28px rgba(0,0,0,.22);
+  color-scheme:dark;
+ }
+}
+html{background:var(--bg);scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-size:15px;line-height:1.5;letter-spacing:0}
+body::before,body::after{display:none!important}
+.app{width:min(calc(100% - 40px),1120px);max-width:1120px;padding:28px 0 calc(env(safe-area-inset-bottom) + 118px)}
+.top{min-height:46px;margin:0 0 22px;align-items:center}
+.top h1{font-size:clamp(25px,3vw,30px);font-weight:680;letter-spacing:-.035em}
+.card,.item{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.card{padding:clamp(17px,2.2vw,23px);margin-bottom:12px}
+.hero{background:linear-gradient(132deg,#812f3d 0%,#64212e 58%,#4c1a25 100%);border:0;color:#fff;padding:clamp(21px,3vw,30px);box-shadow:0 12px 30px rgba(100,33,46,.16)}
+.hero .label,.hero small{color:rgba(255,255,255,.72)}
+.hero .big{font-size:clamp(36px,5vw,48px);font-weight:700;letter-spacing:-.045em;line-height:1.12;margin:8px 0 20px}
+.hero .split{gap:18px}
+.hero .split b{font-size:clamp(16px,2vw,20px);font-weight:650;color:#fff}
+.greet{font-size:14px;color:var(--mut);margin:0 0 12px}
+.status{padding:13px 15px;background:var(--card);border:1px solid var(--line);border-radius:14px;font-size:13px;margin:0 0 12px}
+.quick{gap:10px;margin:14px 0 18px}
+.qbtn{min-height:82px;padding:13px 8px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:var(--shadow);font-size:13px;font-weight:560}
+.qbtn span{width:34px;height:34px;border-radius:11px;background:color-mix(in srgb,var(--acc) 10%,var(--card));color:var(--acc);font-size:20px}
+.sec{margin:22px 0 10px}
+.sec h2,.sec h2{font-size:16px;font-weight:680;letter-spacing:-.015em}
+.item{padding:13px 15px;margin-bottom:9px}
+.ico{background:color-mix(in srgb,var(--acc) 9%,var(--card));color:var(--acc);border-radius:13px}
+.bar{height:6px;background:var(--line);border-radius:999px}
+.bar i{background:var(--acc);border-radius:999px}
+button{min-height:44px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-weight:560;transition:transform .16s ease,background .16s ease,border-color .16s ease}
+button:not(:disabled):active{transform:scale(.985)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+.ghost{background:transparent}
+input,select{min-height:48px;background:var(--bg);border:1px solid var(--line);border-radius:12px;color:var(--fg)}
+.tabs{gap:7px;padding:2px 0 9px}
+.tabs button,.tabs button[aria-selected=true]{min-height:42px;padding:9px 14px;border-radius:12px;box-shadow:none}
+.tabs button{background:var(--card);border:1px solid var(--line);color:var(--mut)}
+.tabs button[aria-selected=true]{background:color-mix(in srgb,var(--acc) 10%,var(--card));border-color:color-mix(in srgb,var(--acc) 28%,var(--line));color:var(--acc);font-weight:680}
+.chip{border-radius:12px;box-shadow:none}
+.bl{border-radius:14px;box-shadow:none;background:var(--card)}
+.goal-card{padding:21px!important}
+.goal-card .bar{height:7px}
+.goal-percent,.forecast-tag{background:color-mix(in srgb,var(--acc) 10%,var(--card));color:var(--acc)}
+.nav{width:min(calc(100% - 40px),900px);max-width:900px;bottom:12px;padding:9px 14px calc(env(safe-area-inset-bottom) + 9px);border:1px solid var(--line);border-radius:18px;background:color-mix(in srgb,var(--card) 94%,transparent);box-shadow:0 10px 34px rgba(35,20,22,.13);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.nav button{min-height:48px;border:0;border-radius:12px;color:var(--mut);font-size:11px}
+.nav button[aria-current=page]{color:var(--acc);background:color-mix(in srgb,var(--acc) 9%,var(--card));font-weight:700}
+.nav svg{width:21px;height:21px}
+.auth-screen{background:var(--bg)}
+.auth-card{border-radius:24px;box-shadow:0 14px 44px rgba(54,31,34,.09)}
+.auth-mark{border-radius:15px;background:color-mix(in srgb,var(--acc) 11%,var(--card))}
+.dialog,.ov-card{border-radius:20px}
+.toast{border-radius:13px}
+@media(min-width:760px){
+ .app{width:min(calc(100% - 64px),1120px);padding-top:34px;padding-bottom:132px}
+ .nav{bottom:14px}
+ .view[data-view=home]:not([hidden]){gap:0}
+}
+@media(max-width:759px){
+ .app{width:calc(100% - 28px);padding-top:calc(env(safe-area-inset-top) + 18px);padding-bottom:calc(env(safe-area-inset-bottom) + 108px)}
+ .top{margin-bottom:18px}
+ .hero{padding:21px 19px}
+ .quick{gap:8px}
+ .qbtn{min-height:76px;font-size:12px}
+ .nav{width:100%;max-width:none;left:0;right:0;bottom:0;border-radius:17px 17px 0 0;border-left:0;border-right:0;border-bottom:0;padding:8px 8px calc(env(safe-area-inset-bottom) + 7px)}
+ .nav button{min-height:47px;padding:6px 2px}
+ .goal-card{padding:18px!important}
+}
+@media(max-width:360px){
+ .app{width:calc(100% - 22px)}
+ .hero .big{font-size:32px}
+ .nav button{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ *,*::before,*::after{transition:none!important;animation:none!important}
+}
+
 </style>
 </head>
 <body>
