@@ -17,6 +17,8 @@ test('all main application views and navigation targets are present', () => {
 });
 
 test('authentication entry points and financial input remain available', () => {
+  assert.match(html, /id="googleSignInButton"/);
+  assert.match(html, /data-auth-action="google"/);
   for (const id of ['authLoginForm', 'authRegisterForm', 'authResetForm']) {
     assert.match(html, new RegExp('id="' + id + '"'));
   }
