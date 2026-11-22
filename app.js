@@ -443,7 +443,7 @@ function renderFinanceReport(){
 function finance(q){
   const d=financeReportData(),s=String(q||'').toLowerCase();
   if(!S.tx.length)return'Пока нет операций. Добавьте доходы и расходы — тогда я смогу показать аналитику.';
-  if(/цель|накоп/.test(s))return d.goals.length?'Ваши цели: '+d.goals.map(g=>`«${g.name}» — ${money(g.saved)} из ${money(g.target)} (${g.target?Math.round(g.saved/g.target*100):0}%).`).join(' '):'Вы пока не создали накопительные цели. Добавьте цель в разделе «Бюджет».';
+  if(/цель|накоп/.test(s))return d.goals.length?'Ваши цели: '+d.goals.map(g=>`«${g.name}» — ${currencyMoney(g.saved,g.currency)} из ${currencyMoney(g.target,g.currency)} (${g.target?Math.round(g.saved/g.target*100):0}%).`).join(' '):'Вы пока не создали накопительные цели. Добавьте цель в разделе «Бюджет».';
   if(/платеж|подпис|регуляр|долг|кредит/.test(s))return d.recurring?`По вашим записям регулярные платежи и ежемесячные платежи по долгам составляют примерно ${money(d.recurring)} в месяц. Проверьте, все ли записи актуальны.`:'Вы пока не добавили регулярные платежи или долги.';
   if(/доход|заработ|отлож|сбереж/.test(s))return d.earned?`В этом месяце внесено доходов на ${money(d.earned)} и расходов на ${money(d.spent)}. Разница — ${money(d.earned-d.spent)}. Это сумма по записанным операциям, а не гарантированно свободные деньги.`:'В этом месяце пока нет записанных доходов.';
   if(/трач|категор|больше/.test(s))return d.top.length?`Больше всего в этом месяце уходит на «${d.top[0][0]}»: ${money(d.top[0][1])} (${Math.round(d.top[0][1]/Math.max(1,d.spent)*100)}% расходов).`:'В этом месяце расходов пока нет.';
