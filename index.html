@@ -1038,7 +1038,7 @@ document.addEventListener('click',e=>{
   const id=t.dataset.id,act=t.dataset.act;
   const confirmDo=(msg,fn)=>{if(confirm(msg)){fn();if(!save())return;render()}};
   switch(act){
-    case'tx-del':return confirmDo('Удалить операцию?',()=>{S.tx=S.tx.filter(x=>String(x.id)!==id)});
+    case'tx-del':return confirmDo('Удалить операцию?',()=>{const tx=S.tx.find(x=>String(x.id)===id);if(tx?.type==='saving'&&tx.goalId){const goal=S.goals.find(g=>String(g.id)===String(tx.goalId));if(goal)goal.saved=Math.max(0,(Number(goal.saved)||0)-(Number(tx.amount)||0));}S.tx=S.tx.filter(x=>String(x.id)!==id)});
     case'goal-edit':return editGoal(id);
     case'goal-fund':return ask('Пополнить цель',[{n:'amount',l:'Сумма, ₽'}],f=>{
       const v=Math.round(+f.amount),g=S.goals.find(x=>x.id===id);
