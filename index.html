@@ -591,6 +591,16 @@ input,select{min-height:48px;font-size:16px}
 @media(max-width:420px){.app{width:calc(100% - 24px)}.card{padding:16px}.hero{padding:20px 18px}.split b{font-size:15px}.nav{width:100%;border-radius:0}.item{gap:8px;padding:11px 10px}.amt{font-size:14px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
+/* Operation rows: fixed two-column layout and safe wrapping */
+.item{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;max-width:100%;padding:14px 16px}
+.item>div:first-child{display:flex!important;align-items:center;gap:12px;flex:1 1 auto;min-width:0;max-width:100%}
+.item>div:first-child>div{display:flex;flex-direction:column;flex:1 1 auto;min-width:0;max-width:100%;gap:4px}
+.item b{display:block;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;word-break:normal;line-height:1.35}
+.item small{display:block;white-space:normal;overflow-wrap:anywhere;line-height:1.4}
+.item .amt{flex:0 0 auto;min-width:max-content;max-width:42%;align-self:center;white-space:nowrap;text-align:right;font-size:clamp(13px,1.5vw,16px);font-variant-numeric:tabular-nums}
+.item .amt .link{display:block;margin-left:auto;min-height:36px}
+.item .ico{width:42px;height:42px;flex:0 0 42px;margin:0}
+@media(max-width:420px){.item{gap:8px;padding:12px}.item>div:first-child{gap:9px}.item .amt{max-width:40%;font-size:13px}.item .ico{width:38px;height:38px;flex-basis:38px}}
 </style>
 </head>
 <body>
@@ -703,7 +713,7 @@ input,select{min-height:48px;font-size:16px}
       <div id="panel"></div>
     </section>
   </main>
-ion>
+</main>
 </div>
 
 <nav class="nav" aria-label="Основная навигация">
@@ -718,8 +728,8 @@ ion>
 <div id="toast" class="toast" role="status"></div>
 <input id="importFile" type="file" accept="application/json,.json" hidden>
 
-<script src="./app.js?v=42"></script>
-<script src="./auth.js?v=42"></script>
-<script src="./learning.js?v=42" defer></script>
+<script src="./app.js?v=44"></script>
+<script src="./auth.js?v=44"></script>
+<script src="./learning.js?v=44" defer></script>
 </body>
 </html>
