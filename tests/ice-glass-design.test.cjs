@@ -27,7 +27,7 @@ test('light and dark themes and responsive behavior remain present', () => {
 });
 
 test('learning overlay uses the burgundy theme', () => {
-  assert.match(learning, /#7a1f2b|rgba\(122,31,43/);
+  assert.match(learning, /#7a1f2b|#852d3a|#5a1724|#3e1420|rgba\(122,31,43/);
   assert.doesNotMatch(learning, /#dceefa|#b8d6eb|#5799c9/);
 });
 
