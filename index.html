@@ -604,6 +604,7 @@ input,select{min-height:48px;font-size:16px}
 @media(max-width:420px){.operation-item{gap:8px;padding:12px}.operation-item>.operation-main{gap:9px}.operation-item .amt{max-width:40%;font-size:13px}.operation-item .ico{width:38px;height:38px;flex-basis:38px}}
 
 
+.auth-public-description{margin:0 0 18px;color:var(--mut);font-size:13px;line-height:1.55;text-align:center}.auth-legal{margin:20px 0 0;text-align:center;font-size:12px}.auth-legal a{color:var(--mut);text-decoration:underline;text-underline-offset:3px}
 .google-signin{width:100%;min-height:54px;display:flex;align-items:center;justify-content:center;gap:12px;border:1px solid #ded9d5;border-radius:15px;background:#fff;color:#242124;font-family:inherit;font-size:16px;font-weight:600;line-height:1.2;box-shadow:0 5px 18px rgba(38,18,25,.08);cursor:pointer;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
 .google-signin svg{width:21px;height:21px;flex:0 0 21px}
 .google-signin:hover{transform:translateY(-1px);box-shadow:0 9px 24px rgba(38,18,25,.13);border-color:#c9bfc0}
@@ -617,6 +618,7 @@ input,select{min-height:48px;font-size:16px}
 <section class="auth-card">
 <div class="auth-mark">✦</div><h1 id="authTitle">Войти в SaymoSaldo</h1>
 <p class="auth-lead">Ваши финансы — в вашем личном аккаунте.</p>
+<p class="auth-public-description">Учитывайте доходы и расходы, планируйте бюджет и накопления. Ваши финансовые записи доступны только после входа в личный аккаунт.</p>
 <p id="authNotice" class="auth-notice" role="status" aria-live="polite"></p>
 <form id="authLoginForm" class="auth-form" novalidate>
 <button class="google-signin" id="googleSignInButton" type="button" data-auth-action="google">
@@ -625,6 +627,7 @@ input,select{min-height:48px;font-size:16px}
 </button>
 <p class="auth-hint">Без отдельного пароля. SaymoSaldo получает только подтверждение входа, имя, адрес почты и фотографию профиля. Доступа к Gmail и Google Диску нет.</p>
 </form>
+<p class="auth-legal"><a href="./privacy.html">Политика конфиденциальности</a></p>
 <form id="authRegisterForm" class="auth-form" hidden novalidate>
 <label class="field"><span>Придумайте логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,23}" required placeholder="3–24 символа: латиница, цифры . _ -"><small class="field-help">От 3 до 24 символов. Используйте латинские буквы, цифры, точку, дефис или подчёркивание. Без пробелов и кириллицы.</small></label>
 <label class="field"><span>Пароль</span><input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required placeholder="Не менее 12 символов"><small class="field-help">Придумайте уникальный пароль длиной от 12 символов. Не используйте пароль от других сайтов.</small></label>
