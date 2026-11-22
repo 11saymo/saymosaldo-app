@@ -570,6 +570,27 @@ button,input,select{letter-spacing:0;line-height:1.4}
 }
 
 
+/* Consistent responsive sizing and accessible touch targets */
+html{overflow-x:hidden;scrollbar-gutter:stable}
+body{font-size:16px;line-height:1.5;overflow-x:hidden}
+.app{width:min(calc(100% - 32px),1200px);max-width:1200px;padding:calc(env(safe-area-inset-top) + 20px) 0 calc(env(safe-area-inset-bottom) + 112px)}
+.card{padding:clamp(16px,2vw,24px);border-radius:16px}
+button{min-height:44px}
+.link{min-height:0}
+input,select{min-height:48px;font-size:16px}
+.nav{width:min(calc(100% - 32px),1200px);max-width:1200px;padding-inline:clamp(8px,2vw,18px)}
+.nav button{min-height:48px}
+.hero{padding:clamp(20px,3vw,32px)}
+.hero .big{font-size:clamp(32px,5vw,48px);line-height:1.15;overflow-wrap:anywhere}
+.split{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(10px,2vw,20px)}
+.split>div{min-width:0}.split b{display:block;overflow-wrap:anywhere}
+.item,.row,.toolbar{min-width:0;flex-wrap:wrap}
+.item>*{min-width:0;max-width:100%}
+.actions button,.tabs button{min-height:44px}
+@media(min-width:760px){.app{padding-top:32px;padding-bottom:132px}.nav{bottom:12px;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(0,0,0,.08)}.hero{min-height:190px}.quick{gap:16px}.qbtn{min-height:76px}}
+@media(max-width:420px){.app{width:calc(100% - 24px)}.card{padding:16px}.hero{padding:20px 18px}.split b{font-size:15px}.nav{width:100%;border-radius:0}.item{gap:8px;padding:11px 10px}.amt{font-size:14px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -613,15 +634,11 @@ button,input,select{letter-spacing:0;line-height:1.4}
     <section class="view" data-view="home">
       <p class="greet" id="greet"></p>
       <div class="card hero">
-        <span class="label" id="monthLabel">За всё время · общий эквивалент</span>
+        <span class="label" id="monthLabel">Общий баланс</span>
         <div class="big" id="balance">—</div>
         <div class="split">
-          <div><span class="label">Доходы · эквивалент ₽</span><b id="income">—</b></div>
-          <div><span class="label">Расходы · эквивалент ₽</span><b id="expense">—</b></div>
-        </div>
-        <div class="hero-period" role="group" aria-label="Период статистики">
-          <button type="button" data-hero-period="month" aria-pressed="false">За месяц</button>
-          <button type="button" data-hero-period="all" aria-pressed="true">За всё время</button>
+          <div><span class="label">Доходы · ₽</span><b id="income">—</b></div>
+          <div><span class="label">Расходы · ₽</span><b id="expense">—</b></div>
         </div>
       </div>
       <p class="status" id="status"></p>
