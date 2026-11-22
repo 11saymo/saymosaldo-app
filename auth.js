@@ -36,7 +36,7 @@
     const identifier = value.trim();
     if (identifier.includes('@')) {
       const email = identifier.toLowerCase();
-      return email.length <= 254 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) ? email : null;
+      return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
     }
     return usernameEmail(identifier);
   }
