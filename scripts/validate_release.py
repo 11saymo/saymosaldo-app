@@ -62,7 +62,7 @@ else:
     }
     declared_hashes = {token for token in script_policy if token.startswith("'sha256-")}
     if expected_hashes != declared_hashes:
-        errors.append("CSP script hashes mismatch: expected=" + repr(sorted(expected_hashes)) + " declared=" + repr(sorted(declared_hashes)))
+        errors.append("CSP script hashes do not exactly match the inline JavaScript")
 
 if parser.external_scripts:
     errors.append("External script sources are not allowed: " + ", ".join(parser.external_scripts))
