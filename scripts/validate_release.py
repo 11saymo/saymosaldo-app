@@ -58,18 +58,17 @@ if parser.external_scripts:
 if parser.external_styles:
     errors.append("External stylesheets are not allowed: " + ", ".join(parser.external_styles))
 
-scripts = re.findall(r"<script\\b[^>]*>(.*?)</script\\s*>", html, flags=re.I | re.S)
+scripts = re.findall(r"<script\b[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
 if not scripts:
     errors.append("No inline JavaScript found")
 else:
     for index, source in enumerate(scripts):
         (Path("/tmp") / f"saymosaldo-inline-{index}.js").write_text(source, encoding="utf-8")
 
-for filename in ("manifest.json",):
-    try:
-        json.loads((ROOT / filename).read_text(encoding="utf-8"))
-    except Exception as exc:
-        errors.append(f"{filename} is not valid JSON: {exc}")
+try:
+    json.loads((ROOT / "manifest.json").read_text(encoding="utf-8"))
+except Exception as exc:
+    errors.append(f"manifest.json is not valid JSON: {exc}")
 
 try:
     ET.parse(ROOT / "sitemap.xml")
@@ -78,7 +77,7 @@ except Exception as exc:
 
 for filename in ("index.html", "sw.js", "manifest.json"):
     content = (ROOT / filename).read_text(encoding="utf-8")
-    if re.search(r"\\bservice_role\\b|\\bsb_secret_[A-Za-z0-9_]+", content, flags=re.I):
+    if re.search(r"\bservice_role\b|\bsb_secret_[A-Za-z0-9_]+", content, flags=re.I):
         errors.append(f"Possible privileged Supabase key found in {filename}")
 
 if errors:
