@@ -32,5 +32,11 @@ jobs:
         run: node scripts/test_storage.js
       - name: Check authentication JavaScript syntax
         run: node --check auth.js
-      - name: Test authentication client
+      - name: Set up Deno for Supabase Edge Function checks
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check username authentication Edge Function
+        run: deno check supabase/functions/username-auth/index.ts
+      - name: Test authentication client and account isolation
         run: node scripts/test_auth.js
