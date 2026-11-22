@@ -5,7 +5,7 @@ const path = require('node:path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-test('Ice Glass design tokens replace the old burgundy visual identity', () => {
+test('Ice Glass design tokens use the softer silver-blue palette', () => {
   assert.match(html, /SAYMOSALDO ICE GLASS/);
   for (const token of ['--bg:#f4f7fb', '--ice:#d5eafa', '--ice-strong:#83afd2', '--bg:#111a27']) {
     assert.ok(html.includes(token), 'missing design token ' + token);
@@ -14,7 +14,13 @@ test('Ice Glass design tokens replace the old burgundy visual identity', () => {
   assert.doesNotMatch(layer, /#7a1f2b|#4a0f1a|burgundy/i);
 });
 
-test('rounded TT Travels-inspired typography and softer metallic palette are present', () => {\n  assert.match(html, /font-family:\s*"TT Travels","Avenir Next",Avenir,"Manrope","Segoe UI",sans-serif/);\n  assert.match(html, /#f4f7fb/);\n  assert.match(html, /#d5eafa/);\n});\n\ntest('light and dark glass themes respect explicit and system preferences', () => {
+test('rounded TT Travels-inspired typography and softer metallic palette are present', () => {
+  assert.match(html, /font-family:\s*"TT Travels","Avenir Next",Avenir,"Manrope","Segoe UI",sans-serif/);
+  assert.match(html, /#f4f7fb/);
+  assert.match(html, /#d5eafa/);
+});
+
+test('light and dark glass themes respect explicit and system preferences', () => {
   assert.match(html, /:root\[data-theme=light\]/);
   assert.match(html, /:root\[data-theme=dark\]/);
   assert.match(html, /prefers-color-scheme:\s*dark/);
