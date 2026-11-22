@@ -447,9 +447,8 @@ button,input,select{letter-spacing:0;line-height:1.4}
   .view[data-view="home"] > #homeDebts { grid-column: 1 / 7; }
   .view[data-view="home"] > .sec:has(+ #recent),
   .view[data-view="home"] > #recent { grid-column: 7 / -1; }
-  .view[data-view="home"] > #homeCurrencyCard { grid-column: 1 / -1; }
   .view[data-view="home"] > .sec:has(+ .card:not(.hero)) { grid-column: 1 / -1; }
-  .view[data-view="home"] > .card:not(.hero):not(#homeCurrencyCard) { grid-column: 1 / -1; }
+  .view[data-view="home"] > .card:not(.hero) { grid-column: 1 / -1; }
   .view[data-view="ops"]:not([hidden]),
   .view[data-view="add"]:not([hidden]) { width: min(100%, 900px); margin-inline: auto; }
   .view[data-view="add"]:not([hidden]) { max-width: 760px; }
