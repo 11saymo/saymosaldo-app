@@ -2,7 +2,7 @@ name: Validate release
 
 on:
   push:
-    branches: [main, launch-hardening]
+    branches: [main, launch-hardening, auth-integration]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -30,3 +30,7 @@ jobs:
           node --check sw.js
       - name: Test local data persistence
         run: node scripts/test_storage.js
+      - name: Check authentication JavaScript syntax
+        run: node --check auth.js
+      - name: Test authentication client
+        run: node scripts/test_auth.js
