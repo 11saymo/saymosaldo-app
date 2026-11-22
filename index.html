@@ -558,7 +558,7 @@ button,input,select{letter-spacing:0;line-height:1.4}
 
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const KEY='saymosaldo_';
+let KEY='saymosaldo_';
 const KEYS=['tx','goals','budgets','recurring','debts'];
 const scopedKey=k=>KEY+k;
 const load=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(KEY+k));return Array.isArray(v)?v:d}catch{return d}};
@@ -599,8 +599,11 @@ const save=()=>{
     for(const k of KEYS)S[k]=previous[k];
     return false;
   }
+  try{localStorage.setItem(scopedKey('local_modified_at'),new Date().toISOString())}catch(e){}
+  if(cloudSaveHandler)cloudSaveHandler();
   return true;
 };
+let cloudSaveHandler=null;
 const CATS={expense:['Продукты','Кафе и рестораны','Транспорт','Покупки','Дом','Здоровье','Развлечения','Подписки','Кредиты и долги','Другое'],income:['Зарплата','Подработка','Подарок','Другое']};
 const DEBT_KINDS=['Ипотека','Кредит','Кредитная карта','Рассрочка','Частный долг'];
 const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -901,6 +904,8 @@ function importData(e){
     const entries=Object.fromEntries(KEYS.map(k=>[scopedKey(k),JSON.stringify(S[k])]));
     if(Array.isArray(d.chatFinance))entries[chatKey()]=JSON.stringify(d.chatFinance);
     if(!persistEntries(entries)){Object.assign(S,previousState);return}
+    try{localStorage.setItem(scopedKey('local_modified_at'),new Date().toISOString())}catch(e){}
+    if(cloudSaveHandler)cloudSaveHandler();
     render();renderPanel();toast('Данные восстановлены.');
   };
   r.onerror=()=>toast('Не удалось прочитать файл резервной копии');
@@ -922,6 +927,8 @@ function askAssistant(q){
   list.push({role:'user',text:q},{role:'assistant',text:finance(q)});
   try{localStorage.setItem(chatKey(),JSON.stringify(list.slice(-60)))}
   catch(e){return toast('Не удалось сохранить историю помощника. Освободите место в браузере и попробуйте снова.')}
+  try{localStorage.setItem(scopedKey('local_modified_at'),new Date().toISOString())}catch(e){}
+  if(cloudSaveHandler)cloudSaveHandler();
   renderChat();
 }
 
@@ -1026,7 +1033,7 @@ document.addEventListener('click',e=>{
     case'rec-del':return confirmDo('Удалить регулярный платёж?',()=>{S.recurring=S.recurring.filter(x=>x.id!==id)});
     case'debt-pay':return payDebt(id);
     case'debt-del':return confirmDo('Удалить обязательство? История расходов останется.',()=>{S.debts=S.debts.filter(x=>x.id!==id)});
-    case'chat-clear':if(confirm('Очистить историю этого режима на этом устройстве?')){localStorage.removeItem(chatKey());renderChat()}return;
+    case'chat-clear':if(confirm('Очистить историю этого режима на этом устройстве?')){localStorage.removeItem(chatKey());if(cloudSaveHandler)cloudSaveHandler();renderChat()}return;
     case'welcome-yes':return startTour();
     case'welcome-no':try{localStorage.setItem(KEY+'onboarding','skipped')}catch(e){}closeWelcome();return;
     case'tour-start':return startTour();
@@ -1042,11 +1049,18 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{if(e.target.id==='importFile')importData(e)});
 $('#filter').addEventListener('change',render);
 
-fillTx();
-go('home');
-renderPanel();
-if(!localStorage.getItem(KEY+'onboarding'))showWelcome();
+function readStoredArray(key){try{const value=JSON.parse(localStorage.getItem(key));return Array.isArray(value)?value:[]}catch(e){return[]}}
+window.SaymoSaldoApp={
+ getGuestData(){return {tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts,chat_finance:readStoredArray('saymosaldo_chat_finance')}},
+ getLocalUserData(userId){const prefix='saymosaldo_user_'+userId+'_';let found=false;const data={};for(const key of KEYS){const raw=localStorage.getItem(prefix+key);if(raw!==null)found=true;try{const value=JSON.parse(raw);data[key]=Array.isArray(value)?value:[]}catch(e){data[key]=[]}}const chatRaw=localStorage.getItem(prefix+'chat_finance');if(chatRaw!==null)found=true;try{const value=JSON.parse(chatRaw);data.chat_finance=Array.isArray(value)?value:[]}catch(e){data.chat_finance=[]}if(!found)return null;return {data,updated_at:localStorage.getItem(prefix+'local_modified_at')||'1970-01-01T00:00:00.000Z'}},
+ getData(){return {tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts,chat_finance:readStoredArray(chatKey())}},
+ activate(userId,data,updatedAt){KEY='saymosaldo_user_'+userId+'_';S.tx=Array.isArray(data.tx)?data.tx:[];S.goals=Array.isArray(data.goals)?data.goals:[];S.budgets=Array.isArray(data.budgets)?data.budgets:[];S.recurring=Array.isArray(data.recurring)?data.recurring:[];S.debts=Array.isArray(data.debts)?data.debts:[];const entries=Object.fromEntries(KEYS.map(key=>[scopedKey(key),JSON.stringify(S[key])]));entries[chatKey()]=JSON.stringify(Array.isArray(data.chat_finance)?data.chat_finance:Array.isArray(data.chatFinance)?data.chatFinance:[]);if(!persistEntries(entries))return false;try{localStorage.setItem(scopedKey('local_modified_at'),updatedAt||new Date().toISOString())}catch(e){}fillTx();go('home');renderPanel();$('#appShell').hidden=false;if(!localStorage.getItem(KEY+'onboarding'))showWelcome();return true},
+ setCloudSaveHandler(handler){cloudSaveHandler=typeof handler==='function'?handler:null},
+ setSyncStatus(message){const el=$('#syncStatus');if(el)el.textContent=message||''},
+ reset(){cloudSaveHandler=null;KEY='saymosaldo_';S.tx=[];S.goals=[];S.budgets=[];S.recurring=[];S.debts=[];$('#appShell').hidden=true}
+};
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
+<script src="./auth.js"></script>
 </body>
 </html>
