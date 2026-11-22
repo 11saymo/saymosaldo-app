@@ -56,6 +56,10 @@ function testBackupAcceptsConvertedAmounts() {
   const txValidation = html.slice(html.indexOf("if(d.tx.some"), html.indexOf("if(d.goals.some"));
   assert.match(txValidation, /Number\.isFinite\(Number\(x\.amount\)\)/, "backup validation should accept decimal RUB conversions");
   assert.doesNotMatch(txValidation, /!positive\(x\.amount\)/, "backup validation must not require integer transaction amounts");
+  assert.match(html, /amount:originalAmount,originalAmount,baseAmount/, "new operations must preserve their native amount");
+  assert.match(html, /const txBaseAmount=x=>/, "analytics must use a separate RUB-equivalent amount");
+  assert.match(html, /currencyBalances/, "balances must be tracked separately by currency");
+  assert.match(html, /exchangeRate\x27in x&&x.exchangeRate!==null/, "backup import must allow missing rates");
 }
 
 function testGoalProjection() {
