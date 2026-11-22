@@ -569,6 +569,20 @@ button,input,select{letter-spacing:0;line-height:1.4}
   .nav { width:min(calc(100% - 96px),1040px); max-width:1040px; }
 }
 
+
+/* Multicurrency summary inside the burgundy dashboard card */
+.hero-period{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:18px 0 14px;padding:4px;border-radius:12px;background:rgba(255,255,255,.13)}
+.hero-period button{min-width:0;padding:9px 8px;border:1px solid transparent;border-radius:9px;background:transparent;color:rgba(255,255,255,.78);font-size:13px}
+.hero-period button[aria-pressed=true]{background:#fff;color:#5a1724;font-weight:700}
+.hero-currency-title{font-size:13px;font-weight:650;margin:8px 0}
+.hero-currency-list{display:grid;gap:8px}
+.hero-currency-row{display:grid;grid-template-columns:minmax(48px,.65fr) repeat(3,minmax(0,1fr));gap:6px;align-items:center;padding:10px 9px;border:1px solid rgba(255,255,255,.16);border-radius:11px;background:rgba(255,255,255,.075)}
+.hero-currency-row>div{min-width:0;display:grid;gap:3px}
+.hero-currency-row .hc-code{font-weight:750;font-size:14px}
+.hero-currency-row small{font-size:10px;color:rgba(255,255,255,.68);white-space:nowrap}
+.hero-currency-row b{font-size:12px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.hero .hero-currency-empty{font-size:12px;color:rgba(255,255,255,.72);padding:8px 0}
+@media(max-width:390px){.hero-currency-row{gap:4px;padding:9px 6px}.hero-currency-row b{font-size:11px}.hero-currency-row small{font-size:9px}}
 </style>
 </head>
 <body>
@@ -612,12 +626,18 @@ button,input,select{letter-spacing:0;line-height:1.4}
     <section class="view" data-view="home">
       <p class="greet" id="greet"></p>
       <div class="card hero">
-        <span class="label" id="monthLabel"></span>
+        <span class="label" id="monthLabel">За всё время · общий эквивалент</span>
         <div class="big" id="balance">—</div>
         <div class="split">
-          <div><span class="label">Доходы</span><b id="income">—</b></div>
-          <div><span class="label">Расходы</span><b id="expense">—</b></div>
+          <div><span class="label">Доходы · эквивалент ₽</span><b id="income">—</b></div>
+          <div><span class="label">Расходы · эквивалент ₽</span><b id="expense">—</b></div>
         </div>
+        <div class="hero-period" role="group" aria-label="Период статистики">
+          <button type="button" data-hero-period="month" aria-pressed="false">За месяц</button>
+          <button type="button" data-hero-period="all" aria-pressed="true">За всё время</button>
+        </div>
+        <div class="hero-currency-title">Разбивка по валютам</div>
+        <div id="currencyBalances" class="hero-currency-list" aria-live="polite"></div>
       </div>
       <div class="card"><h2 style="margin-bottom:10px">Остатки по валютам</h2><div id="currencyBalances" class="list"><small class="muted">Остатки появятся после добавления операций.</small></div></div>
       <p class="status" id="status"></p>
