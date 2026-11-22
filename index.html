@@ -414,6 +414,82 @@ button,input,select{letter-spacing:0;line-height:1.4}
 .sync-status{font-size:12px;color:var(--mut);min-height:18px;margin:-16px 0 14px}
 @media(prefers-reduced-motion:reduce){.auth-card,*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 
+
+/* Desktop and laptop layout: readable widths, stable grid, no stretched controls */
+@media (min-width: 760px) {
+  .app {
+    width: min(100% - 64px, 1280px);
+    max-width: 1280px;
+    margin-inline: auto;
+    padding: 34px 0 132px;
+  }
+  .top { margin-bottom: 22px; }
+  .view { min-width: 0; }
+  .view[data-view="home"]:not([hidden]) {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 22px;
+    row-gap: 12px;
+    align-items: start;
+  }
+  .view[data-view="home"] > * { min-width: 0; }
+  .view[data-view="home"] > #greet { grid-column: 1 / -1; }
+  .view[data-view="home"] > .hero { grid-column: 1 / 9; grid-row: span 2; min-height: 100%; }
+  .view[data-view="home"] > #status,
+  .view[data-view="home"] > #moneyInsight { grid-column: 9 / -1; }
+  .view[data-view="home"] > .quick { grid-column: 1 / -1; }
+  .view[data-view="home"] > .sec:has(+ #homeLimits),
+  .view[data-view="home"] > #homeLimits { grid-column: 1 / 7; }
+  .view[data-view="home"] > .sec:has(+ #homeGoals),
+  .view[data-view="home"] > #homeGoals { grid-column: 7 / -1; }
+  .view[data-view="home"] > .sec:has(+ #homeDebts),
+  .view[data-view="home"] > #homeDebts { grid-column: 1 / 7; }
+  .view[data-view="home"] > .sec:has(+ #recent),
+  .view[data-view="home"] > #recent { grid-column: 7 / -1; }
+  .view[data-view="home"] > #homeCurrencyCard { grid-column: 1 / -1; }
+  .view[data-view="home"] > .sec:has(+ .card:not(.hero)) { grid-column: 1 / -1; }
+  .view[data-view="home"] > .card:not(.hero):not(#homeCurrencyCard) { grid-column: 1 / -1; }
+  .view[data-view="ops"]:not([hidden]),
+  .view[data-view="add"]:not([hidden]) { width: min(100%, 900px); margin-inline: auto; }
+  .view[data-view="add"]:not([hidden]) { max-width: 760px; }
+  .view[data-view="stats"]:not([hidden]) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 22px;
+    align-items: start;
+  }
+  #budgetWrap { grid-column: 1 / -1; min-width: 0; }
+  .view[data-view="stats"] > .sec,
+  .view[data-view="stats"] > .card { min-width: 0; }
+  .view[data-view="stats"] > .sec:nth-of-type(1),
+  .view[data-view="stats"] > .card:nth-of-type(1) { grid-column: 1 / -1; }
+  .view[data-view="stats"] > .sec:nth-of-type(2),
+  .view[data-view="stats"] > .card:nth-of-type(2) { grid-column: 1 / 2; }
+  .view[data-view="stats"] > .sec:nth-of-type(3),
+  .view[data-view="stats"] > .card:nth-of-type(3) { grid-column: 2 / 3; }
+  .view[data-view="more"]:not([hidden]) { width: min(100%, 1120px); margin-inline: auto; }
+  #panel { min-width: 0; }
+  .nav { width: min(100%, 1280px); }
+  .nav button { min-height: 52px; }
+  .seo-intro { max-width: 900px; }
+}
+@media (min-width: 1200px) {
+  .app { width: min(100% - 96px, 1360px); max-width: 1360px; }
+  .view[data-view="home"]:not([hidden]) { column-gap: 26px; row-gap: 14px; }
+  .card { padding: 24px; }
+  .nav { max-width: 1360px; }
+}
+@media (min-width: 760px) and (max-width: 1000px) {
+  .app { width: calc(100% - 48px); }
+  .view[data-view="home"]:not([hidden]) { column-gap: 16px; }
+  .view[data-view="home"] > .hero { grid-column: 1 / 8; }
+  .view[data-view="home"] > #status,
+  .view[data-view="home"] > #moneyInsight { grid-column: 8 / -1; }
+}
+@media (max-width: 759px) {
+  .view[data-view="home"]:not([hidden]) { display: block; }
+}
+
 </style>
 </head>
 <body>
