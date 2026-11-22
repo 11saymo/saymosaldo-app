@@ -34,7 +34,7 @@ test('learning overlay uses the burgundy theme', () => {
 test('PWA assets refresh with the burgundy theme', () => {
   assert.equal(manifest.theme_color, '#7a1f2b');
   assert.equal(manifest.background_color, '#f5f5f3');
-  assert.match(sw, /saymosaldo-v48/);
+  assert.match(sw, /saymosaldo-v49/);
   assert.match(sw, /fetch\(e\.request,\{cache:'no-store'\}\)/);
   assert.match(sw, /self\.skipWaiting\(\)/);
   assert.match(app, /updateViaCache:'none'/);
