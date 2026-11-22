@@ -69,21 +69,25 @@
   async function apiRequest(path, options = {}) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 18000);
-    const headers = {
-      apikey: PUBLISHABLE_KEY,
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    };
-    if (options.token) headers.Authorization = 'Bearer ' + options.token;
     let response;
+    let raw;
     try {
+      const headers = {
+        apikey: PUBLISHABLE_KEY,
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      };
+      if (options.token) headers.Authorization = 'Bearer ' + options.token;
       response = await fetch(SUPABASE_URL + path, {
         method: options.method || 'GET',
         headers,
         body: options.body === undefined ? undefined : JSON.stringify(options.body),
         signal: controller.signal,
-        cache: 'no-store'
+        cache: 'no-store',
+        credentials: 'omit'
       });
+      // Keep the same deadline active while the response body is being read.
+      raw = await response.text();
     } catch (error) {
       const failure = new Error(error && error.name === 'AbortError'
         ? 'Сервер долго не отвечает. Проверьте интернет и попробуйте ещё раз.'
@@ -93,7 +97,6 @@
     } finally {
       clearTimeout(timeout);
     }
-    const raw = await response.text();
     let payload = {};
     try { payload = raw ? JSON.parse(raw) : {}; }
     catch (error) { throw new Error('Сервер вернул некорректный ответ. Попробуйте позже.'); }
