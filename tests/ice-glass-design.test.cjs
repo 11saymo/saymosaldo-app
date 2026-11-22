@@ -10,7 +10,8 @@ test('Ice Glass design tokens replace the old burgundy visual identity', () => {
   for (const token of ['--bg:#edf2f7', '--ice:#a9d8ff', '--ice-strong:#4d9fe8', '--bg:#080d16']) {
     assert.ok(html.includes(token), 'missing design token ' + token);
   }
-  assert.doesNotMatch(html, /--acc:#7a1f2b/);
+  const layer = html.slice(html.indexOf('SAYMOSALDO ICE GLASS'), html.indexOf('</style>'));
+  assert.doesNotMatch(layer, /#7a1f2b|#4a0f1a|burgundy/i);
 });
 
 test('light and dark glass themes respect explicit and system preferences', () => {
