@@ -1,4 +1,6 @@
 from html.parser import HTMLParser
+import base64
+import hashlib
 from pathlib import Path
 import json
 import re
@@ -53,10 +55,38 @@ else:
     if "'unsafe-inline'" in script_policy or "'unsafe-eval'" in script_policy:
         errors.append("CSP script-src must not allow unsafe-inline or unsafe-eval")
 
+    inline_sources = re.findall(r"<script\\b[^>]*>(.*?)</script\\s*>", html, flags=re.I | re.S)
+    expected_hashes = {
+        "'sha256-" + base64.b64encode(hashlib.sha256(source.encode("utf-8")).digest()).decode("ascii") + "'"
+        for source in inline_sources
+    }
+    declared_hashes = {token for token in script_policy if token.startswith("'sha256-")}
+    if expected_hashes != declared_hashes:
+        errors.append("CSP script hashes do not exactly match the inline JavaScript")
+
 if parser.external_scripts:
     errors.append("External script sources are not allowed: " + ", ".join(parser.external_scripts))
 if parser.external_styles:
     errors.append("External stylesheets are not allowed: " + ", ".join(parser.external_styles))
+
+inline_source = "\\n".join(re.findall(r"<script\\b[^>]*>(.*?)</script\\s*>", html, flags=re.I | re.S))
+if re.search(r"\\b(?:fetch|XMLHttpRequest|WebSocket|sendBeacon)\\b", inline_source):
+    errors.append("The app must not send financial data through browser network APIs")
+
+export_start = html.find("function exportData()")
+import_start = html.find("function importData(e)")
+chat_start = html.find("const chatKey=")
+if export_start < 0 or import_start < 0 or chat_start < 0:
+    errors.append("Missing export, import, or chat storage functions")
+else:
+    export_section = html[export_start:import_start]
+    import_section = html[import_start:chat_start]
+    if "localStorage.getItem(chatKey())" not in export_section:
+        errors.append("Backup export must include the active assistant chat history")
+    if "entries[chatKey()]" not in import_section or "persistEntries(entries)" not in import_section:
+        errors.append("Backup restore must restore chat history together with financial records")
+if "function persistEntries(entries)" not in html:
+    errors.append("Missing safe storage write helper")
 
 scripts = re.findall(r"<script\b[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
 if not scripts:
@@ -97,6 +127,16 @@ for filename in ("index.html", "sw.js", "manifest.json"):
     if re.search(r"\bservice_role\b|\bsb_secret_[A-Za-z0-9_]+", content, flags=re.I):
         errors.append(f"Possible privileged Supabase key found in {filename}")
 
+
+sw_content = (ROOT / "sw.js").read_text(encoding="utf-8")
+if "e.request.method!=='GET'||url.origin!==location.origin" not in sw_content:
+    errors.append("Service worker must only intercept same-origin GET requests")
+if "./privacy.html" not in sw_content or "./404.html" not in sw_content:
+    errors.append("Service worker must include the privacy and not-found pages in its app shell cache")
+
+privacy_content = (ROOT / "privacy.html").read_text(encoding="utf-8") if (ROOT / "privacy.html").is_file() else ""
+if "не шифрует записи отдельным паролем" not in privacy_content:
+    errors.append("Privacy policy must disclose that app data is not separately encrypted")
 
 # Public launch assets must exist and the GitHub Pages 404 route must be useful.
 try:
