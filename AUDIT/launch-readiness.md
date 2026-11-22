@@ -53,3 +53,11 @@ Do not add new product sections before launch. Keep the existing burgundy design
 ## Release rule
 
 A green GitHub Actions run is necessary but not sufficient. Do not describe the product as fully secure or launch-ready until the production Supabase configuration, live auth/data flows, backup/restore, and real-device UI have been checked.
+
+
+## Additional confirmed authentication details
+
+- New registrations are created through the `username-auth` Edge Function using a synthetic address under `accounts.saymosaldo.app` and `email_confirm: true`. This is a username + password + one-time recovery-code flow, not email-confirmation registration.
+- The recovery code is generated with Web Crypto, only its SHA-256 hash is stored in the dedicated table, and the raw code is returned once to the client. The current reset path deliberately keeps the same high-entropy code after password change so a lost response does not lock the user out; review whether the intended recovery threat model requires rotation/revocation.
+- The Edge Function enforces an Origin allowlist and calls a rate-limit RPC. Production behavior still depends on the deployed allowlist, deployed function version, configured secrets, and the actual database function/table state.
+- The app's browser session includes both access and refresh tokens in localStorage. A migration to HttpOnly cookies is not a drop-in change for this static Pages architecture; do not attempt it without designing and testing a server-side session boundary.
