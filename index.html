@@ -980,6 +980,20 @@ dialog{background:var(--card);border-color:var(--line)}
 :root[data-theme=dark] .nav{background:rgba(25,40,58,.96)}
 :root[data-theme=dark] .nav .fab{background:#294763!important;color:#c4e2fa!important;border-color:#3d6283}
 :root[data-theme=dark] .auth-card{background:#19283a;border-color:var(--line)}
+
+@media(prefers-color-scheme:dark){
+ :root:not([data-theme=light]) .hero{color:#eaf4fd!important;background:linear-gradient(125deg,#28435e 0%,#203a55 58%,#1b3149 100%)!important;border-color:#3a5875}
+ :root:not([data-theme=light]) .hero .label,:root:not([data-theme=light]) .hero small{color:#b5cce0}
+ :root:not([data-theme=light]) .hero .big,:root:not([data-theme=light]) .hero .split b{color:#f1f7fc}
+ :root:not([data-theme=light]) .hero .split>div{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.10)}
+ :root:not([data-theme=light]) .qbtn,:root:not([data-theme=light]) .tabs{background:var(--card)}
+ :root:not([data-theme=light]) .tabs button{background:#1d3045}
+ :root:not([data-theme=light]) .tabs button[aria-selected=true]{background:#294763;color:#c4e2fa;border-color:#3d6283}
+ :root:not([data-theme=light]) .nav{background:rgba(25,40,58,.96)}
+ :root:not([data-theme=light]) .nav .fab{background:#294763!important;color:#c4e2fa!important;border-color:#3d6283}
+ :root:not([data-theme=light]) .auth-card{background:#19283a;border-color:var(--line)}
+}
+
 @media(prefers-reduced-motion:no-preference){
  .card,.item,.qbtn,button{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease,transform .18s ease}
  .card:hover,.item:hover{box-shadow:0 9px 26px rgba(48,91,132,.075)}
