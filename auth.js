@@ -274,7 +274,8 @@
   }
 
   function scheduleCloudSave() {
-    if (!session || !window.SaymoSaldoApp || loggingOut) return;
+    if (!session || !window.SaymoSaldoApp || loggingOut || !window.SaymoSaldoApp.hasPendingSync()) return;
+    window.SaymoSaldoApp.setSyncStatus('Сохраняем изменения в аккаунт…');
     if (syncTimer) clearTimeout(syncTimer);
     syncTimer = setTimeout(() => { syncTimer = null; syncCloudData(); }, 700);
   }
