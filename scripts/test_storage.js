@@ -7,7 +7,9 @@ const html = fs.readFileSync(path.join(__dirname, "..", "app.js"), "utf8");
 const start = html.indexOf("function persistEntries(entries){");
 const end = html.indexOf("const CATS=", start);
 assert(start >= 0 && end > start, "storage helper block must exist");
-const storageCode = html.slice(start, end);
+// This harness tests storage helpers only. Startup normalization is a separate
+// concern and its call sits in the extracted range, so omit that side effect.
+const storageCode = html.slice(start, end).replace("if(normalizeRubleData(S))save();", "");
 
 function createHarness(initial, failKey = null) {
   const data = new Map(Object.entries(initial));
