@@ -68,7 +68,7 @@ const empty=t=>`<div class="empty">${t}</div>`;
 const catOpts=t=>CATS[t].map(c=>`<option>${esc(c)}</option>`).join('');
 const FIELD_HELP={name:'Дайте понятное название, чтобы потом легко узнать запись.',target:'Укажите полную сумму, которую хотите накопить.',saved:'Укажите, сколько уже отложено на эту цель. Если пока ничего — оставьте пустым или введите 0.',date:'При желании укажите дату, к которой хотите достичь цели.',limit:'Максимальная сумма расходов по выбранной категории за месяц.',amount:'Введите сумму одного регулярного платежа в рублях.',day:'Введите число месяца от 1 до 31, когда обычно наступает платёж.',original:'Полная сумма обязательства на момент оформления, а не текущий остаток.',remaining:'Сколько осталось выплатить на сегодняшний день. Значение не должно превышать первоначальную сумму.',monthly:'Сколько обычно платите каждый месяц.',rate:'Укажите годовую процентную ставку из договора. Если не знаете — оставьте поле пустым.'};
 const field=(n,l,t='number',x='')=>`<label class="field"><span>${l}</span><input name="${n}" type="${t}" ${t==='number'?'inputmode="decimal" step="any"':''} ${x}>${FIELD_HELP[n]?`<small class="field-help">${FIELD_HELP[n]}</small>`:''}</label>`;
-let mode='finance', tab='recurring', cur='home', heroPeriod='all';
+let mode='finance', tab='recurring', cur='home';
 
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2400)}
 
@@ -133,18 +133,15 @@ function migrateGoalSavingsToOperations(){let changed=false;for(const g of S.goa
 function render(){
   migrateGoalSavingsToOperations();
   const k=nowMk(), m=monthTx(k), monthInc=sumType(m,'income'), monthOut=sumType(m,'expense');
-  const periodRows=heroPeriod==='month'?m:S.tx;
-  const periodInc=sumType(periodRows,'income'),periodOut=sumType(periodRows,'expense');
   const inc=sumType(S.tx,'income'), out=sumType(S.tx,'expense');
   const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(txBaseAmount));
   const overN=S.budgets.filter(b=>spent(b.category)>b.limit).length;
   const h=new Date().getHours();
   $('#greet').textContent=(h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+', рады видеть вас в SaymoSaldo!';
-  $('#monthLabel').textContent=(heroPeriod==='month'?monthName(k):'За всё время');
-  $('#balance').textContent=money(periodInc-periodOut);
-  $('#income').textContent=money(periodInc);
-  $('#expense').textContent=money(periodOut);
-  $$('.hero-period [data-hero-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.heroPeriod===heroPeriod)));
+  $('#monthLabel').textContent='Общий баланс';
+  $('#balance').textContent=money(inc-out);
+  $('#income').textContent=money(inc);
+  $('#expense').textContent=money(out);
 
   $('#status').textContent=!S.tx.length?'Добавьте первую операцию, и общая картина появится здесь.':overN?`Превышено лимитов: ${overN}. Проверьте категории ниже.`:'Всё под контролем.';
    const insightEl=$('#moneyInsight');
@@ -474,9 +471,8 @@ function endTour(state){
 function setTheme(v){try{localStorage.setItem('saymosaldo_theme',v)}catch(e){}if(v==='light'||v==='dark')document.documentElement.dataset.theme=v;else delete document.documentElement.dataset.theme}
 document.addEventListener('click',e=>{
   
-  const t=e.target.closest('[data-go],[data-tab],[data-mode],[data-q],[data-act],[data-theme-set],[data-hero-period]');
+  const t=e.target.closest('[data-go],[data-tab],[data-mode],[data-q],[data-act],[data-theme-set]');
   if(!t)return;
-  if(t.dataset.heroPeriod){heroPeriod=t.dataset.heroPeriod==='month'?'month':'all';return render()}
   if(t.dataset.themeSet){setTheme(t.dataset.themeSet);return renderPanel()}
   if(t.dataset.go){if(t.dataset.tabTarget)tab=t.dataset.tabTarget;return go(t.dataset.go)}
   if(t.dataset.tab){tab=t.dataset.tab;return renderPanel()}
