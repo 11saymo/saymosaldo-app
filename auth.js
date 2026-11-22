@@ -13,6 +13,7 @@
   let refreshTimer = null;
   let syncBusy = false;
   let syncPromise = null;
+  let refreshPromise = null;
   let syncAgain = false;
   let loggingOut = false;
   let retryDelay = 2000;
@@ -158,14 +159,26 @@
   }
 
   async function refreshSession() {
+    if (refreshPromise) return refreshPromise;
     if (!session || !session.refresh_token) throw new Error('Сессия завершилась. Войдите снова.');
-    const value = await apiRequest('/auth/v1/token?grant_type=refresh_token', {
-      method: 'POST',
-      body: { refresh_token: session.refresh_token }
-    });
-    storeSession(value);
-    scheduleRefresh();
-    return session;
+    const sessionAtStart = session;
+    const refreshToken = session.refresh_token;
+    refreshPromise = (async () => {
+      const value = await apiRequest('/auth/v1/token?grant_type=refresh_token', {
+        method: 'POST',
+        body: { refresh_token: refreshToken }
+      });
+      // A concurrent sign-in or logout must never be overwritten by an older refresh response.
+      if (session !== sessionAtStart || !session || session.refresh_token !== refreshToken) return session;
+      storeSession(value);
+      scheduleRefresh();
+      return session;
+    })();
+    try {
+      return await refreshPromise;
+    } finally {
+      refreshPromise = null;
+    }
   }
 
   async function ensureFreshSession() {
@@ -522,11 +535,21 @@
     setNotice('Вы вышли из аккаунта.', 'success');
   }
 
+  function isInvalidSessionError(error) {
+    if (!error) return false;
+    if (error.status === 401) return true;
+    return error.status === 400 && /invalid_grant|refresh.token.not.found|invalid.refresh.token/i
+      .test(String(error.code || '') + ' ' + String(error.message || ''));
+  }
+
   async function bootstrap() {
     rememberButtonLabels();
     showAuth();
     session = readSession();
     if (!session) return;
+
+    // Validate/refresh authentication separately from loading financial data.
+    // A temporary REST/database error must not destroy a valid login session.
     try {
       if (session.expires_at <= Math.floor(Date.now() / 1000) + 90) {
         await refreshSession();
@@ -535,23 +558,29 @@
         session.user = user;
         storeSession(session);
       }
-      await openApp(session.user);
     } catch (error) {
-      if (error.status === 0 && session && session.user &&
-          window.SaymoSaldoApp.getLocalUserData(session.user.id)) {
-        try { await openApp(session.user); return; } catch (offlineError) {}
+      if (error.status === 0 || (error.status >= 500 && error.status < 600) || error.status === 429) {
+        setNotice('Не удалось проверить сессию из-за временной ошибки связи. Повторите загрузку страницы — вход сохранён.', 'error');
+        return;
       }
       try {
         await refreshSession();
-        await openApp(session.user);
       } catch (refreshError) {
-        if (refreshError.status === 0 && session && session.user &&
-            window.SaymoSaldoApp.getLocalUserData(session.user.id)) {
-          try { await openApp(session.user); return; } catch (offlineError) {}
+        if (!isInvalidSessionError(refreshError)) {
+          setNotice('Сервер временно не отвечает. Вход сохранён — попробуйте обновить страницу позже.', 'error');
+          return;
         }
         clearSession();
-        setNotice('Сеанс завершился или недоступен сервер. Войдите снова при подключении к интернету.', 'error');
+        setNotice('Сеанс завершился. Войдите снова.', 'error');
+        return;
       }
+    }
+
+    try {
+      await openApp(session.user);
+    } catch (error) {
+      showAuth();
+      setNotice(error.message || 'Не удалось загрузить данные аккаунта. Вход сохранён — попробуйте ещё раз.', 'error');
     }
   }
 
