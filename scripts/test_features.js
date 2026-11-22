@@ -49,6 +49,12 @@ async function testCurrencyClient() {
   assert.ok(events.includes("saymo-rates-updated"));
 }
 
+function testBackupAcceptsConvertedAmounts() {
+  const html = fs.readFileSync("index.html", "utf8");
+  assert.match(html, /Number\\.isFinite\\(Number\\(x\\.amount\\)\\)/, "backup validation should accept decimal RUB conversions");
+  assert.doesNotMatch(html, /!positive\\(x\\.amount\\)/, "backup validation must not require integer transaction amounts");
+}
+
 function testGoalProjection() {
   const html = fs.readFileSync("index.html", "utf8");
   const match = html.match(/function goalProjection\(g\)\{[^\n]+\}/);
@@ -72,5 +78,6 @@ function testGoalProjection() {
 (async () => {
   await testCurrencyClient();
   testGoalProjection();
+  testBackupAcceptsConvertedAmounts();
   console.log("Currency and savings goal tests passed.");
 })().catch(error => { console.error(error); process.exit(1); });
