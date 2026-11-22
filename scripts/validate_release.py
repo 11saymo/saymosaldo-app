@@ -64,8 +64,8 @@ else:
     if expected_hashes != declared_hashes:
         errors.append("CSP script hashes do not exactly match the inline JavaScript")
 
-if parser.external_scripts != ["./currency.js", "./auth.js", "./learning.js"]:
-    errors.append("Only approved first-party currency.js, auth.js, and learning.js scripts may be loaded externally: " + ", ".join(parser.external_scripts))
+if parser.external_scripts != ["./currency.js", "./app.js", "./auth.js", "./learning.js"]:
+    errors.append("Only approved first-party currency.js, app.js, auth.js, and learning.js scripts may be loaded externally: " + ", ".join(parser.external_scripts))
 if parser.external_styles:
     errors.append("External stylesheets are not allowed: " + ", ".join(parser.external_styles))
 
@@ -73,19 +73,21 @@ inline_source = "\n".join(re.findall(r"<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</scri
 if re.search(r"\b(?:fetch|XMLHttpRequest|WebSocket|sendBeacon)\b", inline_source):
     errors.append("The app must not send financial data through browser network APIs")
 
-export_start = html.find("function exportData()")
-import_start = html.find("function importData(e)")
-chat_start = html.find("const chatKey=")
+app_path = ROOT / "app.js"
+app = app_path.read_text(encoding="utf-8")
+export_start = app.find("function exportData(")
+import_start = app.find("function importData(")
+chat_start = app.find("const chatKey=")
 if export_start < 0 or import_start < 0 or chat_start < 0:
-    errors.append("Missing export, import, or chat storage functions")
+    errors.append("Missing export, import, or chat storage functions in app.js")
 else:
-    export_section = html[export_start:import_start]
-    import_section = html[import_start:chat_start]
+    export_section = app[export_start:import_start]
+    import_section = app[import_start:chat_start]
     if "localStorage.getItem(chatKey())" not in export_section:
         errors.append("Backup export must include the active assistant chat history")
     if "entries[chatKey()]" not in import_section or "persistEntries(entries)" not in import_section:
         errors.append("Backup restore must restore chat history together with financial records")
-if "function persistEntries(entries)" not in html:
+if "function persistEntries(entries)" not in app:
     errors.append("Missing safe storage write helper")
 
 scripts = re.findall(r"<script\b(?![^>]*\bsrc=)[^>]*>(.*?)</script\s*>", html, flags=re.I | re.S)
