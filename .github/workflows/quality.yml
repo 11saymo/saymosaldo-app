@@ -6,6 +6,7 @@ on:
       - main
       - quality-foundation
       - "feature/**"
+      - "audit/**"
   pull_request:
     branches:
       - main
