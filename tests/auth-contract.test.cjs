@@ -83,7 +83,7 @@ test('self-service account deletion is authenticated, recent-session protected, 
   assert.match(source, /deleteAccount/);
   assert.match(app, /data-act="account-delete"/);
   assert.match(deletion, /auth_time/);
-  assert.match(deletion, /claims\\.amr/);
+  assert.ok(deletion.includes('claims?.amr'));
   assert.match(deletion, /method === 'oauth'/);
   assert.match(deletion, /now - authTime > 600/);
   assert.ok(deletion.includes("body.confirmation !== 'DELETE'"));
