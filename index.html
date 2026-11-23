@@ -6,7 +6,7 @@
 <meta name="description" content="MUNORA — личный финансовый помощник: учёт доходов и расходов, планирование бюджета, контроль платежей и накоплений.">
 <meta name="robots" content="index, follow">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'self'  ; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://pmrrslmkrulhuapxtltm.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-fzYAVOeGb2FL1k2ZTmAI0okrh8YU6t9vYkQzGO2R1DA=' 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://pmrrslmkrulhuapxtltm.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; worker-src 'self'; manifest-src 'self'; upgrade-insecure-requests">
 <meta name="google-site-verification" content="5JxssF-pElOr3sZdiBvC2ko0LklpC0O8AirzG-uq7cI">
 <link rel="canonical" href="https://munora.ru/">
 <meta property="og:type" content="website">
@@ -628,24 +628,6 @@ input,select{min-height:48px;font-size:16px}
 <p class="auth-hint">Без отдельного пароля. MUNORA получает только подтверждение входа, имя, адрес почты и фотографию профиля. Доступа к Gmail и Google Диску нет.</p>
 </form>
 <p class="auth-legal"><a href="./privacy.html">Политика конфиденциальности</a></p>
-<form id="authRegisterForm" class="auth-form" hidden novalidate>
-<label class="field"><span>Придумайте логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,23}" required placeholder="3–24 символа: латиница, цифры . _ -"><small class="field-help">От 3 до 24 символов. Используйте латинские буквы, цифры, точку, дефис или подчёркивание. Без пробелов и кириллицы.</small></label>
-<label class="field"><span>Пароль</span><input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required placeholder="Не менее 12 символов"><small class="field-help">Придумайте уникальный пароль длиной от 12 символов. Не используйте пароль от других сайтов.</small></label>
-<label class="field"><span>Повторите пароль</span><input name="passwordConfirm" type="password" minlength="12" maxlength="72" autocomplete="new-password" required placeholder="Повторите пароль"><small class="field-help">Введите тот же пароль ещё раз — символы должны полностью совпасть.</small></label>
-<p class="auth-hint">Электронная почта не нужна. После регистрации вы получите код восстановления — сохраните его отдельно.</p>
-<button class="primary" type="submit">Создать аккаунт</button>
-<div class="auth-links"><button type="button" class="link" data-auth-view="login">У меня уже есть аккаунт</button></div>
-</form>
-<form id="authResetForm" class="auth-form" hidden novalidate>
-<label class="field"><span>Логин</span><input name="username" type="text" minlength="3" maxlength="24" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
-<label class="field"><span>Код восстановления</span><input name="recoveryCode" type="text" minlength="48" maxlength="48" autocapitalize="none" spellcheck="false" autocomplete="off" required placeholder="48 символов"><small class="field-help">Вставьте все 48 символов кода, выданного при регистрации. Не добавляйте пробелы.</small></label>
-<label class="field"><span>Новый пароль</span><input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></label>
-<label class="field"><span>Повторите новый пароль</span><input name="passwordConfirm" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></label>
-<p class="auth-hint">Код восстановления выдаётся один раз при регистрации. Без него восстановить забытый пароль невозможно.</p>
-<button class="primary" type="submit">Обновить пароль</button>
-<div class="auth-links"><button type="button" class="link" data-auth-view="login">Вернуться ко входу</button></div>
-</form>
-<section id="recoveryPanel" class="recovery-panel" hidden><h2>Сохраните код восстановления</h2><p id="recoveryMessage" class="auth-hint"></p><code id="recoveryCode" class="recovery-code"></code><button id="copyRecovery" type="button" class="ghost">Скопировать код</button><button id="recoveryContinue" type="button" class="primary">Код сохранён — продолжить</button></section>
 <p class="auth-foot">MUNORA · Личный финансовый помощник</p>
 </section>
 </div>
