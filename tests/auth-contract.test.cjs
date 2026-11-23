@@ -9,6 +9,7 @@ const source = fs.readFileSync(path.join(root, 'auth.js'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const edge = fs.readFileSync(path.join(root, 'supabase/functions/username-auth/index.ts'), 'utf8');
 const config = fs.readFileSync(path.join(root, 'supabase/config.toml'), 'utf8');
+const serviceWorker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 
 function loadAuthApi() {
   const document = { readyState: 'loading', addEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; }, getElementById() { return null; } };
@@ -30,11 +31,11 @@ test('Google sign-in uses PKCE and only the public identity scopes', () => {
   assert.equal(target.searchParams.get('scopes'), 'openid email profile');
 });
 
-test('public sign-in screen exposes Google and keeps legacy password forms unavailable', () => {
+test('public sign-in screen exposes Google only and contains no dormant password forms', () => {
   assert.match(html, /id="googleSignInButton"/);
-  assert.match(html, /id="authRegisterForm"[^>]*hidden/);
-  assert.match(html, /id="authResetForm"[^>]*hidden/);
   assert.match(html, /id="authLoginForm"/);
+  assert.doesNotMatch(html, /authRegisterForm|authResetForm|recoveryPanel/);
+  assert.doesNotMatch(source, /username-auth|grant_type=password|reset_password|recoveryCode/);
 });
 
 test('OAuth verifier is generated with Web Crypto and stored only for the current tab', () => {
@@ -80,4 +81,10 @@ test('public client contains no privileged Supabase keys', () => {
     const value = fs.readFileSync(path.join(root, file), 'utf8');
     assert.doesNotMatch(value, /\bservice_role\b|\bsb_secret_[A-Za-z0-9_]+/i, file);
   }
+});
+
+test('service worker never persists OAuth callback URLs in Cache Storage', () => {
+  assert.match(serviceWorker, /isAuthCallback/);
+  assert.match(serviceWorker, /if\(res\.ok&&!isAuthCallback\)/);
+  assert.match(serviceWorker, /'access_token','refresh_token','token_hash'/);
 });
