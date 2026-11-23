@@ -9,8 +9,8 @@ const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
 const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
 
-test('SaymoSaldo burgundy visual direction is restored', () => {
-  assert.match(html, /SaymoSaldo burgundy visual system restored/);
+test('Munora burgundy visual direction is restored', () => {
+  assert.match(html, /MUNORA burgundy visual system restored/);
   assert.match(html, /--acc:#7a1f2b/);
   assert.match(html, /--bg:#f5f5f3/);
   assert.match(html, /rgba\(122,31,43/);
@@ -34,7 +34,7 @@ test('learning overlay uses the burgundy theme', () => {
 test('PWA assets refresh with the burgundy theme', () => {
   assert.equal(manifest.theme_color, '#7a1f2b');
   assert.equal(manifest.background_color, '#f5f5f3');
-  assert.match(sw, /saymosaldo-v49/);
+  assert.match(sw, /munora-v51/);
   assert.match(sw, /fetch\(e\.request,\{cache:'no-store'\}\)/);
   assert.match(sw, /self\.skipWaiting\(\)/);
   assert.match(app, /updateViaCache:'none'/);
