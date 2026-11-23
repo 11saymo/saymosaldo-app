@@ -118,6 +118,7 @@
     const value = String(payload && (payload.error || payload.code || payload.msg || payload.message || payload.error_description) || '');
     if (/temporarily_unavailable/i.test(value)) return 'Сервис временно недоступен. Попробуйте ещё раз чуть позже.';
     if (/origin_not_allowed/i.test(value)) return 'Запрос отклонён настройками безопасности. Откройте официальный сайт MUNORA.';
+    if (/reauthentication_required/i.test(value)) return 'Для удаления аккаунта подтвердите вход заново: выйдите и войдите через Google, затем повторите удаление.';
     return status === 0 ? 'Нет соединения. Проверьте интернет и повторите попытку.' :
       'Не удалось выполнить действие. Попробуйте ещё раз позже.';
   }
@@ -405,6 +406,27 @@
     if (needsSync) scheduleCloudSave();
   }
 
+  async function deleteAccount() {
+    if (!session || !session.user || !session.user.id) throw new Error('Войдите в аккаунт перед удалением.');
+    await ensureFreshSession();
+    const userId = session.user.id;
+    await apiRequest('/functions/v1/delete-account', {
+      method: 'POST',
+      token: session.access_token,
+      body: { confirmation: 'DELETE' }
+    });
+    if (window.SaymoSaldoApp && window.SaymoSaldoApp.deleteLocalUserData) {
+      window.SaymoSaldoApp.deleteLocalUserData(userId);
+    }
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = null;
+    clearSession();
+    if (window.SaymoSaldoApp) window.SaymoSaldoApp.reset();
+    showAuth();
+    setNotice('Аккаунт и облачные данные удалены.', 'success');
+    return true;
+  }
+
   async function logout() {
     loggingOut = true;
     if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
@@ -501,6 +523,7 @@
     normalizeCloudData,
     hasData,
     apiRequest,
+    deleteAccount,
     get username() { return username; }
   };
   window.SaymoSaldoAuth = publicApi;
