@@ -30,6 +30,7 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check app.js
+          node --check app.js
           node --check auth.js
           node --check learning.js
       - name: Run auth contract tests
