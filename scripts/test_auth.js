@@ -10,7 +10,8 @@ const config = fs.readFileSync(path.join(root, "supabase/config.toml"), "utf8");
 const migrations = fs.readdirSync(path.join(root, "supabase/migrations")).join("\n");
 
 assert.ok(html.includes('id="googleSignInButton"'), "Google sign-in button must be present");
-assert.ok(html.includes('id="authRegisterForm"') && html.includes('id="authResetForm"'), "Legacy forms must remain hidden for backward-compatible markup");
+assert.ok(!html.includes('authRegisterForm') && !html.includes('authResetForm'), "Retired password and recovery forms must not ship in the public client");
+assert.ok(!auth.includes("username-auth") && !auth.includes("grant_type=password") && !auth.includes("reset_password"), "Public client must not contain retired password-auth flows");
 assert.ok(auth.includes("googleAuthorizeUrl") && auth.includes("code_challenge_method"), "Google OAuth must use PKCE");
 assert.ok(auth.includes("sessionStorage.setItem(GOOGLE_PKCE_KEY, verifier)"), "PKCE verifier must be tab-scoped");
 assert.ok(auth.includes("credentials: 'omit'"), "Auth requests must omit ambient browser credentials");
