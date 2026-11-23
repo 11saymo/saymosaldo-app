@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const root = path.join(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'auth.js'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
 const edge = fs.readFileSync(path.join(root, 'supabase/functions/username-auth/index.ts'), 'utf8');
 const config = fs.readFileSync(path.join(root, 'supabase/config.toml'), 'utf8');
 const serviceWorker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
@@ -80,7 +81,7 @@ test('legacy username and recovery-code endpoint is retired and JWT protected', 
 test('self-service account deletion is authenticated, recent-session protected, and server-side', () => {
   assert.ok(source.includes('/functions/v1/delete-account'));
   assert.match(source, /deleteAccount/);
-  assert.match(html, /data-act="account-delete"/);
+  assert.match(app, /data-act="account-delete"/);
   assert.match(deletion, /auth_time/);
   assert.match(deletion, /now - authTime > 600/);
   assert.ok(deletion.includes("body.confirmation !== 'DELETE'"));
