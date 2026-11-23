@@ -105,8 +105,8 @@ except Exception as exc:
 try:
     sitemap = ET.parse(ROOT / "sitemap.xml")
     locations = [node.text for node in sitemap.findall(".//{*}loc")]
-    if "https://11saymo.github.io/saymosaldo-app/privacy.html" not in locations:
-        errors.append("sitemap.xml must include the privacy policy URL")
+    if "https://munora.ru/privacy.html" not in locations:
+        errors.append("sitemap.xml must include the Munora privacy policy URL")
 except Exception as exc:
     errors.append(f"sitemap.xml is not valid XML: {exc}")
 
