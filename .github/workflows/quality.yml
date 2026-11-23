@@ -1,4 +1,4 @@
-name: SaymoSaldo quality checks
+name: MUNORA quality checks
 
 on:
   push:
