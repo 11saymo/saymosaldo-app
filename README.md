@@ -13,6 +13,7 @@ MUNORA — личный финансовый помощник для учёта 
 - Учёт долгов и обязательств.
 - Локальный экспорт и восстановление резервной копии.
 - Синхронизация данных между устройствами через личный аккаунт.
+- Самостоятельное удаление аккаунта, облачных записей и резервных копий с повторным подтверждением входа.
 
 ## Архитектура
 
@@ -49,6 +50,7 @@ node scripts/test_auth.js
 node scripts/test_storage.js
 node scripts/test_features.js
 deno check supabase/functions/username-auth/index.ts
+deno check supabase/functions/delete-account/index.ts
 ```
 
 GitHub Actions автоматически запускает проверки качества и релиза. CodeQL выполняет статический анализ JavaScript, а Dependabot проверяет обновления GitHub Actions.
