@@ -17,10 +17,13 @@ self.addEventListener('activate',e=>{
 self.addEventListener('fetch',e=>{
   const url=new URL(e.request.url);
   if(e.request.method!=='GET'||url.origin!==location.origin)return;
+  // OAuth callback parameters must never become persistent Cache Storage keys.
+  const authParams=['code','state','error','error_description','error_code','access_token','refresh_token','token_hash'];
+  const isAuthCallback=authParams.some(key=>url.searchParams.has(key));
   e.respondWith(
     fetch(e.request,{cache:'no-store'})
       .then(async res=>{
-        if(res.ok){
+        if(res.ok&&!isAuthCallback){
           try{const cache=await caches.open(CACHE);await cache.put(e.request,res.clone())}catch(err){}
         }
         return res;
