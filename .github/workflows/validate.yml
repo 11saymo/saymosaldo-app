@@ -43,5 +43,7 @@ jobs:
           deno-version: v2.x
       - name: Type-check username authentication Edge Function
         run: deno check supabase/functions/username-auth/index.ts
+      - name: Type-check account deletion Edge Function
+        run: deno check supabase/functions/delete-account/index.ts
       - name: Test authentication client and account isolation
         run: node scripts/test_auth.js
