@@ -47,10 +47,15 @@ else:
         "base-uri": ["'self'"],
         "form-action": ["'self'"],
         "connect-src": ["'self'", "https://pmrrslmkrulhuapxtltm.supabase.co"],
+        "frame-src": ["'none'"],
+        "worker-src": ["'self'"],
+        "manifest-src": ["'self'"],
     }
     for name, values in required.items():
         if directives.get(name) != values:
             errors.append(f"CSP directive {name} must be exactly {' '.join(values)}")
+    if "upgrade-insecure-requests" not in directives:
+        errors.append("CSP must upgrade insecure resource requests")
     script_policy = directives.get("script-src", [])
     if "'unsafe-inline'" in script_policy or "'unsafe-eval'" in script_policy:
         errors.append("CSP script-src must not allow unsafe-inline or unsafe-eval")
@@ -133,6 +138,8 @@ for filename in ("index.html", "sw.js", "manifest.json", "auth.js"):
 sw_content = (ROOT / "sw.js").read_text(encoding="utf-8")
 if "e.request.method!=='GET'||url.origin!==location.origin" not in sw_content:
     errors.append("Service worker must only intercept same-origin GET requests")
+if "isAuthCallback" not in sw_content or "if(res.ok&&!isAuthCallback)" not in sw_content:
+    errors.append("Service worker must not persist OAuth callback URLs in Cache Storage")
 if "./privacy.html" not in sw_content or "./404.html" not in sw_content or "./auth.js" not in sw_content or "./learning.js" not in sw_content:
     errors.append("Service worker must include the privacy and not-found pages in its app shell cache")
 
@@ -141,9 +148,12 @@ if not auth_path.is_file():
     errors.append("Missing auth.js")
 else:
     auth_content = auth_path.read_text(encoding="utf-8")
-    for required_text in ("username-auth", "auth/v1/token?grant_type=password", "reset_password", "rest/v1/user_data", "sb_publishable_"):
+    for required_text in ("googleAuthorizeUrl", "code_challenge_method", "rest/v1/user_data", "sb_publishable_"):
         if required_text not in auth_content:
-            errors.append(f"auth.js is missing required account flow element: {required_text}")
+            errors.append(f"auth.js is missing required Google sign-in or sync element: {required_text}")
+    for retired_text in ("username-auth", "grant_type=password", "reset_password"):
+        if retired_text in auth_content:
+            errors.append(f"Retired password-auth flow must not ship in auth.js: {retired_text}")
     if "service_role" in auth_content or "sb_secret_" in auth_content:
         errors.append("Privileged Supabase credentials must never appear in auth.js")
 
