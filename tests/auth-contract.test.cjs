@@ -10,6 +10,7 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const edge = fs.readFileSync(path.join(root, 'supabase/functions/username-auth/index.ts'), 'utf8');
 const config = fs.readFileSync(path.join(root, 'supabase/config.toml'), 'utf8');
 const serviceWorker = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
+const deletion = fs.readFileSync(path.join(root, 'supabase/functions/delete-account/index.ts'), 'utf8');
 
 function loadAuthApi() {
   const document = { readyState: 'loading', addEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; }, getElementById() { return null; } };
@@ -74,6 +75,20 @@ test('legacy username and recovery-code endpoint is retired and JWT protected', 
   assert.match(edge, /status: 410/);
   assert.doesNotMatch(edge, /createUser|updateUserById|SUPABASE_SERVICE_ROLE_KEY/);
   assert.match(config, /\[functions\.username-auth\]\s+verify_jwt = true/);
+});
+
+test('self-service account deletion is authenticated, recent-session protected, and server-side', () => {
+  assert.match(source, /functions\\/v1\\/delete-account/);
+  assert.match(source, /deleteAccount/);
+  assert.match(html, /data-act="account-delete"/);
+  assert.match(deletion, /auth_time/);
+  assert.match(deletion, /now - authTime > 600/);
+  assert.match(deletion, /body\.confirmation !== 'DELETE'/);
+  assert.match(deletion, /auth\\/v1\\/user/);
+  assert.match(deletion, /auth\\/v1\\/admin\\/users\\//);
+  assert.match(config, /\\[functions\\.delete-account\\]\\s+verify_jwt = true/);
+  assert.match(deletion, /SUPABASE_SERVICE_ROLE_KEY/);
+  assert.doesNotMatch(source + html, /SUPABASE_SERVICE_ROLE_KEY|sb_secret_/);
 });
 
 test('public client contains no privileged Supabase keys', () => {
