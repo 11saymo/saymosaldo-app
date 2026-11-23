@@ -6,6 +6,9 @@
   const USERNAME_DOMAIN = 'accounts.saymosaldo.app';
   const SESSION_KEY = 'saymosaldo_auth_session';
   const $ = id => document.getElementById(id);
+  // Keep the app navigation hidden until an authenticated user enters the app.
+  const appNavigation = document.querySelector('.nav');
+  if (appNavigation) appNavigation.hidden = true;
 
   let session = null;
   let username = '';
@@ -319,6 +322,7 @@
   function showAuth() {
     $('authRoot').hidden = false;
     $('appShell').hidden = true;
+    if (appNavigation) appNavigation.hidden = true;
     showView('login');
   }
 
@@ -497,6 +501,7 @@
     app.setCloudSaveHandler(scheduleCloudSave);
     $('authRoot').hidden = true;
     $('appShell').hidden = false;
+    if (appNavigation) appNavigation.hidden = false;
     showAppStatus(remoteFailed);
     scheduleRefresh();
     if (needsSync) scheduleCloudSave();
