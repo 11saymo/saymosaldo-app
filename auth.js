@@ -3,7 +3,6 @@
 
   const SUPABASE_URL = 'https://pmrrslmkrulhuapxtltm.supabase.co';
   const PUBLISHABLE_KEY = 'sb_publishable_yqDwOCq3n3rZ7E0WOMLUtg_84VOefBt';
-  const USERNAME_DOMAIN = 'accounts.saymosaldo.app';
   const SESSION_KEY = 'saymosaldo_auth_session';
   const $ = id => document.getElementById(id);
   // Keep the app navigation hidden until an authenticated user enters the app.
@@ -20,35 +19,6 @@
   let syncAgain = false;
   let loggingOut = false;
   let retryDelay = 2000;
-  let recoveryUsername = '';
-
-  function normalizeUsername(value) {
-    if (typeof value !== 'string') return null;
-    const result = value.trim().toLowerCase();
-    return /^[a-z0-9][a-z0-9._-]{2,23}$/.test(result) ? result : null;
-  }
-
-  function usernameEmail(value) {
-    const normalized = normalizeUsername(value);
-    return normalized ? normalized + '@' + USERNAME_DOMAIN : null;
-  }
-
-  // Keep accounts created by the earlier email-based login reachable.
-  // New registrations still create username-only accounts.
-  function loginEmail(value) {
-    if (typeof value !== 'string') return null;
-    const identifier = value.trim();
-    if (identifier.includes('@')) {
-      const email = identifier.toLowerCase();
-      return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
-    }
-    return usernameEmail(identifier);
-  }
-
-  function validPassword(value) {
-    return typeof value === 'string' && value.length >= 12 && value.length <= 72;
-  }
-
   const GOOGLE_PKCE_KEY = 'saymosaldo_google_pkce_verifier';
 
   function randomVerifier() {
@@ -146,15 +116,8 @@
 
   function apiErrorMessage(payload, status) {
     const value = String(payload && (payload.error || payload.code || payload.msg || payload.message || payload.error_description) || '');
-    if (/username_taken/i.test(value)) return 'Этот логин уже занят. Придумайте другой.';
-    if (/username_invalid/i.test(value)) return 'Логин: 3–24 символа, латинские буквы, цифры, точка, дефис или подчёркивание.';
-    if (/password_invalid/i.test(value)) return 'Пароль должен содержать от 12 до 72 символов.';
-    if (/recovery_invalid/i.test(value)) return 'Логин или код восстановления не подошли. Проверьте их и попробуйте ещё раз.';
-    if (/rate_limited/i.test(value) || status === 429) return 'Слишком много попыток. Подождите 10 минут и попробуйте снова.';
     if (/temporarily_unavailable/i.test(value)) return 'Сервис временно недоступен. Попробуйте ещё раз чуть позже.';
     if (/origin_not_allowed/i.test(value)) return 'Запрос отклонён настройками безопасности. Откройте официальный сайт MUNORA.';
-    if (/invalid login credentials|invalid_grant|invalid_credentials/i.test(value)) return 'Неверный логин или пароль.';
-    if (/email not confirmed/i.test(value)) return 'Аккаунт не активирован. Обратитесь в поддержку.';
     return status === 0 ? 'Нет соединения. Проверьте интернет и повторите попытку.' :
       'Не удалось выполнить действие. Попробуйте ещё раз позже.';
   }
@@ -200,10 +163,6 @@
       throw failure;
     }
     return payload;
-  }
-
-  async function callUsernameFunction(body) {
-    return apiRequest('/functions/v1/username-auth', { method: 'POST', body });
   }
 
   function readSession() {
@@ -294,7 +253,6 @@
     syncTimer = null;
     syncAgain = false;
     clearSession();
-    $('recoveryCode').textContent = '';
     if (window.SaymoSaldoApp) window.SaymoSaldoApp.reset();
     showAuth();
     setNotice('Сеанс завершился. Войдите снова — ваши сохранённые записи останутся в аккаунте.', 'error');
@@ -307,73 +265,13 @@
     el.className = 'auth-notice' + (message ? ' on' : '') + (kind ? ' ' + kind : '');
   }
 
-  function showView(view) {
-    for (const name of ['login', 'register', 'reset']) {
-      const form = $('auth' + name[0].toUpperCase() + name.slice(1) + 'Form');
-      if (form) form.hidden = name !== view;
-    }
-    $('recoveryPanel').hidden = true;
-    $('recoveryCode').textContent = '';
-    $('authTitle').textContent = view === 'login' ? 'Войти в MUNORA' :
-      view === 'register' ? 'Создать аккаунт' : 'Восстановить пароль';
-    setNotice('');
-  }
-
   function showAuth() {
     $('authRoot').hidden = false;
     $('appShell').hidden = true;
     if (appNavigation) appNavigation.hidden = true;
-    showView('login');
-  }
-
-  function setBusy(form, busy) {
-    const button = form.querySelector('button[type="submit"]');
-    if (button) {
-      button.disabled = busy;
-      button.textContent = busy ? 'Подождите…' : button.dataset.idleText;
-    }
-  }
-
-  function rememberButtonLabels() {
-    document.querySelectorAll('.auth-form button[type="submit"]').forEach(button => {
-      button.dataset.idleText = button.textContent;
-    });
-  }
-
-  function setRecoveryCode(code, message, user) {
-    recoveryUsername = user || '';
-    $('authLoginForm').hidden = true;
-    $('authRegisterForm').hidden = true;
-    $('authResetForm').hidden = true;
-    $('recoveryPanel').hidden = false;
-    $('authTitle').textContent = 'Сохраните код восстановления';
-    $('recoveryMessage').textContent = message;
-    $('recoveryCode').textContent = code;
-    setNotice('Это единственный показ кода. Скопируйте его и сохраните в надёжном месте.', 'success');
-  }
-
-  async function copyRecoveryCode() {
-    const code = $('recoveryCode').textContent;
-    if (!code) return;
-    try {
-      await navigator.clipboard.writeText(code);
-      setNotice('Код скопирован. Сохраните его отдельно от телефона.', 'success');
-    } catch (error) {
-      const area = document.createElement('textarea');
-      area.value = code;
-      area.setAttribute('readonly', '');
-      area.style.position = 'fixed';
-      area.style.opacity = '0';
-      document.body.appendChild(area);
-      area.select();
-      try {
-        const ok = document.execCommand('copy');
-        setNotice(ok ? 'Код скопирован. Сохраните его отдельно от телефона.' : 'Выделите код и скопируйте его вручную.', ok ? 'success' : 'error');
-      } catch (copyError) {
-        setNotice('Выделите код и скопируйте его вручную.', 'error');
-      }
-      area.remove();
-    }
+    $('authLoginForm').hidden = false;
+    $('authTitle').textContent = 'Войти в MUNORA';
+    setNotice('');
   }
 
   function localEmptyData() {
@@ -507,99 +405,6 @@
     if (needsSync) scheduleCloudSave();
   }
 
-  async function login(usernameValue, password) {
-    const email = loginEmail(usernameValue);
-    if (!email) throw new Error('Введите логин (3–24 символа) или корректный адрес старого аккаунта.');
-    if (typeof password !== 'string' || password.length < 1 || password.length > 72) throw new Error('Введите пароль длиной не более 72 символов.');
-    const value = await apiRequest('/auth/v1/token?grant_type=password', {
-      method: 'POST',
-      body: { email, password }
-    });
-    storeSession(value);
-    await openApp(session.user);
-  }
-
-  async function handleLogin(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    setBusy(form, true);
-    setNotice('');
-    try {
-      await login(data.get('username'), data.get('password'));
-      form.reset();
-    } catch (error) {
-      setNotice(error.message || 'Не удалось войти. Проверьте логин и пароль.', 'error');
-    } finally {
-      setBusy(form, false);
-    }
-  }
-
-  async function handleRegister(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    const normalized = normalizeUsername(data.get('username'));
-    const password = data.get('password');
-    if (!normalized) return setNotice('Логин: 3–24 символа, латинские буквы, цифры, точка, дефис или подчёркивание.', 'error');
-    if (!validPassword(password)) return setNotice('Пароль должен содержать от 12 до 72 символов.', 'error');
-    if (password !== data.get('passwordConfirm')) return setNotice('Пароли не совпадают.', 'error');
-    setBusy(form, true);
-    setNotice('');
-    try {
-      const result = await callUsernameFunction({ action: 'register', username: normalized, password });
-      if (!result.ok || !result.recovery_code) throw new Error('Аккаунт не создан полностью. Попробуйте ещё раз.');
-      setRecoveryCode(result.recovery_code,
-        'Этот код понадобится, если вы забудете пароль. Он не отправляется по почте и больше не будет показан.',
-        normalized);
-      form.reset();
-    } catch (error) {
-      setNotice(error.message || 'Не удалось создать аккаунт.', 'error');
-    } finally {
-      setBusy(form, false);
-    }
-  }
-
-  async function handleReset(event) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const data = new FormData(form);
-    const normalized = normalizeUsername(data.get('username'));
-    const password = data.get('password');
-    const recoveryCode = String(data.get('recoveryCode') || '').trim().toLowerCase();
-    if (!normalized) return setNotice('Проверьте логин.', 'error');
-    if (!/^[0-9a-f]{48}$/.test(recoveryCode)) return setNotice('Код восстановления должен содержать 48 символов.', 'error');
-    if (!validPassword(password)) return setNotice('Новый пароль должен содержать от 12 до 72 символов.', 'error');
-    if (password !== data.get('passwordConfirm')) return setNotice('Пароли не совпадают.', 'error');
-    setBusy(form, true);
-    setNotice('');
-    try {
-      const result = await callUsernameFunction({
-        action: 'reset_password', username: normalized, password, recovery_code: recoveryCode
-      });
-      if (!result.ok || !result.recovery_code) throw new Error('Пароль не обновлён. Попробуйте ещё раз.');
-      setRecoveryCode(result.recovery_code,
-        'Пароль изменён. Код восстановления остаётся действующим — сохраните его надёжно.',
-        normalized);
-      form.reset();
-    } catch (error) {
-      setNotice(error.message || 'Не удалось восстановить пароль.', 'error');
-    } finally {
-      setBusy(form, false);
-    }
-  }
-
-  async function finishRecovery() {
-    const savedUsername = recoveryUsername;
-    $('recoveryPanel').hidden = true;
-    $('recoveryCode').textContent = '';
-    showView('login');
-    const loginForm = $('authLoginForm');
-    loginForm.elements.username.value = savedUsername;
-    loginForm.elements.password.value = '';
-    setNotice('Код сохранён. Теперь войдите с логином и паролем.', 'success');
-  }
-
   async function logout() {
     loggingOut = true;
     if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
@@ -626,7 +431,6 @@
   }
 
   async function bootstrap() {
-    rememberButtonLabels();
     showAuth();
     try {
       await consumeGoogleCallback();
@@ -676,18 +480,11 @@
   }
 
   function bindUi() {
-    $('authLoginForm').addEventListener('submit', handleLogin);
-    $('authRegisterForm').addEventListener('submit', handleRegister);
-    $('authResetForm').addEventListener('submit', handleReset);
     document.addEventListener('click', event => {
-      const view = event.target.closest('[data-auth-view]');
-      if (view) { showView(view.dataset.authView); return; }
       const action = event.target.closest('[data-auth-action]');
       if (action && action.dataset.authAction === 'logout') logout();
       if (action && action.dataset.authAction === 'google') startGoogleLogin();
     });
-    $('copyRecovery').addEventListener('click', copyRecoveryCode);
-    $('recoveryContinue').addEventListener('click', finishRecovery);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible' && session) {
         ensureFreshSession().then(scheduleCloudSave).catch(error => {
@@ -700,11 +497,7 @@
   }
 
   const publicApi = {
-    normalizeUsername,
-    usernameEmail,
     googleAuthorizeUrl,
-    loginEmail,
-    validPassword,
     normalizeCloudData,
     hasData,
     apiRequest,
