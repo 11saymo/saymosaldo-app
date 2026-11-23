@@ -11,9 +11,9 @@ const edge = fs.readFileSync(path.join(root, 'supabase/functions/username-auth/i
 const config = fs.readFileSync(path.join(root, 'supabase/config.toml'), 'utf8');
 
 function loadAuthApi() {
-  const document = { readyState: 'loading', addEventListener() {}, querySelectorAll() {} };
-  const window = {};
-  vm.runInNewContext(source, { window, document, console, URL, AbortController, setTimeout, clearTimeout });
+  const document = { readyState: 'loading', addEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; }, getElementById() { return null; } };
+  const window = { addEventListener() {} };
+  vm.runInNewContext(source, { window, document, console, URL, AbortController, setTimeout, clearTimeout, localStorage: { getItem() { return null; }, setItem() {}, removeItem() {} }, sessionStorage: { getItem() { return null; }, setItem() {}, removeItem() {} } });
   return window.SaymoSaldoAuth;
 }
 
