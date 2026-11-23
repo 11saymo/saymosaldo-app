@@ -51,7 +51,10 @@ Deno.serve(async (req: Request) => {
   if (!token) return response({ error: 'unauthorized' }, 401);
 
   const claims = decodeClaims(token);
-  const authTime = Number(claims?.auth_time);
+  const oauthMethod = Array.isArray(claims?.amr)
+    ? (claims.amr as Array<Record<string, unknown>>).find(method => method.method === 'oauth')
+    : null;
+  const authTime = Number(claims?.auth_time ?? oauthMethod?.timestamp);
   const now = Math.floor(Date.now() / 1000);
   if (!claims || !claims.sub || !Number.isFinite(authTime) || authTime > now + 60 || now - authTime > 600) {
     return response({ error: 'reauthentication_required' }, 403);
