@@ -78,15 +78,16 @@ test('legacy username and recovery-code endpoint is retired and JWT protected', 
 });
 
 test('self-service account deletion is authenticated, recent-session protected, and server-side', () => {
-  assert.match(source, /functions\\/v1\\/delete-account/);
+  assert.ok(source.includes('/functions/v1/delete-account'));
   assert.match(source, /deleteAccount/);
   assert.match(html, /data-act="account-delete"/);
   assert.match(deletion, /auth_time/);
   assert.match(deletion, /now - authTime > 600/);
-  assert.match(deletion, /body\.confirmation !== 'DELETE'/);
-  assert.match(deletion, /auth\\/v1\\/user/);
-  assert.match(deletion, /auth\\/v1\\/admin\\/users\\//);
-  assert.match(config, /\\[functions\\.delete-account\\]\\s+verify_jwt = true/);
+  assert.ok(deletion.includes("body.confirmation !== 'DELETE'"));
+  assert.ok(deletion.includes('/auth/v1/user'));
+  assert.ok(deletion.includes('/auth/v1/admin/users/'));
+  assert.ok(config.includes('[functions.delete-account]'));
+  assert.match(config, /verify_jwt = true/);
   assert.match(deletion, /SUPABASE_SERVICE_ROLE_KEY/);
   assert.doesNotMatch(source + html, /SUPABASE_SERVICE_ROLE_KEY|sb_secret_/);
 });
