@@ -1,0 +1,34 @@
+name: MUNORA public-site smoke test
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-site:
+    name: Check live MUNORA website
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check homepage, auth entry point, and security policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 3 --max-time 30 https://munora.ru/ -o /tmp/munora.html
+          grep -Fq 'https://munora.ru/' /tmp/munora.html
+          grep -Fq 'id="googleSignInButton"' /tmp/munora.html
+          grep -Fq "object-src 'none'" /tmp/munora.html
+          grep -Fq "frame-src 'none'" /tmp/munora.html
+          grep -Fq './auth.js' /tmp/munora.html
+      - name: Check privacy policy and service worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 3 --max-time 30 https://munora.ru/privacy.html -o /tmp/munora-privacy.html
+          curl --fail --silent --show-error --location --retry 3 --max-time 30 https://munora.ru/sw.js -o /tmp/munora-sw.js
+          grep -Fq 'Политика конфиденциальности' /tmp/munora-privacy.html
+          grep -Fq 'munora-v52' /tmp/munora-sw.js
+          grep -Fq 'isAuthCallback' /tmp/munora-sw.js
