@@ -15,6 +15,20 @@ jobs:
     name: Check live MUNORA website
     runs-on: ubuntu-latest
     steps:
+      - name: Diagnose public DNS and HTTP routing
+        shell: bash
+        run: |
+          set -u
+          echo "A records for munora.ru:"
+          dig +short A munora.ru || true
+          echo "AAAA records for munora.ru:"
+          dig +short AAAA munora.ru || true
+          echo "CAA records for munora.ru:"
+          dig +short CAA munora.ru || true
+          echo "www records:"
+          dig +noall +answer www.munora.ru A www.munora.ru AAAA www.munora.ru CNAME || true
+          echo "HTTP response headers:"
+          curl --silent --show-error --location --max-time 20 -I http://munora.ru/ || true
       - name: Check homepage, auth entry point, and security policy
         shell: bash
         run: |
