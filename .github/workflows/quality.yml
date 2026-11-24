@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   checks:
-    name: JavaScript and auth contract
+    name: JavaScript, UI, auth, and release validation
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -30,8 +30,9 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           node --check app.js
-          node --check app.js
           node --check auth.js
           node --check learning.js
-      - name: Run auth contract tests
+      - name: Run auth and UI contract tests
         run: node --test tests/*.test.cjs
+      - name: Validate public release, CSP, PWA assets, and privacy disclosures
+        run: python3 scripts/validate_release.py
