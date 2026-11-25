@@ -44,3 +44,15 @@ test('the app loads only approved first-party scripts and no external stylesheet
   assert.ok(!html.includes('app.js?') && !html.includes('auth.js?') && !html.includes('learning.js?'));
   assert.doesNotMatch(html, /<link\b[^>]*rel="stylesheet"[^>]*href="https?:/i);
 });
+
+
+test('the product introduction appears only in a one-time first-login screen', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  assert.doesNotMatch(html, /class="seo-intro"/);
+  assert.match(app, /function showWelcome\(\)/);
+  assert.match(app, /welcome-screen/);
+  assert.match(app, /KEY\+'intro_v1'/);
+  assert.match(app, /localStorage\.setItem\(KEY\+'intro_v1','shown'\)/);
+  assert.match(app, /Политика конфиденциальности/);
+  assert.match(app, /Условия использования/);
+});
