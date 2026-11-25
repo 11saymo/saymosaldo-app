@@ -96,3 +96,20 @@ test('returning visitors see a branded boot screen before a sign-in decision', (
   assert.match(bootstrap, /showAuth\(true\)/);
   assert.match(auth, /function showAuth\(preserveNotice = false\)/);
 });
+
+
+test('the More data panel exposes the account automatic-backup list', () => {
+  assert.match(app, /id="serverBackups"/);
+  assert.match(app, /data-act="backups-refresh"/);
+  assert.match(app, /data-act="backup-restore"/);
+  assert.match(app, /function loadServerBackups\(\)/);
+});
+
+test('learning tour no longer references removed payments and debt tabs', () => {
+  const start = app.indexOf('const TOUR=[');
+  const end = app.indexOf('];', start);
+  const tour = app.slice(start, end);
+  assert.doesNotMatch(tour, /tab:'recurring'|tab:'debts'/);
+  assert.match(tour, /tab:'assistant'/);
+  assert.match(tour, /tab:'data'/);
+});
