@@ -295,7 +295,7 @@
   }
 
   async function syncCloudData() {
-    if (!session || !window.SaymoSaldoApp) return;
+    if (!session || !window.SaymoSaldoApp) return false;
     if (syncBusy) { syncAgain = true; return syncPromise; }
     syncBusy = true;
     syncPromise = (async () => {
@@ -329,6 +329,7 @@
           syncAgain = true;
         }
         window.SaymoSaldoApp.setSyncStatus('Синхронизировано');
+        return true;
       } catch (error) {
         window.SaymoSaldoApp.setSyncStatus('Нет синхронизации — записи пока сохранены на этом устройстве');
         if (!loggingOut) {
@@ -336,15 +337,53 @@
           syncTimer = setTimeout(() => { syncTimer = null; syncCloudData(); }, retryDelay);
           retryDelay = Math.min(60000, retryDelay * 2);
         }
+        return false;
       }
     })();
     try {
-      await syncPromise;
+      return await syncPromise;
     } finally {
       syncBusy = false;
       syncPromise = null;
       if (syncAgain && !loggingOut) { syncAgain = false; scheduleCloudSave(); }
     }
+  }
+
+  async function listBackups() {
+    await ensureFreshSession();
+    return apiRequest('/rest/v1/rpc/list_my_data_backups', {
+      method: 'POST',
+      token: session.access_token,
+      body: {}
+    });
+  }
+
+  async function restoreBackup(backupId) {
+    const id = Number(backupId);
+    if (!Number.isSafeInteger(id) || id <= 0) throw new Error('Некорректный номер резервной копии.');
+    await ensureFreshSession();
+
+    // Never overwrite a cloud snapshot while local edits are waiting to sync.
+    const synced = await syncCloudData();
+    if (!synced || window.SaymoSaldoApp?.hasPendingSync()) {
+      throw new Error('Не удалось синхронизировать текущие записи. Проверьте соединение и повторите восстановление — данные не изменены.');
+    }
+
+    await apiRequest('/rest/v1/rpc/restore_my_data_backup', {
+      method: 'POST',
+      token: session.access_token,
+      body: { p_backup_id: id }
+    });
+
+    const remote = await loadRemoteData(session.user.id);
+    if (!remote || !remote.data) throw new Error('Снимок восстановлен на сервере, но не удалось перечитать данные. Обновите страницу.');
+    const restored = normalizeCloudData(remote.data);
+    if (!window.SaymoSaldoApp.activate(session.user.id, restored, remote.updated_at, false)) {
+      throw new Error('Снимок восстановлен на сервере, но не удалось обновить локальную копию. Обновите страницу для загрузки данных.');
+    }
+    window.SaymoSaldoApp.setCloudSaveHandler(scheduleCloudSave);
+    window.SaymoSaldoApp.setSyncStatus('Резервная копия восстановлена и синхронизирована');
+    return true;
   }
 
   function showAppStatus(offline) {
@@ -430,13 +469,28 @@
   }
 
   async function logout() {
+    if (loggingOut) return;
     loggingOut = true;
     if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
     try {
       if (syncBusy && syncPromise) await syncPromise;
-      if (syncAgain) syncAgain = false;
-      await syncCloudData();
+      syncAgain = false;
     } catch (error) {}
+
+    const synced = await syncCloudData();
+    const hasPending = Boolean(window.SaymoSaldoApp?.hasPendingSync?.());
+    if (hasPending && (!synced || hasPending)) {
+      loggingOut = false;
+      const leaveAnyway = window.confirm(
+        'Не удалось отправить последние изменения в облако. Они останутся на этом устройстве и не появятся на других устройствах, пока синхронизация не завершится. Выйти всё равно?'
+      );
+      if (!leaveAnyway) {
+        scheduleCloudSave();
+        return;
+      }
+      loggingOut = true;
+    }
+
     if (session) {
       try { await apiRequest('/auth/v1/logout', { method: 'POST', token: session.access_token }); } catch (error) {}
     }
@@ -534,6 +588,9 @@
     hasData,
     apiRequest,
     deleteAccount,
+    listBackups,
+    restoreBackup,
+    syncCloudData,
     get username() { return username; }
   };
   window.SaymoSaldoAuth = publicApi;
