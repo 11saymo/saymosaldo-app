@@ -27,7 +27,7 @@ test('light and dark themes and responsive behavior remain present', () => {
 });
 
 test('learning overlay uses the emerald theme', () => {
-  assert.match(learning, /#7a1f2b|#852d3a|#5a1724|#3e1420|rgba\(18,185,129/);
+  assert.match(learning, /#12b981|#0d9f73|#087452|#064b39|rgba\(18,185,129/);
   assert.doesNotMatch(learning, /#dceefa|#b8d6eb|#5799c9/);
 });
 
