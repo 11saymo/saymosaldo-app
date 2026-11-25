@@ -610,7 +610,31 @@ input,select{min-height:48px;font-size:16px}
 .google-signin:hover{transform:translateY(-1px);box-shadow:0 9px 24px rgba(38,18,25,.13);border-color:#c9bfc0}
 .google-signin:disabled{opacity:.65;cursor:wait;transform:none}
 
-/* MUNORA burgundy visual system restored */
+
+/* MUNORA emerald identity refresh */
+:root{--acc:#12b981;--line:#e2e9e5;--bg:#f4f8f6;--card:#fff;--fg:#13211b;--mut:#667b71;--warn:#b7791f;--bad:#c44747;--r:22px;--shadow:0 12px 32px rgba(13,65,48,.07);color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--acc:#35d6a0;--bg:#07110e;--card:#101d18;--fg:#e9f5ef;--mut:#9bb4a8;--line:#20342b;--warn:#e6b45c;--bad:#ff7979;color-scheme:dark}}
+:root[data-theme=dark]{--acc:#35d6a0;--bg:#07110e;--card:#101d18;--fg:#e9f5ef;--mut:#9bb4a8;--line:#20342b;--warn:#e6b45c;--bad:#ff7979;color-scheme:dark}
+body{background:radial-gradient(ellipse at 10% 0%,rgba(18,185,129,.09),transparent 40%),radial-gradient(ellipse at 100% 70%,rgba(25,154,110,.045),transparent 36%),var(--bg)}
+body::before{background:radial-gradient(ellipse 600px 480px at 4% 8%,rgba(18,185,129,.10),transparent 72%),radial-gradient(ellipse 600px 500px at 90% 85%,rgba(18,185,129,.06),transparent 72%),linear-gradient(rgba(18,185,129,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(18,185,129,.018) 1px,transparent 1px);background-size:auto,auto,36px 36px,36px 36px}
+body::after{border-color:rgba(18,185,129,.12);box-shadow:0 0 0 30px rgba(18,185,129,.025),0 0 0 65px rgba(18,185,129,.02)}
+.hero{background:linear-gradient(135deg,#0d9f73,#087452 58%,#064b39);box-shadow:0 18px 44px rgba(7,116,82,.18);border-radius:26px}
+.hero .label,.hero small{color:rgba(255,255,255,.75)}.hero .bar{background:rgba(255,255,255,.24)}.hero .split b{color:white}
+.pos,.goal-percent{color:var(--acc)}.bar i,.wb i{background:var(--acc)}.bar i.warn{background:var(--warn)}.bar i.over{background:var(--bad)}
+.qbtn span{background:color-mix(in srgb,var(--acc) 12%,var(--card));color:var(--acc)}
+.nav button[aria-current=page]{color:var(--acc)}.nav button[aria-current=page] svg{stroke:var(--acc)}
+.tabs button[aria-selected=true]{color:var(--acc);background:color-mix(in srgb,var(--acc) 11%,var(--card));border-color:color-mix(in srgb,var(--acc) 30%,var(--line))}
+.auth-screen{background:radial-gradient(ellipse at 12% 0%,rgba(18,185,129,.12),transparent 42%),var(--bg)}
+.auth-card{border-radius:28px;box-shadow:0 22px 65px rgba(8,80,55,.11);border-color:color-mix(in srgb,var(--acc) 15%,var(--line))}
+.auth-mark{width:76px;height:76px;padding:8px;border-radius:22px;background:linear-gradient(135deg,#0c9f72,#064c39);box-shadow:0 10px 24px rgba(8,100,70,.2);margin-inline:auto}.auth-mark img{width:60px;height:60px;object-fit:contain;border-radius:0}
+.auth-card h1{text-align:center}.auth-lead,.auth-public-description{text-align:center}
+.google-signin{border-color:#dce7e1;border-radius:16px;box-shadow:0 6px 20px rgba(8,80,55,.08)}
+.primary{background:var(--acc);color:#05291c;border-color:var(--acc)}
+button:focus-visible,input:focus,select:focus{outline-color:var(--acc)}
+.seo-intro{border-color:var(--line)}.seo-intro a{color:var(--acc)}
+@media(prefers-reduced-motion:no-preference){.card,.qbtn,.item,button{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.qbtn:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(13,65,48,.1)}}
+
+ .brand-lockup{display:flex;align-items:center;gap:14px}.brand-icon{width:46px;height:46px;object-fit:contain;border-radius:13px}.brand-copy{display:grid;gap:1px}.brand-copy strong{font-size:17px;letter-spacing:.14em;color:var(--acc)}.brand-copy span{font-size:13px;color:var(--mut)}
 </style>
 </head>
 <body>
@@ -633,7 +657,7 @@ input,select{min-height:48px;font-size:16px}
 </section>
 <div id="authRoot" class="auth-screen" aria-live="polite">
 <section class="auth-card">
-<div class="auth-mark"><img src="./icon-180.png?v=50" alt="Логотип MUNORA"></div><h1 id="authTitle">Войти в MUNORA</h1>
+<div class="auth-mark"><img src="./icon.svg?v=51" alt="Логотип MUNORA"></div><h1 id="authTitle">Войти в MUNORA</h1>
 <p class="auth-lead">Ваши финансы — в вашем личном аккаунте.</p>
 <p class="auth-public-description">Учитывайте доходы и расходы, планируйте бюджет и накопления. Ваши финансовые записи доступны только после входа в личный аккаунт.</p>
 <p id="authNotice" class="auth-notice" role="status" aria-live="polite"></p>
@@ -649,7 +673,7 @@ input,select{min-height:48px;font-size:16px}
 </section>
 </div>
 <div class="app" id="appShell" hidden>
-  <header class="top"><h1 id="title">Главная</h1></header>
+  <header class="top"><div class="brand-lockup"><img src="./icon.svg?v=51" alt="" class="brand-icon"><div class="brand-copy"><strong>MUNORA</strong><span id="title">Главная</span></div></div></header>
 <p id="syncStatus" class="sync-status" role="status" aria-live="polite"></p>
 
   <main>
