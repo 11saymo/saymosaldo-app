@@ -27,8 +27,8 @@ test('authentication entry points and financial input remain available', () => {
 });
 
 test('responsive visual system covers phone, desktop, theme, and reduced motion', () => {
-  assert.match(html, /MUNORA burgundy visual system restored/);
-  assert.ok(html.includes('.auth-card'), 'authentication screen must use the restored burgundy design');
+  assert.match(html, /MUNORA emerald identity refresh/);
+  assert.ok(html.includes('.auth-card'), 'authentication screen must use the emerald brand design');
   assert.match(html, /@media\s*\(max-width:\s*759px\)/);
   assert.match(html, /@media\s*\(min-width:\s*760px\)/);
   assert.match(html, /prefers-reduced-motion:\s*reduce/);
