@@ -106,7 +106,7 @@
   style.textContent = `
     #ssLearning{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:clamp(10px,3vw,28px);background:rgba(12,13,12,.58);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
     #ssLearning[hidden]{display:none}
-    #ssLearning .ss-box{width:min(920px,calc(100vw - 32px));max-height:min(90dvh,900px);min-height:min(560px,82dvh);display:flex;flex-direction:column;overflow:hidden;background:var(--card,#fff);color:var(--fg,#121212);border:1px solid var(--line,#e4e4e0);border-radius:22px;box-shadow:0 24px 80px rgba(0,0,0,.26)}
+    #ssLearning .ss-box{width:min(920px,calc(100vw - 32px));max-height:min(90dvh,900px);min-height:min(560px,82dvh);display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;overflow:hidden;background:var(--card,#fff);color:var(--fg,#121212);border:1px solid var(--line,#e4e4e0);border-radius:22px;box-shadow:0 24px 80px rgba(0,0,0,.26);min-width:0}
     #ssLearning .ss-head{position:relative;padding:22px 24px 18px;background:linear-gradient(125deg,#0d9f73 0%,#087452 58%,#064b39 100%);color:#fff}
     #ssLearning .ss-headrow{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
     #ssLearning .ss-kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);font-weight:650;margin-bottom:7px}
@@ -116,17 +116,18 @@
     #ssLearning .ss-close:active{background:rgba(255,255,255,.2)}
     #ssLearning .ss-progress-track{height:4px;background:rgba(255,255,255,.2);margin-top:18px;border-radius:9px;overflow:hidden}
     #ssLearning .ss-progress-fill{height:100%;width:14.285%;background:#fff;border-radius:9px;transition:width .2s ease}
-    #ssLearning .ss-tabs{display:flex;gap:8px;overflow-x:auto;padding:14px 20px 12px;border-bottom:1px solid var(--line);background:var(--card);scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    #ssLearning .ss-tabs{position:relative;z-index:2;display:flex;flex:0 0 auto;align-items:center;gap:8px;min-width:0;min-height:66px;box-sizing:border-box;overflow-x:auto;overflow-y:hidden;padding:12px 20px 13px;border-bottom:1px solid var(--line);background:var(--card);box-shadow:0 4px 12px rgba(10,30,20,.035);scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x}
     #ssLearning .ss-tabs::-webkit-scrollbar{display:none}
     #ssLearning .ss-tabs button{flex:0 0 auto;white-space:nowrap;min-height:40px;padding:9px 13px;font-size:13px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--fg);box-shadow:0 3px 12px rgba(24,28,24,.045)}
     #ssLearning .ss-tabs button[aria-current=true]{background:color-mix(in srgb,var(--acc) 11%,var(--card));color:var(--acc);border-color:color-mix(in srgb,var(--acc) 32%,var(--line));font-weight:650}
-    #ssLearning .ss-content{flex:1;min-height:0;overflow-y:auto;padding:18px 22px 22px;background:var(--bg);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+    #ssLearning .ss-content{position:relative;z-index:1;min-width:0;min-height:0;overflow-x:hidden;overflow-y:auto;padding:18px 22px 22px;background:var(--bg);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
     #ssLearning .ss-item{padding:17px 18px;margin:0 0 10px;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--surface-shadow,0 5px 18px rgba(24,28,24,.045))}
     #ssLearning .ss-item:last-child{margin-bottom:0}
     #ssLearning .ss-item h3{display:flex;align-items:flex-start;gap:9px;font-size:15px;line-height:1.35;font-weight:650;margin:0 0 11px;color:var(--fg)}
     #ssLearning .ss-item h3 .ss-num{display:grid;place-items:center;flex:none;width:25px;height:25px;margin-top:-3px;border-radius:8px;background:color-mix(in srgb,var(--acc) 12%,var(--card));color:var(--acc);font-size:12px}
     #ssLearning .ss-item p{font-size:13px;line-height:1.58;margin:7px 0 0;color:var(--mut)}
     #ssLearning .ss-item b{font-weight:650;color:var(--fg)}
+    #ssLearning .ss-head,#ssLearning .ss-tabs,#ssLearning .ss-foot{min-width:0;flex-shrink:0;position:relative;z-index:2}
     #ssLearning .ss-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 20px calc(13px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--card)}
     #ssLearning .ss-progress{font-size:12px;line-height:1.4;color:var(--mut)}
     #ssLearning .ss-actions{display:flex;gap:8px;flex:none}
@@ -141,9 +142,9 @@
       #ssLearning .ss-head h2{font-size:21px}
       #ssLearning .ss-lead{font-size:12px;line-height:1.5}
       #ssLearning .ss-close{padding:8px 10px;font-size:12px}
-      #ssLearning .ss-tabs{padding:11px 13px 10px;gap:7px}
+      #ssLearning .ss-tabs{min-height:58px;padding:9px 13px 10px;gap:7px}
       #ssLearning .ss-tabs button{min-height:38px;padding:8px 11px;font-size:12px}
-      #ssLearning .ss-content{padding:13px 13px 18px}
+      #ssLearning .ss-content{padding:13px 13px 18px;min-height:0}
       #ssLearning .ss-item{padding:14px 14px;margin-bottom:9px;border-radius:14px}
       #ssLearning .ss-item h3{font-size:14px;margin-bottom:9px}
       #ssLearning .ss-item p{font-size:12.5px;line-height:1.55}
