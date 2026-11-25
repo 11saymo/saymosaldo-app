@@ -99,6 +99,7 @@ test('returning visitors see a branded boot screen before a sign-in decision', (
 
 
 test('the More data panel exposes the account automatic-backup list', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   assert.match(app, /id="serverBackups"/);
   assert.match(app, /data-act="backups-refresh"/);
   assert.match(app, /data-act="backup-restore"/);
