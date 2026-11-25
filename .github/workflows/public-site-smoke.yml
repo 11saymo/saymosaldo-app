@@ -1,9 +1,7 @@
 name: MUNORA public-site smoke test
 
 on:
-  workflow_run:
-    workflows: ["pages build and deployment"]
-    types: [completed]
+  push:
     branches: [main]
   schedule:
     - cron: "17 */6 * * *"
@@ -15,9 +13,12 @@ permissions:
 jobs:
   public-site:
     name: Check live MUNORA website
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Allow GitHub Pages to finish publishing
+        if: github.event_name == 'push'
+        shell: bash
+        run: sleep 45
       - name: Diagnose public DNS and HTTP routing
         shell: bash
         run: |
