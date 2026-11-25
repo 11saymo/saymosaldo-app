@@ -107,3 +107,19 @@ test('service worker never persists OAuth callback URLs in Cache Storage', () =>
   assert.match(serviceWorker, /if\(res\.ok&&!isAuthCallback\)/);
   assert.match(serviceWorker, /'access_token','refresh_token','token_hash'/);
 });
+
+
+test('automatic backups use authenticated RPCs and restoration syncs before replacing cloud data', () => {
+  assert.match(source, /async function listBackups\(\)/);
+  assert.match(source, /rpc\/list_my_data_backups/);
+  assert.match(source, /async function restoreBackup\(backupId\)/);
+  assert.match(source, /rpc\/restore_my_data_backup/);
+  assert.match(source, /const synced = await syncCloudData\(\)/);
+  assert.match(source, /if \(!synced \|\| window\.SaymoSaldoApp\?\.hasPendingSync\(\)\)/);
+});
+
+test('logout warns before leaving a session with unsynced local edits', () => {
+  assert.match(source, /hasPending = Boolean\(window\.SaymoSaldoApp\?\.hasPendingSync\?\.\(\)\)/);
+  assert.match(source, /Не удалось отправить последние изменения в облако/);
+  assert.match(source, /if \(!leaveAnyway\)/);
+});
