@@ -68,3 +68,30 @@ test('More navigation shows only assistant, settings, and data', () => {
   assert.doesNotMatch(more, /data-tab="recurring"|data-tab="debts"/);
   assert.doesNotMatch(html, /data-tab-target="debts"/);
 });
+
+
+test('home dashboard is compact by default and detailed metrics are collapsed', () => {
+  const start = html.indexOf('<section class="view" data-view="home">');
+  const end = html.indexOf('<section class="view" data-view="ops"', start);
+  const home = html.slice(start, end);
+  assert.ok(home.indexOf('id="recent"') < home.indexOf('<details class="home-details">'));
+  assert.match(home, /<details class="home-details">/);
+  for (const id of ['status', 'moneyInsight', 'homeWeekCard', 'homeLimits', 'homeGoals', 'homeDebts']) {
+    assert.match(home, new RegExp('id="' + id + '"'));
+  }
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
+  assert.doesNotMatch(app, /рады видеть вас в MUNORA/);
+});
+
+test('returning visitors see a branded boot screen before a sign-in decision', () => {
+  const auth = fs.readFileSync(path.join(root, 'auth.js'), 'utf8');
+  assert.match(html, /id="appBoot"/);
+  assert.match(html, /id="authRoot"[^>]*hidden/);
+  assert.match(html, /<nav class="nav"[^>]*hidden/);
+  const start = auth.indexOf('async function bootstrap()');
+  const end = auth.indexOf('function bindUi()', start);
+  const bootstrap = auth.slice(start, end);
+  assert.doesNotMatch(bootstrap, /^async function bootstrap\(\)\s*\{\s*showAuth\(\);/);
+  assert.match(bootstrap, /if \(!session\)\s*\{\s*showAuth\(true\);\s*return;/);
+  assert.match(auth, /function showAuth\(preserveNotice = false\)/);
+});
