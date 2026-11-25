@@ -39,3 +39,10 @@ test('PWA assets refresh with the emerald theme', () => {
   assert.match(sw, /self\.skipWaiting\(\)/);
   assert.match(app, /updateViaCache:'none'/);
 });
+
+test('learning panel keeps its header, section tabs, lesson body, and footer in separate rows', () => {
+  assert.match(learning, /display:grid;grid-template-rows:auto auto minmax\(0,1fr\) auto/);
+  assert.match(learning, /\.ss-tabs\{position:relative;z-index:2;display:flex;flex:0 0 auto/);
+  assert.match(learning, /\.ss-content\{position:relative;z-index:1;min-width:0;min-height:0;overflow-x:hidden;overflow-y:auto/);
+  assert.match(learning, /\.ss-head,#ssLearning \.ss-tabs,#ssLearning \.ss-foot\{min-width:0;flex-shrink:0/);
+});
