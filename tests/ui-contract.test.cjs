@@ -59,9 +59,12 @@ test('the product introduction appears only in a one-time first-login screen', (
 
 
 test('More navigation shows only assistant, settings, and data', () => {
-  const more = html.slice(html.indexOf('data-view="more"'), html.indexOf('</section>', html.indexOf('data-view="more"')));
+  const marker = '<section class="view" data-view="more"';
+  const start = html.indexOf(marker);
+  const more = html.slice(start, html.indexOf('</section>', start));
   assert.match(more, /data-tab="assistant"/);
   assert.match(more, /data-tab="settings"/);
   assert.match(more, /data-tab="data"/);
   assert.doesNotMatch(more, /data-tab="recurring"|data-tab="debts"/);
+  assert.doesNotMatch(html, /data-tab-target="debts"/);
 });
