@@ -363,10 +363,9 @@
     if (!Number.isSafeInteger(id) || id <= 0) throw new Error('Некорректный номер резервной копии.');
     await ensureFreshSession();
 
-    // Never overwrite a cloud snapshot while local edits are waiting to sync.
-    const synced = await syncCloudData();
-    if (!synced || window.SaymoSaldoApp?.hasPendingSync()) {
-      throw new Error('Не удалось синхронизировать текущие записи. Проверьте соединение и повторите восстановление — данные не изменены.');
+    // Never replace a backup while local edits are still waiting to sync.
+    if (window.SaymoSaldoApp?.hasPendingSync()) {
+      throw new Error('Сначала дождитесь надписи «Синхронизировано». Ваши последние изменения пока находятся только на этом устройстве.');
     }
 
     await apiRequest('/rest/v1/rpc/restore_my_data_backup', {
@@ -477,18 +476,21 @@
       syncAgain = false;
     } catch (error) {}
 
-    const synced = await syncCloudData();
-    const hasPending = Boolean(window.SaymoSaldoApp?.hasPendingSync?.());
-    if (hasPending && (!synced || hasPending)) {
-      loggingOut = false;
-      const leaveAnyway = window.confirm(
-        'Не удалось отправить последние изменения в облако. Они останутся на этом устройстве и не появятся на других устройствах, пока синхронизация не завершится. Выйти всё равно?'
-      );
-      if (!leaveAnyway) {
-        scheduleCloudSave();
-        return;
+    const pendingBeforeLogout = Boolean(window.SaymoSaldoApp?.hasPendingSync?.());
+    if (pendingBeforeLogout) {
+      const synced = await syncCloudData();
+      const hasPending = Boolean(window.SaymoSaldoApp?.hasPendingSync?.());
+      if (!synced || hasPending) {
+        loggingOut = false;
+        const leaveAnyway = window.confirm(
+          'Не удалось отправить последние изменения в облако. Они останутся на этом устройстве и не появятся на других устройствах, пока синхронизация не завершится. Выйти всё равно?'
+        );
+        if (!leaveAnyway) {
+          scheduleCloudSave();
+          return;
+        }
+        loggingOut = true;
       }
-      loggingOut = true;
     }
 
     if (session) {
