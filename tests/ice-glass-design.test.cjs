@@ -34,7 +34,7 @@ test('learning overlay uses the emerald theme', () => {
 test('PWA assets refresh with the emerald theme', () => {
   assert.equal(manifest.theme_color, '#12b981');
   assert.equal(manifest.background_color, '#07110e');
-  assert.match(sw, /munora-v57/);
+  assert.match(sw, /munora-v58/);
   assert.match(sw, /fetch\(e\.request,\{cache:'no-store'\}\)/);
   assert.match(sw, /self\.skipWaiting\(\)/);
   assert.match(app, /updateViaCache:'none'/);
