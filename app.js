@@ -248,14 +248,45 @@ const PANELS={
     <div class="actions"><button class="link" data-act="chat-clear">Очистить историю этого режима</button></div>`,
 
   settings:()=>{const cur=document.documentElement.dataset.theme||'auto';return `<div class="card"><h2>Аккаунт</h2><p class="muted" style="margin:6px 0 12px">Вы вошли как <b>${esc(window.SaymoSaldoAuth?.username||'')}</b>. Данные аккаунта синхронизируются между вашими устройствами.</p></div><div class="card"><h2>Обучение</h2><p class="muted" style="margin:6px 0 12px">Короткий обзор основных разделов.</p><button class="ghost" data-act="tour-start">Показать обучение</button></div><div class="card"><h2>Оформление</h2><p class="muted" style="margin:6px 0 14px">Тема сохраняется на этом устройстве.</p><div class="tabs" style="margin:0">${[['light','Светлая'],['dark','Тёмная'],['auto','Как в телефоне']].map(([v,l])=>`<button data-theme-set="${v}" aria-selected="${cur===v}">${l}</button>`).join('')}</div></div><div class="card"><h2>Сеанс</h2><button class="ghost danger" data-auth-action="logout">Выйти</button></div>`},
-  data:()=>`<div class="card"><h2>О приложении и доступе</h2><p>MUNORA помогает учитывать доходы и расходы, планировать бюджет, отслеживать цели, регулярные платежи и задолженности.</p><p class="muted" style="margin-top:8px">Финансовые записи синхронизируются через аккаунт и сохраняются локально для быстрой работы и временного доступа без сети. Доступ к облачным записям ограничен вашим аккаунтом. Локальная копия в браузере не шифруется отдельным паролем — защищайте устройство блокировкой экрана.</p><p style="margin-top:8px"><a href="./privacy.html">Политика конфиденциальности</a></p></div><div class="card"><h2>Данные на этом устройстве</h2><p class="muted">Финансовые записи сохраняются в аккаунте и в локальном хранилище браузера для быстрой работы. Локальная копия не шифруется отдельным паролем — защищайте устройство блокировкой экрана.</p></div><div class="card"><h2>Резервная копия</h2><p>Сохраняйте копию вручную, особенно после важных изменений. В ней находятся операции, цели, лимиты, регулярные платежи, долги и история финансового помощника.</p><div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div><div class="card"><h2>Установить на телефон</h2><p class="muted" style="margin:8px 0">Android: откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».</p><p class="muted" style="margin:8px 0">iPhone: откройте сайт в Safari, нажмите «Поделиться», затем «На экран Домой».</p><small>После установки приложение будет открываться отдельным окном. Доступность пункта зависит от браузера.</small></div><div class="card"><h2>Удаление аккаунта</h2><p class="muted">Вы можете безвозвратно удалить аккаунт MUNORA, облачные финансовые записи и резервные копии. Перед удалением скачайте резервную копию, если хотите сохранить данные. Локальные копии на других устройствах нужно удалить отдельно через настройки браузера.</p><button class="ghost danger" data-act="account-delete">Удалить аккаунт и данные</button></div><p class="note">Финансовые записи синхронизируются с аккаунтом и дополнительно сохраняются в локальном хранилище браузера. При работе без сети новые изменения останутся на этом устройстве до восстановления соединения. Регулярно скачивайте резервную копию. Файл резервной копии содержит личную финансовую информацию — храните его в безопасном месте и не передавайте посторонним.</p>`
+  data:()=>`<div class="card"><h2>О приложении и доступе</h2><p>MUNORA помогает учитывать доходы и расходы, планировать бюджет, отслеживать цели, регулярные платежи и задолженности.</p><p class="muted" style="margin-top:8px">Финансовые записи синхронизируются через аккаунт и сохраняются локально для быстрой работы и временного доступа без сети. Доступ к облачным записям ограничен вашим аккаунтом. Локальная копия в браузере не шифруется отдельным паролем — защищайте устройство блокировкой экрана.</p><p style="margin-top:8px"><a href="./privacy.html">Политика конфиденциальности</a></p></div><div class="card"><h2>Данные на этом устройстве</h2><p class="muted">Финансовые записи сохраняются в аккаунте и в локальном хранилище браузера для быстрой работы. Локальная копия не шифруется отдельным паролем — защищайте устройство блокировкой экрана.</p></div><div class="card"><h2>Автоматические копии в аккаунте</h2><p>Здесь хранятся последние снимки облачных данных. До 30 копий на аккаунт; новый автоматический снимок создаётся не чаще одного раза за 24 часа при изменении данных. Перед восстановлением текущие облачные данные сохраняются в контрольную копию.</p><div id="serverBackups" class="server-backups"><p class="muted">Загружаем список копий…</p></div><button class="ghost" data-act="backups-refresh">Обновить список</button></div><div class="card"><h2>Резервная копия</h2><p>Сохраняйте копию вручную, особенно после важных изменений. В ней находятся операции, цели, лимиты, регулярные платежи, долги и история финансового помощника.</p><div class="actions"><button class="primary" data-act="export">Скачать копию</button><button data-act="import">Восстановить из копии</button></div></div><div class="card"><h2>Установить на телефон</h2><p class="muted" style="margin:8px 0">Android: откройте меню браузера и выберите «Установить приложение» или «Добавить на главный экран».</p><p class="muted" style="margin:8px 0">iPhone: откройте сайт в Safari, нажмите «Поделиться», затем «На экран Домой».</p><small>После установки приложение будет открываться отдельным окном. Доступность пункта зависит от браузера.</small></div><div class="card"><h2>Удаление аккаунта</h2><p class="muted">Вы можете безвозвратно удалить аккаунт MUNORA, облачные финансовые записи и резервные копии. Перед удалением скачайте резервную копию, если хотите сохранить данные. Локальные копии на других устройствах нужно удалить отдельно через настройки браузера.</p><button class="ghost danger" data-act="account-delete">Удалить аккаунт и данные</button></div><p class="note">Финансовые записи синхронизируются с аккаунтом и дополнительно сохраняются в локальном хранилище браузера. При работе без сети новые изменения останутся на этом устройстве до восстановления соединения. Регулярно скачивайте резервную копию. Файл резервной копии содержит личную финансовую информацию — храните его в безопасном месте и не передавайте посторонним.</p>`
 };
+
+function loadServerBackups(){
+  const el=$('#serverBackups');
+  if(!el)return;
+  const auth=window.SaymoSaldoAuth;
+  if(!auth?.listBackups){
+    el.innerHTML='<p class="muted">Список автоматических копий пока недоступен.</p>';
+    return;
+  }
+  el.innerHTML='<p class="muted" role="status">Загружаем список копий…</p>';
+  auth.listBackups().then(rows=>{
+    if(!el.isConnected)return;
+    if(!Array.isArray(rows))throw new Error('Сервер вернул некорректный список копий.');
+    if(!rows.length){
+      el.innerHTML='<p class="muted">Автоматических копий пока нет. Они создаются после изменений облачных данных.</p>';
+      return;
+    }
+    el.innerHTML=rows.map(row=>{
+      const id=Number(row.id);
+      const date=new Date(row.created_at);
+      const dateText=Number.isFinite(date.getTime())?date.toLocaleString('ru-RU',{dateStyle:'medium',timeStyle:'short'}):'Дата не указана';
+      const label=row.backup_type==='before_restore'?'Контрольная копия перед восстановлением':'Автоматическая копия';
+      const validId=Number.isSafeInteger(id)&&id>0;
+      return `<div class="server-backup-row"><div class="server-backup-info"><b>${label}</b><small>${esc(dateText)}</small></div><button class="ghost" data-act="backup-restore" data-id="${validId?id:''}" ${validId?'':'disabled'}>Восстановить</button></div>`;
+    }).join('');
+  }).catch(error=>{
+    if(!el.isConnected)return;
+    el.innerHTML=`<p class="muted" role="alert">${esc(error.message||'Не удалось загрузить автоматические копии.')}</p><button class="ghost" data-act="backups-refresh">Попробовать ещё раз</button>`;
+  });
+}
 
 function renderPanel(){
   $$('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
   $('#panel').innerHTML=PANELS[tab]();
   if(tab==='assistant'){renderFinanceReport();renderChat();}
   if(tab==='goals')updateGoalPreview();
+  if(tab==='data')loadServerBackups();
 }
 
 const FORMS={
@@ -362,8 +393,8 @@ function validBackup(d){
   if('chatFinance'in d&&(!Array.isArray(d.chatFinance)||d.chatFinance.length>60))return false;
   const str=(v,max)=>typeof v==='string'&&v.trim().length>0&&v.length<=max;
   const ident=v=>(typeof v==='string'&&v.length>0&&v.length<=100)||(Number.isSafeInteger(v)&&v>0);
-  const positive=v=>Number.isSafeInteger(Number(v))&&Number(v)>0;
-  const nonnegative=v=>Number.isSafeInteger(Number(v))&&Number(v)>=0;
+  const positive=v=>Number.isFinite(Number(v))&&Number(v)>0&&Number(v)<=Number.MAX_SAFE_INTEGER;
+  const nonnegative=v=>Number.isFinite(Number(v))&&Number(v)>=0&&Number(v)<=Number.MAX_SAFE_INTEGER;
   if(d.tx.some(x=>!x||typeof x!=='object'||!ident(x.id)||!['income','expense','saving'].includes(x.type)||!Number.isFinite(Number(x.amount))||Number(x.amount)<=0||Number(x.amount)>Number.MAX_SAFE_INTEGER||!str(x.category,80)||!validBackupDate(x.date)||('comment'in x&&typeof x.comment!=='string')||('comment'in x&&x.comment.length>200)||('currency'in x&&(!/^(RUB|USD|EUR|CNY)$/.test(x.currency)||!Number.isFinite(Number(x.originalAmount))||Number(x.originalAmount)<=0||('exchangeRate'in x&&x.exchangeRate!==null&&(!Number.isFinite(Number(x.exchangeRate))||Number(x.exchangeRate)<=0))||('baseAmount'in x&&x.baseAmount!==null&&(!Number.isFinite(Number(x.baseAmount))||Number(x.baseAmount)<0))))))return false;
   if(d.goals.some(x=>!x||typeof x!=='object'||!ident(x.id)||!str(x.name,1000)||!positive(x.target)||!nonnegative(x.saved)||('date'in x&&x.date!==''&&!validBackupDate(x.date))||('kind'in x&&!['standard','deposit'].includes(x.kind))||('rate'in x&&(!Number.isFinite(Number(x.rate))||Number(x.rate)<0||Number(x.rate)>100))))return false;
   if(d.budgets.some(x=>!x||typeof x!=='object'||!str(x.category,80)||!positive(x.limit)))return false;
@@ -457,13 +488,12 @@ function finance(q){
 
 
 const TOUR=[
- {view:'home',sel:'#balance',t:'Главная',x:'Здесь видно баланс месяца, доходы и расходы. Всё обновляется сразу после записи операции.'},
- {view:'home',sel:'nav button[data-go="add"]',t:'Новая операция',x:'Нажмите «Добавить», чтобы записать трату или доход. Укажите сумму и категорию, дата подставится сама.'},
- {view:'ops',sel:'#allItems',t:'Операции',x:'Здесь все записи. Фильтр покажет только расходы или только доходы, а лишнюю операцию можно удалить.'},
- {view:'stats',sel:'#budgetWrap',t:'Бюджет',x:'Цели накопления и лимиты по категориям. Лимит подскажет, когда категория близка к пределу.'},
- {view:'more',tab:'recurring',sel:'#panel',t:'Платежи',x:'Аренда, интернет, подписки. Отмечайте оплату, и расход сразу появится в истории.'},
- {view:'more',tab:'debts',sel:'#panel',t:'Задолженность',x:'Кредиты и другие обязательства: видно остаток и процент погашения. Каждый платёж помогает отслеживать, как уменьшается задолженность.'},
- {view:'more',tab:'data',sel:'#panel',t:'Данные и резервная копия',x:'Сохраняйте резервную копию в разделе «Данные». Восстановить записи можно из ранее сохранённого файла.'}
+ {view:'home',sel:'#balance',t:'Главная',x:'Здесь видно общий баланс, доходы и расходы. Дополнительные показатели можно открыть в полной сводке.'},
+ {view:'add',sel:'#txForm',t:'Новая операция',x:'Запишите доход, расход или пополнение накопительной цели. Суммы учитываются в российских рублях.'},
+ {view:'ops',sel:'#allItems',t:'Операции',x:'Здесь все записи. Фильтр покажет нужные операции, а ошибочную запись можно удалить.'},
+ {view:'stats',sel:'#budgetWrap',t:'Бюджет',x:'Здесь находятся цели накопления и лимиты по категориям.'},
+ {view:'more',tab:'assistant',sel:'#panel',t:'Помощник',x:'Помощник анализирует ваши записи прямо на устройстве и показывает финансовый обзор.'},
+ {view:'more',tab:'data',sel:'#panel',t:'Данные и резервные копии',x:'Здесь можно скачать файл, посмотреть автоматические снимки и восстановить нужную версию.'}
 ];
 let tourI=0;
 function showWelcome(){
@@ -565,7 +595,17 @@ document.addEventListener('click',e=>{
     case'tour-next':if(tourI<TOUR.length-1){tourI++;return showTourStep()}return endTour('done');
     case'tour-back':tourI--;return showTourStep();
     case'tour-skip':return endTour('skipped');
-        case'export':return exportData();
+        case'backups-refresh':return loadServerBackups();
+    case'backup-restore':{
+      const backupId=Number(id);
+      if(!Number.isSafeInteger(backupId)||backupId<=0)return toast('Некорректный номер резервной копии.');
+      if(!confirm('Восстановить выбранную автоматическую копию? Текущая облачная версия сначала будет сохранена в отдельную контрольную копию. Если на устройстве есть несинхронизированные изменения, сначала потребуется их синхронизировать.'))return;
+      t.disabled=true;
+      if(!window.SaymoSaldoAuth?.restoreBackup){t.disabled=false;return toast('Восстановление автоматических копий временно недоступно.');}
+      window.SaymoSaldoAuth.restoreBackup(backupId).then(()=>{toast('Резервная копия восстановлена.');go('home')}).catch(error=>{t.disabled=false;toast(error.message||'Не удалось восстановить резервную копию.')});
+      return;
+    }
+    case'export':return exportData();
     case'import':return $('#importFile').click();
     case'account-delete':{
       if(!confirm('Удалить аккаунт MUNORA, все облачные финансовые записи и резервные копии без возможности восстановления? Сначала скачайте копию, если она нужна.'))return;
