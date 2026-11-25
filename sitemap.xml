@@ -10,4 +10,4 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
-</urlset>
+  <url>\n    <loc>https://munora.ru/terms.html</loc>\n    <changefreq>yearly</changefreq>\n    <priority>0.3</priority>\n  </url>\n</urlset>
