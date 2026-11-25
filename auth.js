@@ -266,13 +266,14 @@
     el.className = 'auth-notice' + (message ? ' on' : '') + (kind ? ' ' + kind : '');
   }
 
-  function showAuth() {
+  function showAuth(preserveNotice = false) {
+    if ($('appBoot')) $('appBoot').hidden = true;
     $('authRoot').hidden = false;
     $('appShell').hidden = true;
     if (appNavigation) appNavigation.hidden = true;
     $('authLoginForm').hidden = false;
     $('authTitle').textContent = 'Войти в MUNORA';
-    setNotice('');
+    if (!preserveNotice) setNotice('');
   }
 
   function localEmptyData() {
@@ -398,6 +399,7 @@
       throw new Error('Не удалось сохранить данные аккаунта на устройстве. Проверьте свободное место в браузере.');
     }
     app.setCloudSaveHandler(scheduleCloudSave);
+    if ($('appBoot')) $('appBoot').hidden = true;
     $('authRoot').hidden = true;
     $('appShell').hidden = false;
     if (appNavigation) appNavigation.hidden = false;
@@ -453,17 +455,22 @@
   }
 
   async function bootstrap() {
-    showAuth();
+    // Keep the branded boot screen visible until a saved session is checked.
     try {
       await consumeGoogleCallback();
     } catch (error) {
       try { sessionStorage.removeItem(GOOGLE_PKCE_KEY); } catch (ignore) {}
       cleanOAuthUrl();
+      showAuth();
       setNotice(error.message || 'Не удалось завершить вход через Google. Попробуйте ещё раз.', 'error');
       return;
     }
     session = readSession();
-    if (!session) return;
+    if (!session) {
+      // Preserve any notice produced by a cancelled or incomplete OAuth callback.
+      showAuth(true);
+      return;
+    }
 
     // Validate/refresh authentication separately from loading financial data.
     // A temporary REST/database error must not destroy a valid login session.
@@ -477,6 +484,7 @@
       }
     } catch (error) {
       if (error.status === 0 || (error.status >= 500 && error.status < 600) || error.status === 429) {
+        showAuth();
         setNotice('Не удалось проверить сессию из-за временной ошибки связи. Повторите загрузку страницы — вход сохранён.', 'error');
         return;
       }
@@ -484,10 +492,12 @@
         await refreshSession();
       } catch (refreshError) {
         if (!isInvalidSessionError(refreshError)) {
+          showAuth();
           setNotice('Сервер временно не отвечает. Вход сохранён — попробуйте обновить страницу позже.', 'error');
           return;
         }
         clearSession();
+        showAuth();
         setNotice('Сеанс завершился. Войдите снова.', 'error');
         return;
       }
