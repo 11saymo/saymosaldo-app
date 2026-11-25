@@ -54,6 +54,7 @@ jobs:
           grep -Fq 'munora-v60' /tmp/munora-sw.js
           grep -Fq './terms.html' /tmp/munora-sw.js
           grep -Fq 'https://munora.ru/terms.html' /tmp/munora-sitemap.xml
+          python3 -c "import xml.etree.ElementTree as ET; ET.parse('/tmp/munora-sitemap.xml')"
           grep -Fq 'Sitemap: https://munora.ru/sitemap.xml' /tmp/munora-robots.txt
           grep -Fq 'Contact: mailto:should.poject@gmail.com' /tmp/munora-security.txt
           grep -Fq 'isAuthCallback' /tmp/munora-sw.js
