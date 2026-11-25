@@ -38,11 +38,12 @@ test('backup import still rejects invalid dates, negative values, and non-finite
   assert.equal(validBackup({ ...sample, tx: [{ ...sample.tx[0], date: '2026-02-31' }] }), false);
 });
 
-test('automatic cloud backup functions use authenticated RPCs and sync before restore', () => {
+test('automatic cloud backup functions use authenticated RPCs and refuse restore while local edits are pending', () => {
   assert.match(auth, /async function listBackups\(\)[\s\S]*?ensureFreshSession\(\)[\s\S]*?rpc\/list_my_data_backups/);
   assert.match(auth, /async function restoreBackup\(backupId\)[\s\S]*?ensureFreshSession\(\)[\s\S]*?rpc\/restore_my_data_backup/);
   assert.match(auth, /p_backup_id: id/);
-  assert.match(auth, /if \(!synced \|\| window\.SaymoSaldoApp\?\.hasPendingSync\(\)\)/);
+  assert.match(auth, /if \(window\.SaymoSaldoApp\?\.hasPendingSync\(\)\)/);
+  assert.match(auth, /Сначала дождитесь надписи «Синхронизировано»/);
 });
 
 test('logout warns before leaving when local edits have not reached the cloud', () => {
