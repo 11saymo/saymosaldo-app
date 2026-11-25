@@ -48,5 +48,5 @@ jobs:
           curl --fail --silent --show-error --location --retry 3 --max-time 30 https://munora.ru/sw.js -o /tmp/munora-sw.js
           grep -Fq 'Политика конфиденциальности' /tmp/munora-privacy.html
           grep -Fq 'Условия использования' /tmp/munora-terms.html
-          grep -Fq 'munora-v55' /tmp/munora-sw.js
+          grep -Fq 'munora-v56' /tmp/munora-sw.js
           grep -Fq 'isAuthCallback' /tmp/munora-sw.js
