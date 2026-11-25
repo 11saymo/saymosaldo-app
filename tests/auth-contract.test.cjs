@@ -114,8 +114,8 @@ test('automatic backups use authenticated RPCs and restoration syncs before repl
   assert.match(source, /rpc\/list_my_data_backups/);
   assert.match(source, /async function restoreBackup\(backupId\)/);
   assert.match(source, /rpc\/restore_my_data_backup/);
-  assert.match(source, /const synced = await syncCloudData\(\)/);
-  assert.match(source, /if \(!synced \|\| window\.SaymoSaldoApp\?\.hasPendingSync\(\)\)/);
+  assert.match(source, /if \(window\.SaymoSaldoApp\?\.hasPendingSync\(\)\)/);
+  assert.match(source, /Сначала дождитесь надписи «Синхронизировано»/);
 });
 
 test('logout warns before leaving a session with unsynced local edits', () => {
