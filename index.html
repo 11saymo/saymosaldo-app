@@ -709,6 +709,15 @@ button:focus-visible,input:focus,select:focus{outline-color:var(--acc)}
 @keyframes munoraBoot{from{transform:scaleX(.55);opacity:.7}to{transform:scaleX(1);opacity:1}}
 @media(prefers-reduced-motion:reduce){#appBoot i{animation:none}}
 
+
+.server-backups{display:grid;gap:8px;margin:12px 0}
+.server-backup-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--line);border-radius:13px;background:var(--bg)}
+.server-backup-info{display:grid;gap:4px;min-width:0}
+.server-backup-info b{font-size:13px;color:var(--fg)}
+.server-backup-info small{font-size:12px;color:var(--mut)}
+.server-backup-row button{flex:none;width:auto;min-height:38px;padding:8px 12px;font-size:12px}
+@media(max-width:420px){.server-backup-row{align-items:flex-start;flex-direction:column}.server-backup-row button{width:100%}}
+
 </style>
 </head>
 <body>
