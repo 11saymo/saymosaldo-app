@@ -115,3 +115,13 @@ test('learning tour no longer references removed payments and debt tabs', () => 
   assert.match(tour, /tab:'assistant'/);
   assert.match(tour, /tab:'data'/);
 });
+
+
+test('public sign-in screen links to both legal pages and support contact', () => {
+  const start = html.indexOf('<div id="authRoot"');
+  const end = html.indexOf('<div class="app" id="appShell"', start);
+  const authScreen = html.slice(start, end);
+  assert.match(authScreen, /href="\.\/privacy\.html"/);
+  assert.match(authScreen, /href="\.\/terms\.html"/);
+  assert.match(authScreen, /mailto:should\.poject@gmail\.com/);
+});
