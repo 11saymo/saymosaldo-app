@@ -106,6 +106,7 @@ test('the More data panel exposes the account automatic-backup list', () => {
 });
 
 test('learning tour no longer references removed payments and debt tabs', () => {
+  const app = fs.readFileSync(path.join(root, 'app.js'), 'utf8');
   const start = app.indexOf('const TOUR=[');
   const end = app.indexOf('];', start);
   const tour = app.slice(start, end);
