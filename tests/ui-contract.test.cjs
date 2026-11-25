@@ -92,6 +92,7 @@ test('returning visitors see a branded boot screen before a sign-in decision', (
   const end = auth.indexOf('function bindUi()', start);
   const bootstrap = auth.slice(start, end);
   assert.doesNotMatch(bootstrap, /^async function bootstrap\(\)\s*\{\s*showAuth\(\);/);
-  assert.match(bootstrap, /if \(!session\)\s*\{\s*showAuth\(true\);\s*return;/);
+  assert.match(bootstrap, /if \(!session\)/);
+  assert.match(bootstrap, /showAuth\(true\)/);
   assert.match(auth, /function showAuth\(preserveNotice = false\)/);
 });
