@@ -46,7 +46,14 @@ jobs:
           curl --fail --silent --show-error --location --retry 3 --max-time 30 https://munora.ru/privacy.html -o /tmp/munora-privacy.html
           curl --fail --silent --show-error --location --retry 3 --max-time 30 https://munora.ru/terms.html -o /tmp/munora-terms.html
           curl --fail --silent --show-error --location --retry 3 --max-time 30 https://munora.ru/sw.js -o /tmp/munora-sw.js
+          curl --fail --silent --show-error --location --retry 3 --max-time 30 https://munora.ru/robots.txt -o /tmp/munora-robots.txt
+          curl --fail --silent --show-error --location --retry 3 --max-time 30 https://munora.ru/sitemap.xml -o /tmp/munora-sitemap.xml
+          curl --fail --silent --show-error --location --retry 3 --max-time 30 https://munora.ru/.well-known/security.txt -o /tmp/munora-security.txt
           grep -Fq 'Политика конфиденциальности' /tmp/munora-privacy.html
           grep -Fq 'Условия использования' /tmp/munora-terms.html
-          grep -Fq 'munora-v59' /tmp/munora-sw.js
+          grep -Fq 'munora-v60' /tmp/munora-sw.js
+          grep -Fq './terms.html' /tmp/munora-sw.js
+          grep -Fq 'https://munora.ru/terms.html' /tmp/munora-sitemap.xml
+          grep -Fq 'Sitemap: https://munora.ru/sitemap.xml' /tmp/munora-robots.txt
+          grep -Fq 'Contact: mailto:should.poject@gmail.com' /tmp/munora-security.txt
           grep -Fq 'isAuthCallback' /tmp/munora-sw.js
