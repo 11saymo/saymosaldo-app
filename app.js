@@ -158,7 +158,7 @@ function render(){
   const spent=c=>total(m.filter(x=>x.type==='expense'&&x.category===c).map(txBaseAmount));
   const overN=S.budgets.filter(b=>spent(b.category)>b.limit).length;
   const h=new Date().getHours();
-  $('#greet').textContent=(h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+', рады видеть вас в MUNORA!';
+  $('#greet').textContent=(h<12?'Доброе утро':h<18?'Добрый день':'Добрый вечер')+'!';
   $('#monthLabel').textContent='Общий баланс';
   $('#balance').innerHTML=money(inc-out);
   $('#income').innerHTML=money(inc);
