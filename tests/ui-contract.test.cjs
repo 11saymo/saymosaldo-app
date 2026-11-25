@@ -11,7 +11,7 @@ test('all main application views and navigation targets are present', () => {
     assert.match(html, new RegExp('data-view="' + view + '"'));
     assert.match(html, new RegExp('data-go="' + view + '"'));
   }
-  for (const tab of ['recurring', 'debts', 'assistant', 'settings', 'data']) {
+  for (const tab of ['assistant', 'settings', 'data']) {
     assert.match(html, new RegExp('data-tab="' + tab + '"'));
   }
 });
@@ -55,4 +55,13 @@ test('the product introduction appears only in a one-time first-login screen', (
   assert.match(app, /localStorage\.setItem\(KEY\+'intro_v1','shown'\)/);
   assert.match(app, /Политика конфиденциальности/);
   assert.match(app, /Условия использования/);
+});
+
+
+test('More navigation shows only assistant, settings, and data', () => {
+  const more = html.slice(html.indexOf('data-view="more"'), html.indexOf('</section>', html.indexOf('data-view="more"')));
+  assert.match(more, /data-tab="assistant"/);
+  assert.match(more, /data-tab="settings"/);
+  assert.match(more, /data-tab="data"/);
+  assert.doesNotMatch(more, /data-tab="recurring"|data-tab="debts"/);
 });
