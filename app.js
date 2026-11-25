@@ -467,11 +467,54 @@ const TOUR=[
 ];
 let tourI=0;
 function showWelcome(){
-  const d=document.createElement('div');d.id='welcome';d.className='overlay';
-  d.innerHTML='<div class="ov-card"><div style="font-size:34px;margin-bottom:12px">✦</div><h2>Добро пожаловать в MUNORA!</h2><p class="muted">Здесь можно записывать доходы и расходы, планировать бюджет, контролировать регулярные платежи и долги, а также создавать цели накоплений и смотреть финансовую статистику.</p><p class="muted">Все суммы в приложении указываются только в российских рублях. Накопительные цели показывают прогноз процентов.</p><p class="muted">Сначала коротко покажем основные разделы и объясним, как правильно вносить данные. Обучение можно повторно открыть позже в разделе «Ещё → Настройки».</p><div style="display:grid;gap:8px"><button class="primary" data-act="welcome-yes">Начать обучение</button><button class="ghost" data-act="welcome-no">Перейти к приложению</button></div></div>';
+  const d=document.createElement('section');
+  d.id='welcome';
+  d.className='welcome-screen';
+  d.setAttribute('role','dialog');
+  d.setAttribute('aria-modal','true');
+  d.setAttribute('aria-labelledby','welcomeTitle');
+  d.innerHTML=`
+    <div class="welcome-card">
+      <div class="welcome-brand">
+        <img src="./icon.svg" alt="Логотип MUNORA">
+        <div><strong>MUNORA</strong><span class="muted">Личный финансовый помощник</span></div>
+      </div>
+      <div class="welcome-kicker">Первый вход · краткое знакомство</div>
+      <h1 id="welcomeTitle">Добро пожаловать в MUNORA!</h1>
+      <p class="welcome-lead">MUNORA помогает вести личный учёт финансов: записывать доходы и расходы, планировать бюджет, контролировать регулярные платежи, лимиты, долги и цели накоплений.</p>
+      <section class="welcome-section">
+        <h2>Что можно делать в приложении</h2>
+        <ul>
+          <li>Записывать доходы и расходы и распределять их по категориям.</li>
+          <li>Следить за балансом и статистикой расходов.</li>
+          <li>Планировать месячный бюджет, лимиты и накопительные цели.</li>
+          <li>Учитывать регулярные платежи и задолженности.</li>
+          <li>Синхронизировать данные между устройствами и сохранять резервные копии.</li>
+        </ul>
+      </section>
+      <section class="welcome-section">
+        <h2>Вход и обработка данных</h2>
+        <p>Для входа используется Google. MUNORA получает только базовые данные профиля: идентификатор аккаунта, адрес электронной почты, имя и фотографию профиля, если она доступна.</p>
+        <p>Приложение не запрашивает доступ к Gmail, Google Диску, контактам или календарю. Ваши финансовые записи хранятся отдельно в аккаунте MUNORA и не передаются Google.</p>
+        <p>Сервис не подключается к банковским счетам и не списывает деньги автоматически. Операции вы вносите самостоятельно; суммы указываются в российских рублях.</p>
+      </section>
+      <div class="welcome-links">
+        <a href="./privacy.html" target="_blank" rel="noopener">Политика конфиденциальности</a>
+        <a href="./terms.html" target="_blank" rel="noopener">Условия использования</a>
+      </div>
+      <div class="welcome-actions">
+        <button class="primary" data-act="welcome-yes">Начать знакомство с приложением</button>
+        <button class="ghost" data-act="welcome-no">Перейти в MUNORA</button>
+      </div>
+    </div>`;
   document.body.appendChild(d);
+  const firstButton=d.querySelector('[data-act="welcome-yes"]');
+  if(firstButton) firstButton.focus();
 }
-function closeWelcome(){document.getElementById('welcome')?.remove()}
+function closeWelcome(){
+  try{localStorage.setItem(KEY+'intro_v1','shown')}catch(e){}
+  document.getElementById('welcome')?.remove();
+}
 function startTour(){closeWelcome();tourI=0;showTourStep()}
 function showTourStep(){
   document.querySelectorAll('.tour-hl').forEach(e=>e.classList.remove('tour-hl'));
@@ -544,7 +587,7 @@ window.SaymoSaldoApp={
  getGuestData(){if(localStorage.getItem('saymosaldo_guest_migration_handled')==='1')return {tx:[],goals:[],budgets:[],recurring:[],debts:[],chat_finance:[]};return {tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts,chat_finance:readStoredArray('saymosaldo_chat_finance')}},
  getLocalUserData(userId){const prefix='saymosaldo_user_'+userId+'_';let found=false;const data={};for(const key of KEYS){const raw=localStorage.getItem(prefix+key);if(raw!==null)found=true;try{const value=JSON.parse(raw);data[key]=Array.isArray(value)?value:[]}catch(e){data[key]=[]}}const chatRaw=localStorage.getItem(prefix+'chat_finance');if(chatRaw!==null)found=true;try{const value=JSON.parse(chatRaw);data.chat_finance=Array.isArray(value)?value:[]}catch(e){data.chat_finance=[]}if(!found)return null;return {data,updated_at:localStorage.getItem(prefix+'local_modified_at')||'1970-01-01T00:00:00.000Z',pending_sync:localStorage.getItem(prefix+'pending_sync')==='1'}},
  getData(){return {tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts,chat_finance:readStoredArray(chatKey())}},
- activate(userId,data,updatedAt,pendingSync){const oldKey=KEY,previous={tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts};const currencyChanged=normalizeRubleData(data);KEY='saymosaldo_user_'+userId+'_';S.tx=Array.isArray(data.tx)?data.tx:[];S.goals=Array.isArray(data.goals)?data.goals:[];S.budgets=Array.isArray(data.budgets)?data.budgets:[];S.recurring=Array.isArray(data.recurring)?data.recurring:[];S.debts=Array.isArray(data.debts)?data.debts:[];const entries=Object.fromEntries(KEYS.map(key=>[scopedKey(key),JSON.stringify(S[key])]));entries[chatKey()]=JSON.stringify(Array.isArray(data.chat_finance)?data.chat_finance:Array.isArray(data.chatFinance)?data.chatFinance:[]);entries[scopedKey('local_modified_at')]=updatedAt||new Date().toISOString();entries[scopedKey('pending_sync')]=(pendingSync||currencyChanged)?'1':'0';if(!persistEntries(entries)){KEY=oldKey;Object.assign(S,previous);return false}try{localStorage.setItem('saymosaldo_guest_migration_handled','1')}catch(e){}fillTx();go('home');renderPanel();$('#appShell').hidden=false;if(!localStorage.getItem(KEY+'onboarding'))showWelcome();return true},
+ activate(userId,data,updatedAt,pendingSync){const oldKey=KEY,previous={tx:S.tx,goals:S.goals,budgets:S.budgets,recurring:S.recurring,debts:S.debts};const currencyChanged=normalizeRubleData(data);KEY='saymosaldo_user_'+userId+'_';S.tx=Array.isArray(data.tx)?data.tx:[];S.goals=Array.isArray(data.goals)?data.goals:[];S.budgets=Array.isArray(data.budgets)?data.budgets:[];S.recurring=Array.isArray(data.recurring)?data.recurring:[];S.debts=Array.isArray(data.debts)?data.debts:[];const entries=Object.fromEntries(KEYS.map(key=>[scopedKey(key),JSON.stringify(S[key])]));entries[chatKey()]=JSON.stringify(Array.isArray(data.chat_finance)?data.chat_finance:Array.isArray(data.chatFinance)?data.chatFinance:[]);entries[scopedKey('local_modified_at')]=updatedAt||new Date().toISOString();entries[scopedKey('pending_sync')]=(pendingSync||currencyChanged)?'1':'0';if(!persistEntries(entries)){KEY=oldKey;Object.assign(S,previous);return false}try{localStorage.setItem('saymosaldo_guest_migration_handled','1')}catch(e){}fillTx();go('home');renderPanel();$('#appShell').hidden=false;try{if(!localStorage.getItem(KEY+'intro_v1'))showWelcome()}catch(e){showWelcome()}return true},
  setCloudSaveHandler(handler){cloudSaveHandler=typeof handler==='function'?handler:null},
  deleteLocalUserData(userId){const prefix='saymosaldo_user_'+String(userId)+'_';try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i);if(key&&key.startsWith(prefix))localStorage.removeItem(key)}}catch(e){}},
  markSynced(){try{localStorage.setItem(scopedKey('pending_sync'),'0')}catch(e){}},
