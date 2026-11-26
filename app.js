@@ -13,8 +13,7 @@ let KEY='saymosaldo_';
     ]);
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const key = localStorage.key(i);
-      if (exact.has(key) || key.startsWith('saymosaldo_user_') ||
-          key.startsWith('saymosaldo_chat_')) localStorage.removeItem(key);
+      if (exact.has(key)) localStorage.removeItem(key);
     }
     localStorage.setItem(resetKey, 'done');
   } catch (error) {
