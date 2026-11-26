@@ -51,3 +51,10 @@ test('logout warns before leaving when local edits have not reached the cloud', 
   assert.match(auth, /Не удалось отправить последние изменения в облако/);
   assert.match(auth, /if \(!leaveAnyway\)/);
 });
+
+
+test('one-time legacy cleanup never deletes account-scoped local data', () => {
+  assert.doesNotMatch(app, /key\.startsWith\('saymosaldo_user_'\)/);
+  assert.doesNotMatch(app, /key\.startsWith\('saymosaldo_chat_'\)/);
+  assert.match(app, /if \(exact\.has\(key\)\) localStorage\.removeItem\(key\)/);
+});
